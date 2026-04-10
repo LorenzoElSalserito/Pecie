@@ -272,3 +272,7 @@ git push origin v0.1.0
 ## License
 
 Pecie is released under **AGPL-3.0-only**.
+
+## Copyright
+
+© Lorenzo De Marco (Lorenzo DM) - 2026
