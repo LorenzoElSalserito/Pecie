@@ -37,18 +37,18 @@ const makers = [
       category: 'Office'
     }
   },
-  {
-    name: '@electron-forge/maker-squirrel',
-    platforms: ['win32'],
-    config: {
-      name: 'pecie',
-      authors: 'Lorenzo DM',
-      description: 'Accessible local-first writing environment for long-form projects.',
-      exe: 'Pecie.exe',
-      setupExe: 'Pecie-Setup.exe',
-      setupIcon: assetIcoIconPath,
-      shortcutName: 'Pecie',
-      shortcutFolderName: 'Pecie',
+    {
+      name: '@electron-forge/maker-squirrel',
+      platforms: ['win32'],
+      config: {
+        name: 'pecie',
+        authors: 'Lorenzo DM',
+        description: 'Accessible local-first writing environment for long-form projects.',
+        exe: 'pecie.exe',
+        setupExe: 'Pecie-Setup.exe',
+        setupIcon: assetIcoIconPath,
+        shortcutName: 'Pecie',
+        shortcutFolderName: 'Pecie',
       iconUrl:
         'https://raw.githubusercontent.com/lorenzodm/pecie/main/apps/desktop/src/renderer/src/asset/Icon.ico'
     }
@@ -96,7 +96,7 @@ module.exports = {
       CompanyName: 'Lorenzo DM',
       FileDescription: 'Pecie desktop writing workspace',
       InternalName: 'Pecie',
-      OriginalFilename: 'Pecie.exe',
+      OriginalFilename: 'pecie.exe',
       ProductName: 'Pecie'
     }
   },
