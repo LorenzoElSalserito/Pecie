@@ -4,6 +4,16 @@ import { resolve } from 'node:path'
 
 const rootDirectory = process.cwd()
 const desktopDirectory = resolve(rootDirectory, 'apps/desktop')
+
+if (process.env.PECIE_SKIP_NATIVE_REBUILD === '1') {
+  process.exit(0)
+}
+
+if (process.env.CI === 'true' && process.platform === 'win32') {
+  console.log('Skipping native rebuild for CI on Windows.')
+  process.exit(0)
+}
+
 const requireFromDesktop = createRequire(resolve(desktopDirectory, 'package.json'))
 const electronVersion = requireFromDesktop('electron/package.json').version
 const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm'

@@ -62,10 +62,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - if: matrix.os == 'windows-latest'
-        run: npm ci --ignore-scripts
-      - if: matrix.os != 'windows-latest'
-        run: npm ci
+      - run: npm ci
       - run: npm run generate:types
       - run: npm run ${{ matrix.make_script }} -w @pecie/desktop
       - if: matrix.extra_scripts != ''
