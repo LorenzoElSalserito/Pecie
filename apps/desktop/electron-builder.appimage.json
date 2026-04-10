@@ -1,0 +1,22 @@
+{
+  "appId": "com.pecie.desktop",
+  "productName": "Pecie",
+  "directories": {
+    "output": "../../build/desktop/appimage",
+    "buildResources": "src/renderer/src/asset"
+  },
+  "files": [
+    "out/**/*",
+    "package.json"
+  ],
+  "extraMetadata": {
+    "main": "out/main/index.js"
+  },
+  "linux": {
+    "icon": "Icon.png",
+    "target": [
+      "AppImage"
+    ],
+    "category": "Office"
+  }
+}

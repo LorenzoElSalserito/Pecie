@@ -1,0 +1,15 @@
+{
+  "rootId": "root",
+  "nodes": [
+    { "id": "root", "type": "folder", "title": "Progetto", "children": ["manuscript", "research"] },
+    { "id": "manuscript", "type": "folder", "title": "Manoscritto", "children": ["intro"] },
+    {
+      "id": "intro",
+      "type": "document",
+      "title": "Introduzione",
+      "path": "docs/chapters/introduzione.md",
+      "documentId": "doc-001"
+    },
+    { "id": "research", "type": "folder", "title": "Ricerca", "children": [] }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://pecie.lorenzodm.com/schemas/manifest.schema.json",
+  "title": "Pecie Project Manifest",
+  "description": "Schema per il file pe-manifest.json, il punto di ingresso di un progetto Pecie. Contiene i metadati essenziali per identificare e versionare il progetto.",
+  "type": "object",
+  "properties": {
+    "formatVersion": {
+      "description": "La versione dello schema del progetto Pecie a cui questo file aderisce. Permette la migrazione futura.",
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "projectId": {
+      "description": "Un identificatore univoco globale per il progetto (es. UUIDv4).",
+      "type": "string",
+      "format": "uuid"
+    },
+    "createdAt": {
+      "description": "Il timestamp ISO 8601 di quando il progetto è stato creato.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "appName": {
+      "description": "Il nome dell'applicazione che ha creato/modificato il progetto.",
+      "type": "string",
+      "const": "Pecie"
+    },
+    "appVersion": {
+      "description": "La versione dell'applicazione Pecie che ha salvato per l'ultima volta questo progetto.",
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    }
+  },
+  "required": [
+    "formatVersion",
+    "projectId",
+    "createdAt",
+    "appName",
+    "appVersion"
+  ],
+  "additionalProperties": false
+}

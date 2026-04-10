@@ -1,0 +1,21 @@
+{
+  "format": "pecie-project",
+  "formatVersion": "1.0.0",
+  "projectId": "fixture-project-001",
+  "title": "Fixture Thesis",
+  "createdAt": "2026-04-07T09:00:00.000Z",
+  "appMinVersion": "0.1.0",
+  "historyMode": "git-local",
+  "contentModel": "markdown-frontmatter",
+  "cacheModel": "sqlite-derived",
+  "defaultExportProfile": "thesis-pdf",
+  "language": "it-IT",
+  "privacyMode": "local-first",
+  "embeddedHistory": true,
+  "a11yProfile": "wcag22-aa",
+  "schemaUris": {
+    "manifest": "schemas/manifest.schema.json",
+    "project": "schemas/project.schema.json",
+    "binder": "schemas/binder.schema.json"
+  }
+}

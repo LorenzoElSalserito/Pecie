@@ -1,0 +1,16 @@
+{
+  "title": "Fixture Thesis",
+  "author": {
+    "name": "Fixture Author",
+    "role": "student"
+  },
+  "institution": {
+    "name": "Universita Esempio",
+    "department": "Dipartimento di Filosofia"
+  },
+  "documentKind": "thesis",
+  "defaultLanguage": "it-IT",
+  "defaultBibliographyStyle": "apa",
+  "projectVisibility": "private-local",
+  "containsSensitiveData": true
+}

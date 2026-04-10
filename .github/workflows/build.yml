@@ -1,0 +1,92 @@
+name: Build Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run generate:types
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test:unit
+      - run: npm run test:integration
+      - run: npm run build
+
+  package:
+    needs: validate
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: linux
+            make_script: make:linux:deb
+            extra_scripts: |
+              npm run make:linux:appimage -w @pecie/desktop
+              sudo snap install snapcraft --classic
+              npm run make:linux:snap -w @pecie/desktop
+          - os: windows-latest
+            artifact_name: windows
+            make_script: make:win
+            extra_scripts: ''
+          - os: macos-latest
+            artifact_name: macos
+            make_script: make:mac
+            extra_scripts: ''
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run generate:types
+      - run: npm run ${{ matrix.make_script }} -w @pecie/desktop
+      - if: matrix.extra_scripts != ''
+        run: ${{ matrix.extra_scripts }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pecie-${{ matrix.artifact_name }}
+          retention-days: 14
+          path: |
+            build/desktop/**
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+          pattern: pecie-*
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: release-artifacts/**/*

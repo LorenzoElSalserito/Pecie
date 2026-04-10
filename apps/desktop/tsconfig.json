@@ -1,0 +1,23 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "jsx": "react-jsx",
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@pecie/application": ["../../packages/application/src/index.ts"],
+      "@pecie/domain": ["../../packages/domain/src/index.ts"],
+      "@pecie/infrastructure": ["../../packages/infrastructure/src/index.ts"],
+      "@pecie/schemas": ["../../packages/schemas/src/index.ts"],
+      "@pecie/ui": ["../../packages/ui/src/index.ts"],
+      "@renderer/*": ["./src/renderer/src/*"]
+    }
+  },
+  "include": ["src/**/*"]
+}

@@ -1,0 +1,6 @@
+# Electron Forge specifiche e configurazioni locali
+out/
+dist/
+dist-electron/
+.vite/
+*.log

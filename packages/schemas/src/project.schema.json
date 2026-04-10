@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://pecie.lorenzodm.com/schemas/project.schema.json",
+  "title": "Pecie Project Settings",
+  "description": "Schema per il file pecie-project.json. Contiene le impostazioni e i metadati del progetto, come titolo, autore e configurazioni di esportazione.",
+  "type": "object",
+  "properties": {
+    "title": {
+      "description": "Il titolo del progetto.",
+      "type": "string",
+      "minLength": 1
+    },
+    "author": {
+      "description": "L'autore o gli autori del progetto.",
+      "type": "string"
+    },
+    "language": {
+      "description": "La lingua principale del progetto (codice BCP 47, es. 'it-IT').",
+      "type": "string",
+      "pattern": "^[a-z]{2}(-[A-Z]{2})?$"
+    },
+    "lastModified": {
+      "description": "Il timestamp ISO 8601 dell'ultima modifica al progetto.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "exportProfiles": {
+      "description": "Una lista di profili di esportazione personalizzati per Pandoc.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "format": { "enum": ["pdf", "docx", "md", "html", "epub"] },
+          "pandocArgs": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "required": ["id", "name", "format"]
+      }
+    },
+    "assets": {
+      "description": "Registro degli asset media incorporati nel progetto (immagini, ecc.).",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "relativePath": { "type": "string" },
+          "mimeType": { "type": "string" },
+          "byteSize": { "type": "integer", "minimum": 0 },
+          "sha256": { "type": "string" },
+          "originalFilename": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "kind": { "enum": ["image"] }
+        },
+        "required": ["id", "relativePath", "mimeType", "byteSize", "sha256", "originalFilename", "createdAt", "kind"]
+      }
+    }
+  },
+  "required": [
+    "title",
+    "lastModified"
+  ],
+  "additionalProperties": false
+}

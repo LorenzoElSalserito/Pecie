@@ -1,0 +1,195 @@
+# Pecie Monorepo .gitignore
+
+# =========================
+# Node.js e Dipendenze
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.npm/
+.yarn/
+.pnpm-store/
+
+# =========================
+# Build, Output e Cache (Monorepo & Apps)
+# =========================
+dist/
+out/
+build/
+.build/
+release/
+.release/
+.vite/
+.turbo/
+.cache/
+.parcel-cache/
+.rollup.cache/
+.eslintcache
+.stylelintcache
+coverage/
+.nyc_output/
+*.tsbuildinfo
+
+# =========================
+# Electron e Packaging
+# =========================
+# Cartelle generate da Electron Forge, Builder o affini
+out/
+dist-electron/
+pack/
+*.asar
+*.deb
+*.rpm
+*.AppImage
+*.dmg
+*.pkg
+*.exe
+*.nupkg
+*.zip
+*.tar.gz
+*.tar.bz2
+*.7z
+
+# =========================
+# Pecie Specific (Derivati e Runtime)
+# =========================
+# Log locali e audit diagnostic
+logs/
+local-audit/
+# Cache e indici derivati (SQLite, FTS, Thumbnails)
+cache/
+derived/
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+# Workspace effimero
+workspace.json
+# Output di esportazione non versionabili (es. PDF temporanei, DOCX di test)
+exports/out/
+# Progressi tutorial locali
+tutorials/progress.json
+# Export di share-package
+*.pe-share
+*.pe-bundle
+
+# =========================
+# Test e Playwright
+# =========================
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# =========================
+# Editor, IDE e Strumenti Personali
+# =========================
+.claude/
+.codex
+.idea/
+.vscode/
+*.swp
+*.swo
+*.swn
+*~
+*.sublime-workspace
+*.sublime-project
+.vs/
+.history/
+.project
+.classpath
+.cproject
+.settings/
+
+# =========================
+# Sistemi Operativi (OS Specific)
+# =========================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+.Trash-*
+.fuse_hidden*
+
+# =========================
+# Variabili d'ambiente e Secrets
+# =========================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+*.key
+*.cert
+*.crt
+# (Pecie è local-first e AGPL, ma le chiavi di firma per il packaging debian/mac vanno escluse)
+
+# =========================
+# File di sviluppo temporanei
+# =========================
+tmp/
+temp/
+*.log
+*.bak
+*.tmp
+*.temp
+
+# =========================
+# Documentazione interna di prodotto e pianificazione
+# =========================
+PLAN.md
+UI.md
+*PRD*.md
+docs/prd/
+docs/adr/
+
+# =========================
+# File generati da Pandoc e LaTeX (durante l'export test)
+# =========================
+*.aux
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
+*.idx
+*.ilg
+*.ind
+*.lof
+*.lot
+*.out
+*.toc
+*.xdv
+*.pdfsync
+*.synctex.gz

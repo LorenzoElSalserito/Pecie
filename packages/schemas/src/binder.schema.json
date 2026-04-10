@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://pecie.lorenzodm.com/schemas/binder.schema.json",
+  "title": "Pecie Binder Structure",
+  "description": "Schema per il file binder.json. Definisce la struttura gerarchica (ad albero) dei documenti e delle cartelle all'interno di un progetto Pecie.",
+  "type": "array",
+  "items": {
+    "$ref": "#/definitions/binderNode"
+  },
+  "definitions": {
+    "binderNode": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "ID univoco del nodo (UUIDv4).",
+          "type": "string",
+          "format": "uuid"
+        },
+        "title": {
+          "description": "Il titolo visualizzato nel binder.",
+          "type": "string"
+        },
+        "type": {
+          "description": "Il tipo di nodo.",
+          "enum": ["document", "folder", "separator"]
+        },
+        "filePath": {
+          "description": "Percorso relativo al file markdown associato (solo per 'document').",
+          "type": "string"
+        },
+        "children": {
+          "description": "Una lista di nodi figli, per creare la gerarchia.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/binderNode"
+          }
+        }
+      },
+      "required": ["id", "title", "type"],
+      "if": {
+        "properties": { "type": { "const": "document" } }
+      },
+      "then": {
+        "required": ["filePath"]
+      },
+      "else": {
+        "properties": {
+          "filePath": { "not": {} }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

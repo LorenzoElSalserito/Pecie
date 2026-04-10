@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "lib": ["ESNext", "DOM"],
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "@pecie/application": ["packages/application/src/index.ts"],
+      "@pecie/application/*": ["packages/application/src/*"],
+      "@pecie/domain": ["packages/domain/src/index.ts"],
+      "@pecie/domain/*": ["packages/domain/src/*"],
+      "@pecie/infrastructure": ["packages/infrastructure/src/index.ts"],
+      "@pecie/infrastructure/*": ["packages/infrastructure/src/*"],
+      "@pecie/schemas": ["packages/schemas/src/index.ts"],
+      "@pecie/schemas/*": ["packages/schemas/src/*"],
+      "@pecie/ui": ["packages/ui/src/index.ts"],
+      "@pecie/ui/*": ["packages/ui/src/*"]
+    }
+  }
+}
