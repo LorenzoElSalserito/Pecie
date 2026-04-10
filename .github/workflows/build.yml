@@ -26,7 +26,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
+      - run: npm ci --ignore-scripts
       - run: npm run generate:types
       - run: npm run lint
       - run: npm run typecheck
@@ -45,8 +45,6 @@ jobs:
             make_script: make:linux:deb
             extra_scripts: |
               npm run make:linux:appimage -w @pecie/desktop
-              sudo snap install snapcraft --classic
-              npm run make:linux:snap -w @pecie/desktop
           - os: windows-latest
             artifact_name: windows
             make_script: make:win
@@ -64,7 +62,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
+      - run: npm ci --ignore-scripts
       - run: npm run generate:types
       - run: npm run ${{ matrix.make_script }} -w @pecie/desktop
       - if: matrix.extra_scripts != ''
