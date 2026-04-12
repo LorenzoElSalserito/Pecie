@@ -5,6 +5,7 @@ import { Button } from '@pecie/ui'
 import { t } from '../i18n'
 import type { WorkspaceHeaderProps } from './types'
 
+
 export function WorkspaceHeader({
   locale,
   project,
@@ -113,34 +114,32 @@ export function WorkspaceHeader({
       {/* ── Center: Panel Toggles ── */}
       <div className="workspace-header__center">
         <div className="workspace-header__action-group workspace-header__action-group--toggles">
-          <Button
+          <button
             aria-label={binderToggleLabel}
             aria-pressed={!binderCollapsed}
             className="panel-toggle workspace-toggle"
             onClick={onToggleBinder}
-            size="sm"
             title={binderToggleLabel}
-            variant="ghost"
+            type="button"
           >
             <i
               aria-hidden="true"
               className={`bi ${binderCollapsed ? 'bi-layout-sidebar-inset' : 'bi-layout-sidebar'} workspace-toggle__icon${binderCollapsed ? '' : ' workspace-toggle__icon--active'}`}
             ></i>
-          </Button>
-          <Button
+          </button>
+          <button
             aria-label={contextToggleLabel}
             aria-pressed={!contextCollapsed}
             className="panel-toggle workspace-toggle"
             onClick={onToggleContext}
-            size="sm"
             title={contextToggleLabel}
-            variant="ghost"
+            type="button"
           >
             <i
               aria-hidden="true"
               className={`bi ${contextCollapsed ? 'bi-layout-sidebar-inset-reverse' : 'bi-layout-sidebar-reverse'} workspace-toggle__icon${contextCollapsed ? '' : ' workspace-toggle__icon--active'}`}
             ></i>
-          </Button>
+          </button>
         </div>
       </div>
 

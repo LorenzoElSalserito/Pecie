@@ -1771,7 +1771,8 @@ a:focus-visible,
   z-index: 1;
   min-width: 0;
   max-height: none;
-  overflow: visible;
+  overflow: hidden;
+  overflow-y: auto;
   gap: 0.78rem;
   transition: padding var(--pecie-transition-normal), opacity var(--pecie-transition-fast);
   background:
