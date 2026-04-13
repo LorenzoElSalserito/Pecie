@@ -1,6 +1,7 @@
 export type SupportedLocale = 'it-IT' | 'en-US' | 'de-DE' | 'es-ES' | 'fr-FR' | 'pt-PT';
 export type AuthorRole = 'student' | 'researcher' | 'writer' | 'editor' | 'author';
 export type AppFontPreference = 'classic' | 'dyslexic';
+export type AppUiZoom = 50 | 75 | 100 | 125 | 150;
 export interface AuthorProfile {
     name: string;
     role: AuthorRole;
@@ -198,6 +199,7 @@ export interface AppSettings {
     locale: SupportedLocale;
     theme: 'light' | 'dark' | 'system';
     fontPreference: AppFontPreference;
+    uiZoom: AppUiZoom;
     recentProjectPaths: string[];
     archivedProjectPaths: string[];
     authorProfile: AuthorProfile;

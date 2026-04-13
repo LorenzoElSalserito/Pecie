@@ -59,10 +59,14 @@ export function ContextPanel({
   maxAttachmentSizeBytes,
   attachmentsLoading,
   attachmentsBusy,
+  timeline,
+  timelineLoading,
+  onOpenTimelineWorkspace,
   onOpenWritingHubNode,
   onImportAttachments,
   onOpenAttachmentsDirectory,
   onOpenAttachment,
+  onOpenPreviousVersionDiff,
   collapsed,
   onToggleCollapsed
 }: ContextPanelProps): React.JSX.Element {
@@ -79,6 +83,9 @@ export function ContextPanel({
   const [sessionStartWords] = useState(() => totalWords)
   const [sessionDuration, setSessionDuration] = useState('')
   const [touchedDocumentIds, setTouchedDocumentIds] = useState<string[]>([])
+  const latestTimelineEvent = timeline?.snapshot.events[0] ?? null
+  const milestoneCount = timeline?.snapshot.events.filter((event) => event.kind === 'milestone').length ?? 0
+  const inconsistentTimelineEvents = timeline?.snapshot.events.filter((event) => event.integrity !== 'ok').length ?? 0
 
   useEffect(() => {
     setSessionDuration(formatSessionDuration(sessionStartMs))
@@ -248,6 +255,53 @@ export function ContextPanel({
                   </ul>
                 ) : <p>{t(locale, 'writingHubEmptyUploads')}</p>}
               </section>
+            </div>
+          </CollapsibleSection>
+
+          <CollapsibleSection title={t(locale, 'timelineTitle')} defaultOpen={false}>
+            <div className="context-card context-card--soft">
+              <div className="context-card__heading">
+                <h4>{t(locale, 'timelineTitle')}</h4>
+                <span className="count-chip">{timeline?.snapshot.events.length ?? 0}</span>
+              </div>
+              <p className="muted-copy">{t(locale, 'timelineBody')}</p>
+              <div className="context-metric-row context-metric-row--rich">
+                <div className="context-metric-pill">
+                  <strong>{milestoneCount}</strong>
+                  <span>{t(locale, 'timelineCreateMilestone')}</span>
+                </div>
+                <div className="context-metric-pill">
+                  <strong>{inconsistentTimelineEvents}</strong>
+                  <span>{t(locale, 'timelineRepair')}</span>
+                </div>
+              </div>
+              {latestTimelineEvent ? (
+                <div className="timeline-compact-event">
+                  <span className="status-pill">{latestTimelineEvent.kind}</span>
+                  <strong>{latestTimelineEvent.label}</strong>
+                  <span>{new Date(latestTimelineEvent.createdAt).toLocaleString(locale)}</span>
+                </div>
+              ) : null}
+              <div className="context-card__actions">
+                <Button
+                  onClick={onOpenTimelineWorkspace}
+                  size="sm"
+                  type="button"
+                  variant="secondary"
+                >
+                  {t(locale, 'timelineTitle')}
+                </Button>
+                <Button
+                  disabled={!selectedNode || selectedNode.type !== 'document'}
+                  onClick={() => void onOpenPreviousVersionDiff()}
+                  size="sm"
+                  type="button"
+                  variant="ghost"
+                >
+                  {t(locale, 'comparePreviousVersion')}
+                </Button>
+              </div>
+              {timelineLoading ? <p>{t(locale, 'timelineLoading')}</p> : null}
             </div>
           </CollapsibleSection>
 

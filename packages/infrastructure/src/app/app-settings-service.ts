@@ -126,6 +126,14 @@ export class AppSettingsService {
         ? candidate.theme
         : 'system',
       fontPreference: candidate?.fontPreference === 'dyslexic' ? 'dyslexic' : 'classic',
+      uiZoom:
+        candidate?.uiZoom === 50 ||
+        candidate?.uiZoom === 75 ||
+        candidate?.uiZoom === 100 ||
+        candidate?.uiZoom === 125 ||
+        candidate?.uiZoom === 150
+          ? candidate.uiZoom
+          : 100,
       recentProjectPaths: Array.isArray(candidate?.recentProjectPaths)
         ? candidate.recentProjectPaths.filter((item): item is string => typeof item === 'string')
         : [],

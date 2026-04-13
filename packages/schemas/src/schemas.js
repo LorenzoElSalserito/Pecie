@@ -37,3 +37,18 @@ export const binderSchema = {
     type: 'object',
     required: ['rootId', 'nodes']
 };
+export const timelineSchema = {
+    $id: 'timeline.schema.json',
+    type: 'object',
+    required: ['version', 'generatedAt', 'events', 'groups', 'integrityReport']
+};
+export const milestonesSchema = {
+    $id: 'milestones.schema.json',
+    type: 'object',
+    required: ['version', 'generatedAt', 'milestones']
+};
+export const historyRepairSchema = {
+    $id: 'history-repair.schema.json',
+    type: 'object',
+    required: ['totalCommits', 'eventsOk', 'eventsRepaired', 'eventsMissingCommit', 'eventsMissingMetadata', 'warnings']
+};

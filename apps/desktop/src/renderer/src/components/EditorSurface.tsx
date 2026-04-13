@@ -102,6 +102,7 @@ export function EditorSurface({
   locale,
   project,
   selectedNode,
+  reloadToken,
   authorProfile,
   ingestedDocumentId,
   onImportAttachments,
@@ -112,7 +113,8 @@ export function EditorSurface({
   onManualSaved,
   onBodySnapshot,
   onSaveStateChange,
-  onWordCountChange
+  onWordCountChange,
+  onSelectionRangeChange
 }: EditorSurfaceProps): React.JSX.Element {
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null)
   const [monacoTheme, setMonacoTheme] = useState<'vs' | 'vs-dark'>(document.documentElement.dataset.theme === 'dark' ? 'vs-dark' : 'vs')
@@ -175,6 +177,7 @@ export function EditorSurface({
     locale,
     project,
     selectedNode,
+    reloadToken ?? 0,
     authorProfile,
     onDocumentSaved,
     onManualSaved
@@ -639,6 +642,24 @@ export function EditorSurface({
                     onChange={(value: string | undefined) => setDraftBody(value ?? '')}
                     onMount={(editor: Monaco.editor.IStandaloneCodeEditor) => {
                       editorRef.current = editor
+                      const model = editor.getModel()
+                      if (model) {
+                        onSelectionRangeChange?.({
+                          startOffset: 0,
+                          endOffset: 0
+                        })
+                      }
+                      editor.onDidChangeCursorSelection((event) => {
+                        const currentModel = editor.getModel()
+                        if (!currentModel) {
+                          onSelectionRangeChange?.(null)
+                          return
+                        }
+                        onSelectionRangeChange?.({
+                          startOffset: currentModel.getOffsetAt(event.selection.getStartPosition()),
+                          endOffset: currentModel.getOffsetAt(event.selection.getEndPosition())
+                        })
+                      })
                       editor.focus()
                     }}
                     options={{

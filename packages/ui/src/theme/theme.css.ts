@@ -18,6 +18,8 @@ export const globalThemeStyles = `
   --pecie-font-body: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
   --pecie-font-ui: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
   --pecie-font-mono: "IBM Plex Mono", "SFMono-Regular", monospace;
+  --pecie-font-body-scale: 1;
+  --pecie-font-ui-scale: 1;
   --pecie-body-size: ${tokens.typography.body.size}px;
   --pecie-body-line-height: ${tokens.typography.body.lineHeight};
   --pecie-heading-size: ${tokens.typography.heading.size}px;
@@ -33,6 +35,13 @@ export const globalThemeStyles = `
 [data-font='dyslexic'] {
   --pecie-font-body: "OpenDyslexicRegular", "OpenDyslexic", "Arial", sans-serif;
   --pecie-font-ui: "OpenDyslexicRegular", "OpenDyslexic", "Arial", sans-serif;
+  --pecie-font-body-scale: 0.9;
+  --pecie-font-ui-scale: 0.92;
+  --pecie-body-size: ${Math.round(tokens.typography.body.size * 0.9 * 100) / 100}px;
+  --pecie-heading-size: ${Math.round(tokens.typography.heading.size * 0.92 * 100) / 100}px;
+  --pecie-subheading-size: ${Math.round(tokens.typography.subheading.size * 0.92 * 100) / 100}px;
+  --pecie-small-size: ${Math.round(tokens.typography.small.size * 0.92 * 100) / 100}px;
+  --pecie-caption-size: ${Math.round(tokens.typography.caption.size * 0.92 * 100) / 100}px;
 }
 
 [data-theme='light'] {

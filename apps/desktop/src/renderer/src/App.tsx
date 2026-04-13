@@ -42,6 +42,7 @@ function AppShell(): React.JSX.Element {
   const [isGuideCenterOpen, setIsGuideCenterOpen] = useState(false)
   const [guideCenterSection, setGuideCenterSection] = useState<GuideCenterSection>('quick-start')
   const [isInfoOpen, setIsInfoOpen] = useState(false)
+  const [settingsPreview, setSettingsPreview] = useState<Pick<AppSettings, 'theme' | 'fontPreference' | 'uiZoom'> | null>(null)
   const lastToastRef = useRef<{ message: string; tone: ToastTone; at: number } | null>(null)
 
   const loadBootstrap = useCallback(async () => {
@@ -82,6 +83,7 @@ function AppShell(): React.JSX.Element {
           ? { ...currentBootstrap, settings: response.settings, firstRun: !response.settings.authorProfile.name.trim() }
           : null
       )
+      setSettingsPreview(null)
       setIsSettingsOpen(false)
       pushToast(t(response.settings.locale, 'toastSettingsSaved'))
     },
@@ -146,9 +148,14 @@ function AppShell(): React.JSX.Element {
   }
 
   const onboardingOpen = !settings.onboardingCompleted && !bootstrap.firstRun && !project
+  const effectiveSettings = settingsPreview ? { ...settings, ...settingsPreview } : settings
 
   return (
-    <ThemeProvider defaultMode={settings.theme} fontPreference={settings.fontPreference} key={`${settings.theme}-${settings.fontPreference}`}>
+    <ThemeProvider
+      defaultMode={effectiveSettings.theme}
+      fontPreference={effectiveSettings.fontPreference}
+      uiZoom={effectiveSettings.uiZoom}
+    >
       <>
         <ToastViewport dismissLabel={t(locale, 'dismissToast')} onDismiss={dismissToast} toasts={toasts} />
         <AttachmentPreviewDialog
@@ -174,10 +181,10 @@ function AppShell(): React.JSX.Element {
 
         <div id="app-main-content">
           {bootstrap.firstRun ? (
-            <SetupWizard bootstrap={bootstrap} onComplete={saveSettings} />
+            <SetupWizard bootstrap={bootstrap} onComplete={saveSettings} onPreviewChange={setSettingsPreview} />
           ) : project ? (
             <Workspace
-              authorProfile={settings.authorProfile}
+              authorProfile={effectiveSettings.authorProfile}
               locale={locale}
               onBackToProjects={() => {
                 void logEvent('info', 'navigation', 'back-to-projects', 'Returned to project home.')
@@ -248,13 +255,17 @@ function AppShell(): React.JSX.Element {
         <SettingsDialog
           appDataDirectory={bootstrap.defaults.appDataDirectory}
           currentProjectPath={project?.projectPath}
-          onClose={() => setIsSettingsOpen(false)}
+          onClose={() => {
+            setSettingsPreview(null)
+            setIsSettingsOpen(false)
+          }}
           onPrepareUninstall={async () => {
             const response = await window.pecie.invokeSafe('app:prepareUninstall', {})
             if (response.success) {
               pushToast(t(locale, 'toastUninstallPrepared'))
             }
           }}
+          onPreviewChange={setSettingsPreview}
           onSave={saveSettings}
           open={isSettingsOpen}
           settings={settings}

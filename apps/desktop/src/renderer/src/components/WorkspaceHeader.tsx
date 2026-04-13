@@ -22,7 +22,9 @@ export function WorkspaceHeader({
   onOpenGuide,
   onOpenSettings,
   binderCollapsed,
-  contextCollapsed
+  contextCollapsed,
+  workspaceView,
+  onChangeWorkspaceView
 }: WorkspaceHeaderProps): React.JSX.Element {
   const [overflowOpen, setOverflowOpen] = useState(false)
   const binderToggleLabel = t(locale, binderCollapsed ? 'showStructure' : 'hideStructure')
@@ -140,6 +142,26 @@ export function WorkspaceHeader({
               className={`bi ${contextCollapsed ? 'bi-layout-sidebar-inset-reverse' : 'bi-layout-sidebar-reverse'} workspace-toggle__icon${contextCollapsed ? '' : ' workspace-toggle__icon--active'}`}
             ></i>
           </button>
+        </div>
+        <div className="workspace-header__view-switcher" role="tablist" aria-label={t(locale, 'workspaceViewsTitle')}>
+          {([
+            ['editor', t(locale, 'workspaceViewEditor')],
+            ['timeline', t(locale, 'workspaceViewTimeline')],
+            ['outliner', t(locale, 'workspaceViewOutliner')],
+            ['corkboard', t(locale, 'workspaceViewCorkboard')],
+            ['scrivenings', t(locale, 'workspaceViewScrivenings')]
+          ] as const).map(([view, label]) => (
+            <button
+              aria-selected={workspaceView === view}
+              className={`workspace-view-chip${workspaceView === view ? ' workspace-view-chip--active' : ''}`}
+              key={view}
+              onClick={() => onChangeWorkspaceView(view)}
+              role="tab"
+              type="button"
+            >
+              {label}
+            </button>
+          ))}
         </div>
       </div>
 

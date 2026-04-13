@@ -7,6 +7,8 @@ export type AuthorRole = 'student' | 'researcher' | 'writer' | 'editor' | 'autho
 
 export type AppFontPreference = 'classic' | 'dyslexic'
 
+export type AppUiZoom = 50 | 75 | 100 | 125 | 150
+
 export interface AuthorProfile {
   name: string
   role: AuthorRole
@@ -52,6 +54,9 @@ export interface ProjectManifest {
     manifest: string
     project: string
     binder: string
+    timeline: string
+    milestones: string
+    historyRepair: string
   }
 }
 
@@ -154,11 +159,228 @@ export interface SaveDocumentRequest {
   title: string
   body: string
   authorProfile: AuthorProfile
+  saveMode?: 'manual' | 'autosave'
 }
 
 export interface SaveDocumentResponse {
   document: DocumentRecord
   savedAt: string
+}
+
+export type TimelineEventKind = 'checkpoint' | 'milestone' | 'restore' | 'bootstrap'
+
+export type TimelineIntegrity = 'ok' | 'missing-commit' | 'missing-metadata' | 'repaired'
+
+export interface TimelineAuthorRecord {
+  pecieAuthorId: string
+  pecieDisplayName: string
+  gitName: string
+  gitEmail: string
+}
+
+export interface TimelineEventRecord {
+  timelineEventId: string
+  commitHash: string
+  kind: TimelineEventKind
+  label: string
+  noteMarkdown?: string
+  createdAt: string
+  author: TimelineAuthorRecord
+  touchedPaths: string[]
+  integrity: TimelineIntegrity
+}
+
+export interface MilestoneRecord {
+  timelineEventId: string
+  commitHash: string
+  label: string
+  noteMarkdown?: string
+  createdAt: string
+}
+
+export interface TimelineGroup {
+  groupId: string
+  label: string
+  dayKey: string
+  sessionLabel: string
+  eventIds: string[]
+}
+
+export interface HistoryRepairResult {
+  totalCommits: number
+  eventsOk: number
+  eventsRepaired: number
+  eventsMissingCommit: number
+  eventsMissingMetadata: number
+  warnings: string[]
+}
+
+export interface TimelineSnapshot {
+  version: '1.0.0'
+  generatedAt: string
+  events: TimelineEventRecord[]
+  groups: TimelineGroup[]
+  integrityReport: HistoryRepairResult
+}
+
+export interface MilestonesSnapshot {
+  version: '1.0.0'
+  generatedAt: string
+  milestones: MilestoneRecord[]
+}
+
+export interface CreateCheckpointRequest {
+  projectPath: string
+  reason: 'manual-save' | 'manual-action'
+  label?: string
+  noteMarkdown?: string
+  documentId?: string
+  documentTitle?: string
+  binderPath?: string[]
+  authorProfile: AuthorProfile
+}
+
+export interface CreateCheckpointResponse {
+  created: boolean
+  reason: 'content-changed' | 'no-content-change'
+  event?: TimelineEventRecord
+}
+
+export interface CreateMilestoneRequest {
+  projectPath: string
+  label: string
+  noteMarkdown?: string
+  authorProfile: AuthorProfile
+}
+
+export interface CreateMilestoneResponse {
+  event: TimelineEventRecord
+}
+
+export interface ListTimelineRequest {
+  projectPath: string
+  includeBootstrap?: boolean
+}
+
+export interface TimelineEventViewModel {
+  timelineEventId: string
+  kind: TimelineEventKind
+  label: string
+  noteMarkdown?: string
+  createdAt: string
+  authorDisplayName: string
+  touchedPaths: string[]
+  integrity: TimelineIntegrity
+  isRepairable: boolean
+  commitHashShort: string
+}
+
+export interface ListTimelineResponse {
+  snapshot: TimelineSnapshot
+  groups: Array<{
+    groupId: string
+    label: string
+    dayKey: string
+    sessionLabel: string
+    events: TimelineEventViewModel[]
+  }>
+}
+
+export interface RepairTimelineRequest {
+  projectPath: string
+}
+
+export interface RepairTimelineResponse {
+  snapshot: TimelineSnapshot
+  milestones: MilestonesSnapshot
+  result: HistoryRepairResult
+}
+
+export interface DiffDocumentRequest {
+  projectPath: string
+  documentId: string
+  baseline:
+    | {
+        kind: 'previous-version'
+      }
+    | {
+        kind: 'checkpoint'
+        timelineEventId: string
+      }
+    | {
+        kind: 'milestone'
+        timelineEventId: string
+      }
+    | {
+        kind: 'restore'
+        timelineEventId: string
+      }
+}
+
+export interface DiffDocumentResponse {
+  before: {
+    content: string
+    createdAt: string
+    label: string
+  }
+  after: {
+    content: string
+    createdAt: string
+    label: string
+  }
+}
+
+export interface RestoreDocumentRequest {
+  projectPath: string
+  documentId: string
+  sourceTimelineEventId: string
+  mode: 'preview' | 'apply'
+  authorProfile: AuthorProfile
+}
+
+export interface RestoreDocumentResponse {
+  preview: {
+    before: {
+      content: string
+      createdAt: string
+      label: string
+    }
+    after: {
+      content: string
+      createdAt: string
+      label: string
+    }
+    warning: string
+  }
+  restoredDocument?: DocumentRecord
+  restoreEvent?: TimelineEventRecord
+}
+
+export interface RestoreSelectionRequest {
+  projectPath: string
+  documentId: string
+  sourceTimelineEventId: string
+  sourceSelection: {
+    startOffset: number
+    endOffset: number
+  }
+  insertAt:
+    | {
+        kind: 'cursor'
+        offset: number
+      }
+    | {
+        kind: 'replace-selection'
+        startOffset: number
+        endOffset: number
+      }
+  authorProfile: AuthorProfile
+}
+
+export interface RestoreSelectionResponse {
+  restoredDocument: DocumentRecord
+  insertedText: string
+  restoreEvent: TimelineEventRecord
 }
 
 export interface AddBinderNodeRequest {
@@ -397,6 +619,7 @@ export interface AppSettings {
   locale: SupportedLocale
   theme: 'light' | 'dark' | 'system'
   fontPreference: AppFontPreference
+  uiZoom: AppUiZoom
   recentProjectPaths: string[]
   archivedProjectPaths: string[]
   authorProfile: AuthorProfile
@@ -486,6 +709,34 @@ export type IpcContractMap = {
   'document:save': {
     request: SaveDocumentRequest
     response: SaveDocumentResponse
+  }
+  'history:createCheckpoint': {
+    request: CreateCheckpointRequest
+    response: CreateCheckpointResponse
+  }
+  'history:createMilestone': {
+    request: CreateMilestoneRequest
+    response: CreateMilestoneResponse
+  }
+  'history:listTimeline': {
+    request: ListTimelineRequest
+    response: ListTimelineResponse
+  }
+  'history:repairTimeline': {
+    request: RepairTimelineRequest
+    response: RepairTimelineResponse
+  }
+  'history:diffDocument': {
+    request: DiffDocumentRequest
+    response: DiffDocumentResponse
+  }
+  'history:restoreDocument': {
+    request: RestoreDocumentRequest
+    response: RestoreDocumentResponse
+  }
+  'history:restoreSelection': {
+    request: RestoreSelectionRequest
+    response: RestoreSelectionResponse
   }
   'binder:add-node': {
     request: AddBinderNodeRequest

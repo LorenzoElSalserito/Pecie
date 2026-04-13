@@ -12,6 +12,8 @@ import {
   binderSchema,
   type CreateProjectRequest,
   type CreateProjectResponse,
+  type DiffDocumentRequest,
+  type DiffDocumentResponse,
   type DeleteBinderNodeRequest,
   type DeleteBinderNodeResponse,
   type DeleteProjectRequest,
@@ -43,6 +45,10 @@ import {
   type AddBinderNodeResponse,
   type RestoreProjectRequest,
   type RestoreProjectResponse,
+  type RestoreDocumentRequest,
+  type RestoreDocumentResponse,
+  type RestoreSelectionRequest,
+  type RestoreSelectionResponse,
   type SaveDocumentRequest,
   type SaveDocumentResponse,
   type SearchDocumentsRequest,
@@ -74,6 +80,8 @@ import {
   upsertDerivedIndexAttachment,
   upsertDerivedIndexDocument
 } from '../sqlite/index-database'
+import { HistoryService } from '../history/history-service'
+import { GitAdapter } from '../history/git-adapter'
 
 const execFileAsync = promisify(execFile)
 
@@ -140,11 +148,22 @@ const defaultIndexAdapter: ProjectIndexAdapter = {
 }
 
 export class ProjectService {
+  private readonly fileSystem: ProjectFileSystem
+  private readonly indexAdapter: ProjectIndexAdapter
+  private readonly logger?: AppLoggerService
+  private readonly historyService: HistoryService
+
   public constructor(
-    private readonly fileSystem = new ProjectFileSystem(),
-    private readonly indexAdapter: ProjectIndexAdapter = defaultIndexAdapter,
-    private readonly logger?: AppLoggerService
-  ) {}
+    fileSystem: ProjectFileSystem = new ProjectFileSystem(),
+    indexAdapter: ProjectIndexAdapter = defaultIndexAdapter,
+    logger?: AppLoggerService,
+    historyService?: HistoryService
+  ) {
+    this.fileSystem = fileSystem
+    this.indexAdapter = indexAdapter
+    this.logger = logger
+    this.historyService = historyService ?? new HistoryService(fileSystem, new GitAdapter(), logger)
+  }
 
   public async createProject(input: CreateProjectRequest): Promise<CreateProjectResponse> {
     const projectPath = path.join(input.directory, `${input.projectName}.pe`)
@@ -195,8 +214,25 @@ export class ProjectService {
     await this.fileSystem.writeJson(projectPath, 'tutorials/progress.json', {
       completedTutorialIds: []
     })
-    await this.fileSystem.writeJson(projectPath, 'history/timeline.json', [])
-    await this.fileSystem.writeJson(projectPath, 'history/milestones.json', [])
+    await this.fileSystem.writeJson(projectPath, 'history/timeline.json', {
+      version: '1.0.0',
+      generatedAt: createdAt,
+      events: [],
+      groups: [],
+      integrityReport: {
+        totalCommits: 0,
+        eventsOk: 0,
+        eventsRepaired: 0,
+        eventsMissingCommit: 0,
+        eventsMissingMetadata: 0,
+        warnings: []
+      }
+    })
+    await this.fileSystem.writeJson(projectPath, 'history/milestones.json', {
+      version: '1.0.0',
+      generatedAt: createdAt,
+      milestones: []
+    })
     await this.fileSystem.writeText(
       projectPath,
       '.gitignore',
@@ -247,6 +283,7 @@ export class ProjectService {
     const projectWithStats = await this.refreshProjectAuthorship(projectPath, binder, project)
     await this.fileSystem.writeJson(projectPath, 'project.json', projectWithStats)
     await this.initializeGitRepository(projectPath)
+    await this.historyService.initialize(projectPath)
     await this.log({
       level: 'info',
       category: 'project',
@@ -385,9 +422,111 @@ export class ProjectService {
       }
     })
 
+    if ((input.saveMode ?? 'manual') === 'manual') {
+      await this.historyService.createCheckpoint({
+        projectPath: input.projectPath,
+        reason: 'manual-save',
+        documentId: input.documentId,
+        documentTitle: nextDocument.title,
+        binderPath: this.buildBinderPath(updatedNodes, node.id),
+        authorProfile: input.authorProfile
+      })
+    }
+
     return {
       document: nextDocument,
       savedAt
+    }
+  }
+
+  public async diffDocument(input: DiffDocumentRequest): Promise<DiffDocumentResponse> {
+    const binder = validateBinderDocument(await this.fileSystem.readJson(input.projectPath, 'binder.json'))
+    const node = this.findDocumentNode(binder.nodes, input.documentId)
+    const currentRawDocument = await this.fileSystem.readText(input.projectPath, node.path ?? '')
+    return this.historyService.diffDocument({
+      projectPath: input.projectPath,
+      relativePath: node.path ?? '',
+      currentContent: this.parseDocument(node, currentRawDocument).body,
+      baseline:
+        input.baseline.kind === 'previous-version'
+          ? { kind: 'previous-version' }
+          : { kind: 'timeline-event', timelineEventId: input.baseline.timelineEventId }
+    })
+  }
+
+  public async restoreDocument(input: RestoreDocumentRequest): Promise<RestoreDocumentResponse> {
+    const binder = validateBinderDocument(await this.fileSystem.readJson(input.projectPath, 'binder.json'))
+    const node = this.findDocumentNode(binder.nodes, input.documentId)
+    const currentRawDocument = await this.fileSystem.readText(input.projectPath, node.path ?? '')
+    const preview = await this.historyService.previewRestoreDocument({
+      projectPath: input.projectPath,
+      relativePath: node.path ?? '',
+      currentContent: this.parseDocument(node, currentRawDocument).body,
+      sourceTimelineEventId: input.sourceTimelineEventId
+    })
+
+    if (input.mode === 'preview') {
+      return preview
+    }
+
+    const restoredRawDocument = await this.historyService.readHistoricalDocument({
+      projectPath: input.projectPath,
+      relativePath: node.path ?? '',
+      sourceTimelineEventId: input.sourceTimelineEventId
+    })
+    await this.fileSystem.writeText(input.projectPath, node.path ?? '', restoredRawDocument)
+    const restoredDocument = await this.synchronizeDocumentState(input.projectPath, input.documentId, new Date().toISOString())
+    const restoreEvent = await this.historyService.commitRestore({
+      projectPath: input.projectPath,
+      sourceTimelineEventId: input.sourceTimelineEventId,
+      authorProfile: input.authorProfile
+    })
+
+    return {
+      preview: preview.preview,
+      restoredDocument,
+      restoreEvent
+    }
+  }
+
+  public async restoreSelection(input: RestoreSelectionRequest): Promise<RestoreSelectionResponse> {
+    const binder = validateBinderDocument(await this.fileSystem.readJson(input.projectPath, 'binder.json'))
+    const node = this.findDocumentNode(binder.nodes, input.documentId)
+    const currentRawDocument = await this.fileSystem.readText(input.projectPath, node.path ?? '')
+    const currentDocument = this.parseDocument(node, currentRawDocument)
+    const historicalBody = await this.historyService.readHistoricalBodySelection({
+      projectPath: input.projectPath,
+      relativePath: node.path ?? '',
+      sourceTimelineEventId: input.sourceTimelineEventId,
+      startOffset: input.sourceSelection.startOffset,
+      endOffset: input.sourceSelection.endOffset
+    })
+
+    const nextBody =
+      input.insertAt.kind === 'cursor'
+        ? `${currentDocument.body.slice(0, input.insertAt.offset)}${historicalBody}${currentDocument.body.slice(input.insertAt.offset)}`
+        : `${currentDocument.body.slice(0, input.insertAt.startOffset)}${historicalBody}${currentDocument.body.slice(input.insertAt.endOffset)}`
+
+    const restoredDocumentRecord: DocumentRecord = {
+      ...currentDocument,
+      body: nextBody,
+      frontmatter: {
+        ...currentDocument.frontmatter,
+        updatedAt: new Date().toISOString()
+      }
+    }
+    await this.fileSystem.writeText(input.projectPath, node.path ?? '', this.serializeDocument(restoredDocumentRecord))
+    const restoredDocument = await this.synchronizeDocumentState(input.projectPath, input.documentId, new Date().toISOString())
+    const restoreEvent = await this.historyService.commitRestore({
+      projectPath: input.projectPath,
+      sourceTimelineEventId: input.sourceTimelineEventId,
+      authorProfile: input.authorProfile
+    })
+
+    return {
+      restoredDocument,
+      insertedText: historicalBody,
+      restoreEvent
     }
   }
 
@@ -1021,7 +1160,7 @@ export class ProjectService {
   private async initializeGitRepository(projectPath: string): Promise<void> {
     await execFileAsync('git', ['init'], { cwd: projectPath })
     await execFileAsync('git', ['add', '.'], { cwd: projectPath })
-    await execFileAsync('git', ['commit', '--allow-empty', '-m', 'chore: initialize Pecie project'], {
+    await execFileAsync('git', ['commit', '--allow-empty', '-m', 'bootstrap: initial project state'], {
       cwd: projectPath,
       env: {
         ...process.env,
@@ -1031,6 +1170,58 @@ export class ProjectService {
         GIT_COMMITTER_EMAIL: 'local@pecie.app'
       }
     })
+  }
+
+  private buildBinderPath(nodes: BinderNode[], nodeId: string): string[] {
+    const parentByChild = new Map<string, string>()
+    for (const node of nodes) {
+      for (const childId of node.children ?? []) {
+        parentByChild.set(childId, node.id)
+      }
+    }
+
+    const nodeById = new Map(nodes.map((node) => [node.id, node]))
+    const pathTitles: string[] = []
+    let currentId: string | undefined = nodeId
+
+    while (currentId) {
+      const currentNode = nodeById.get(currentId)
+      if (!currentNode) {
+        break
+      }
+      pathTitles.unshift(currentNode.title)
+      currentId = parentByChild.get(currentId)
+    }
+
+    return pathTitles
+  }
+
+  private async synchronizeDocumentState(projectPath: string, documentId: string, updatedAt: string): Promise<DocumentRecord> {
+    const binder = validateBinderDocument(await this.fileSystem.readJson(projectPath, 'binder.json'))
+    const node = this.findDocumentNode(binder.nodes, documentId)
+    const rawDocument = await this.fileSystem.readText(projectPath, node.path ?? '')
+    const document = this.parseDocument(node, rawDocument)
+    const updatedNodes = binder.nodes.map((candidate) =>
+      candidate.documentId === documentId ? { ...candidate, title: document.title } : candidate
+    )
+
+    await this.fileSystem.writeJson(projectPath, 'binder.json', {
+      ...binder,
+      nodes: updatedNodes
+    })
+    this.indexAdapter.upsert(this.getIndexPath(projectPath), {
+      nodeId: node.id,
+      documentId: document.documentId,
+      path: document.path,
+      title: document.title,
+      body: document.body,
+      updatedAt
+    })
+    const project = validateProjectMetadata(await this.fileSystem.readJson(projectPath, 'project.json'))
+    const refreshedProject = await this.refreshProjectAuthorship(projectPath, { ...binder, nodes: updatedNodes }, project)
+    await this.fileSystem.writeJson(projectPath, 'project.json', refreshedProject)
+
+    return document
   }
 
   private findDocumentNode(nodes: BinderNode[], documentId: string): BinderNode {

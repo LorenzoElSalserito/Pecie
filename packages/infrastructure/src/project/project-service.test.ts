@@ -5,6 +5,10 @@ import { readFile } from 'node:fs/promises'
 
 import { afterEach, describe, expect, it } from 'vitest'
 
+import { ProjectFileSystem } from '../fs/project-file-system'
+import { AppLoggerService } from '../logging/app-logger-service'
+import { GitAdapter } from '../history/git-adapter'
+import { HistoryService } from '../history/history-service'
 import { ProjectService } from './project-service'
 
 const noopIndexAdapter = {
@@ -236,7 +240,10 @@ describe('ProjectService', () => {
     const baseDirectory = await mkdtemp(path.join(tmpdir(), 'pecie-project-service-'))
     cleanupPaths.push(baseDirectory)
 
-    const service = new ProjectService(undefined, noopIndexAdapter)
+    const fileSystem = new ProjectFileSystem()
+    const logger = new AppLoggerService(baseDirectory)
+    const historyService = new HistoryService(fileSystem, new GitAdapter(), logger)
+    const service = new ProjectService(fileSystem, noopIndexAdapter, logger, historyService)
     const createdProject = await service.createProject({
       directory: baseDirectory,
       projectName: 'thesis-demo',
@@ -383,6 +390,137 @@ describe('ProjectService', () => {
     )
     expect(rawSavedDocument).toContain('lastModifiedByAuthorId')
     expect(rawSavedDocument).toContain('contributorAuthorIds')
+  })
+
+  it('diffs against committed history and restores a document from a checkpoint with tracked history', async () => {
+    const baseDirectory = await mkdtemp(path.join(tmpdir(), 'pecie-project-service-'))
+    cleanupPaths.push(baseDirectory)
+
+    const fileSystem = new ProjectFileSystem()
+    const logger = new AppLoggerService(baseDirectory)
+    const historyService = new HistoryService(fileSystem, new GitAdapter(), logger)
+    const service = new ProjectService(fileSystem, noopIndexAdapter, logger, historyService)
+    const createdProject = await service.createProject({
+      directory: baseDirectory,
+      projectName: 'history-restore-demo',
+      title: 'History Restore Demo',
+      language: 'it-IT',
+      template: 'blank',
+      authorProfile: {
+        name: 'Fixture Author',
+        role: 'writer',
+        preferredLanguage: 'it-IT'
+      }
+    })
+
+    const firstDocument = createdProject.binder.nodes.find((node) => node.type === 'document' && node.documentId)
+    expect(firstDocument?.documentId).toBeTruthy()
+
+    await service.saveDocument({
+      projectPath: createdProject.projectPath,
+      documentId: firstDocument?.documentId ?? '',
+      title: 'Storia documento',
+      body: '# Storia documento\n\nVersione checkpoint.\n',
+      authorProfile: {
+        name: 'Fixture Author',
+        role: 'writer',
+        preferredLanguage: 'it-IT'
+      },
+      saveMode: 'manual'
+    })
+
+    await service.saveDocument({
+      projectPath: createdProject.projectPath,
+      documentId: firstDocument?.documentId ?? '',
+      title: 'Storia documento',
+      body: '# Storia documento\n\nVersione corrente non ancora committata.\n',
+      authorProfile: {
+        name: 'Fixture Author',
+        role: 'writer',
+        preferredLanguage: 'it-IT'
+      },
+      saveMode: 'autosave'
+    })
+
+    const diff = await service.diffDocument({
+      projectPath: createdProject.projectPath,
+      documentId: firstDocument?.documentId ?? '',
+      baseline: { kind: 'previous-version' }
+    })
+
+    expect(diff.before.content).toContain('Versione checkpoint.')
+    expect(diff.after.content).toContain('Versione corrente non ancora committata.')
+
+    const repairedTimeline = await historyService.repairTimeline({
+      projectPath: createdProject.projectPath
+    })
+    const checkpointEvent = repairedTimeline.snapshot.events.find((event) => event.kind === 'checkpoint')
+    expect(checkpointEvent?.timelineEventId).toBeTruthy()
+
+    const preview = await service.restoreDocument({
+      projectPath: createdProject.projectPath,
+      documentId: firstDocument?.documentId ?? '',
+      sourceTimelineEventId: checkpointEvent?.timelineEventId ?? '',
+      mode: 'preview',
+      authorProfile: {
+        name: 'Fixture Author',
+        role: 'writer',
+        preferredLanguage: 'it-IT'
+      }
+    })
+
+    expect(preview.preview.before.content).toContain('Versione corrente non ancora committata.')
+    expect(preview.preview.after.content).toContain('Versione checkpoint.')
+
+    const restored = await service.restoreDocument({
+      projectPath: createdProject.projectPath,
+      documentId: firstDocument?.documentId ?? '',
+      sourceTimelineEventId: checkpointEvent?.timelineEventId ?? '',
+      mode: 'apply',
+      authorProfile: {
+        name: 'Fixture Author',
+        role: 'writer',
+        preferredLanguage: 'it-IT'
+      }
+    })
+
+    expect(restored.restoredDocument?.body).toContain('Versione checkpoint.')
+    expect(restored.restoreEvent?.kind).toBe('restore')
+
+    await service.saveDocument({
+      projectPath: createdProject.projectPath,
+      documentId: firstDocument?.documentId ?? '',
+      title: 'Storia documento',
+      body: '# Storia documento\n\nBase locale.\n',
+      authorProfile: {
+        name: 'Fixture Author',
+        role: 'writer',
+        preferredLanguage: 'it-IT'
+      },
+      saveMode: 'autosave'
+    })
+
+    const selectionRestore = await service.restoreSelection({
+      projectPath: createdProject.projectPath,
+      documentId: firstDocument?.documentId ?? '',
+      sourceTimelineEventId: checkpointEvent?.timelineEventId ?? '',
+      sourceSelection: {
+        startOffset: 20,
+        endOffset: 39
+      },
+      insertAt: {
+        kind: 'cursor',
+        offset: '# Storia documento\n\nBase locale.\n'.length
+      },
+      authorProfile: {
+        name: 'Fixture Author',
+        role: 'writer',
+        preferredLanguage: 'it-IT'
+      }
+    })
+
+    expect(selectionRestore.insertedText.length).toBeGreaterThan(0)
+    expect(selectionRestore.restoredDocument.body).toContain(selectionRestore.insertedText)
   })
 
   it('creates writing hub notes as non-exportable support documents', async () => {

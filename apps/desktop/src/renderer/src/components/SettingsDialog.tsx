@@ -11,6 +11,7 @@ export function SettingsDialog({
   settings,
   appDataDirectory,
   currentProjectPath,
+  onPreviewChange,
   onClose,
   onPrepareUninstall,
   onSave
@@ -24,6 +25,23 @@ export function SettingsDialog({
       setStatus(null)
     }
   }, [open, settings])
+
+  useEffect(() => {
+    if (!open) {
+      onPreviewChange?.(null)
+      return
+    }
+
+    onPreviewChange?.({
+      theme: draft.theme,
+      fontPreference: draft.fontPreference,
+      uiZoom: draft.uiZoom
+    })
+
+    return () => {
+      onPreviewChange?.(null)
+    }
+  }, [draft.fontPreference, draft.theme, draft.uiZoom, onPreviewChange, open])
 
   if (!open) {
     return null
@@ -104,7 +122,10 @@ export function SettingsDialog({
           </Button>
           <Button
             disabled={!draft.authorProfile.name.trim() || !draft.workspaceDirectory.trim()}
-            onClick={() => void onSave(draft)}
+            onClick={() => {
+              onPreviewChange?.(null)
+              void onSave(draft)
+            }}
             size="sm"
             type="button"
           >

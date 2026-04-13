@@ -11,7 +11,11 @@ import type {
   BinderNode,
   CreateProjectResponse,
   DocumentRecord,
+  DiffDocumentResponse,
+  ListTimelineResponse,
   OpenProjectResponse,
+  RestoreDocumentResponse,
+  RestoreSelectionResponse,
   SupportedLocale
 } from '@pecie/schemas'
 
@@ -42,6 +46,7 @@ export type EditorFormatAction =
   | 'subscript'
   | 'table'
 export type EditorViewMode = 'write' | 'preview' | 'split'
+export type WorkspaceViewMode = 'editor' | 'timeline' | 'outliner' | 'corkboard' | 'scrivenings'
 export type BinderDropPlacement = 'before' | 'after' | 'inside'
 export type ExportFormatId = 'pdf' | 'docx' | 'odt' | 'rtf' | 'epub' | 'latex' | 'jats' | 'tei' | 'md' | 'txt'
 export type GuideCenterSection = 'quick-start' | 'ui-tour' | 'markdown-guide' | 'how-to' | 'shortcuts'
@@ -78,6 +83,7 @@ export type AuthorFieldsProps = WorkspaceFieldsProps
 
 export type SetupWizardProps = {
   bootstrap: AppBootstrapResponse
+  onPreviewChange?: (preview: Pick<AppSettings, 'theme' | 'fontPreference' | 'uiZoom'> | null) => void
   onComplete: (settings: AppSettings) => Promise<void>
 }
 
@@ -86,6 +92,7 @@ export type SettingsDialogProps = {
   settings: AppSettings
   appDataDirectory: string
   currentProjectPath?: string
+  onPreviewChange?: (preview: Pick<AppSettings, 'theme' | 'fontPreference' | 'uiZoom'> | null) => void
   onClose: () => void
   onPrepareUninstall: () => Promise<void>
   onSave: (settings: AppSettings) => Promise<void>
@@ -142,6 +149,8 @@ export type WorkspaceHeaderProps = {
   onOpenSettings: () => void
   binderCollapsed: boolean
   contextCollapsed: boolean
+  workspaceView: WorkspaceViewMode
+  onChangeWorkspaceView: (view: WorkspaceViewMode) => void
 }
 
 export type BinderNodeDialogProps = {
@@ -193,6 +202,7 @@ export type EditorSurfaceProps = {
   locale: SupportedLocale
   project: NonNullable<LoadedProject>
   selectedNode: VisibleBinderNode | null
+  reloadToken?: number
   authorProfile: AuthorProfile
   ingestedDocumentId?: string | null
   onImportAttachments?: (paths?: string[]) => Promise<void>
@@ -209,6 +219,21 @@ export type EditorSurfaceProps = {
   onBodySnapshot: (body: string) => void
   onSaveStateChange?: (saveState: SaveState, documentId: string | null) => void
   onWordCountChange?: (wordCount: number, documentId: string | null) => void
+  onSelectionRangeChange?: (range: { startOffset: number; endOffset: number } | null) => void
+}
+
+export type WorkspaceDocumentSummary = {
+  nodeId: string
+  documentId: string
+  title: string
+  path: string
+  status: string
+  tags: string[]
+  summary: string
+  includeInExport: boolean
+  updatedAt: string
+  wordCount: number
+  body: string
 }
 
 export type ContextPanelProps = {
@@ -223,12 +248,29 @@ export type ContextPanelProps = {
   maxAttachmentSizeBytes: number
   attachmentsLoading: boolean
   attachmentsBusy: boolean
+  timeline: ListTimelineResponse | null
+  timelineLoading: boolean
+  onOpenTimelineWorkspace: () => void
+  onOpenPreviousVersionDiff: () => Promise<void>
   onOpenWritingHubNode: (nodeId: string) => void
   onImportAttachments: () => void
   onOpenAttachmentsDirectory: () => void
   onOpenAttachment: (absolutePath: string) => void
   collapsed: boolean
   onToggleCollapsed: () => void
+}
+
+export type HistoryDiffDialogProps = {
+  open: boolean
+  locale: SupportedLocale
+  title: string
+  subtitle?: string
+  diff: DiffDocumentResponse | RestoreDocumentResponse['preview'] | null
+  busy?: boolean
+  canRestore?: boolean
+  onClose: () => void
+  onRestore?: () => Promise<void>
+  onRestoreSelection?: (selection: { startOffset: number; endOffset: number }) => Promise<void>
 }
 
 export type WorkspaceProps = {
@@ -247,6 +289,40 @@ export type WorkspaceProps = {
   onOpenProject: () => void
   onOpenExport: () => void
   onOpenSettings: () => void
+}
+
+export type OutlinerViewProps = {
+  locale: SupportedLocale
+  documents: WorkspaceDocumentSummary[]
+  selectedNodeId: string | null
+  onSelectNode: (nodeId: string) => void
+}
+
+export type CorkboardViewProps = {
+  locale: SupportedLocale
+  documents: WorkspaceDocumentSummary[]
+  selectedNodeId: string | null
+  onSelectNode: (nodeId: string) => void
+}
+
+export type ScriveningsViewProps = {
+  locale: SupportedLocale
+  title: string
+  documents: WorkspaceDocumentSummary[]
+  selectedNodeId: string | null
+  onSelectNode: (nodeId: string) => void
+}
+
+export type TimelineViewProps = {
+  locale: SupportedLocale
+  selectedNode: BinderNode | null
+  timeline: ListTimelineResponse | null
+  timelineLoading: boolean
+  onOpenPreviousVersionDiff: () => Promise<void>
+  onOpenTimelineDiff: (timelineEventId: string, kind: 'checkpoint' | 'milestone' | 'restore') => Promise<void>
+  onOpenRestorePreview: (timelineEventId: string) => Promise<void>
+  onCreateMilestone: (payload: { label: string; noteMarkdown?: string }) => Promise<void>
+  onRepairTimeline: () => Promise<void>
 }
 
 export type GlobalSearchDialogProps = {

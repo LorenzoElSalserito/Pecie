@@ -9,6 +9,7 @@ export function useDocumentEditor(
   locale: SupportedLocale,
   project: NonNullable<LoadedProject>,
   selectedNode: VisibleBinderNode | null,
+  reloadToken: number,
   authorProfile: AuthorProfile,
   onDocumentSaved?: (document: DocumentRecord) => void,
   onManualSaved?: () => void
@@ -71,7 +72,7 @@ export function useDocumentEditor(
     return () => {
       isActive = false
     }
-  }, [locale, project.projectPath, selectedNode?.documentId])
+  }, [locale, project.projectPath, reloadToken, selectedNode?.documentId])
 
   const saveNow = useCallback(
     async (mode: 'manual' | 'autosave' = 'manual'): Promise<void> => {
@@ -88,7 +89,8 @@ export function useDocumentEditor(
           documentId: document.documentId,
           title: draftTitle,
           body: draftBody,
-          authorProfile
+          authorProfile,
+          saveMode: mode
         })
 
         setDocument(response.document)

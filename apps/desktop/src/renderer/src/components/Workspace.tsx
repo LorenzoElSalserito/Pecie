@@ -1,14 +1,26 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
-import type { AttachmentRecord, DocumentRecord, ImportAttachmentsResponse } from '@pecie/schemas'
+import type {
+  AttachmentRecord,
+  DiffDocumentResponse,
+  DocumentRecord,
+  ImportAttachmentsResponse,
+  ListTimelineResponse,
+  RestoreDocumentResponse
+} from '@pecie/schemas'
 
 import { useBinderSelection } from '../hooks/useBinderSelection'
 import { t } from '../i18n'
 import { BinderPanel } from './BinderPanel'
 import { ContextPanel } from './ContextPanel'
+import { CorkboardView } from './CorkboardView'
 import { EditorSurface } from './EditorSurface'
 import { GlobalSearchDialog } from './GlobalSearchDialog'
+import { HistoryDiffDialog } from './HistoryDiffDialog'
+import { OutlinerView } from './OutlinerView'
 import { ResizeHandle } from './ResizeHandle'
+import { ScriveningsView } from './ScriveningsView'
+import { TimelineView } from './TimelineView'
 import type { WorkspaceProps } from './types'
 import { WorkspaceHeader } from './WorkspaceHeader'
 
@@ -57,6 +69,34 @@ export function Workspace({
   const [ingestedDocumentId, setIngestedDocumentId] = useState<string | null>(null)
   const [binderWidth, setBinderWidth] = useState(DEFAULT_BINDER_WIDTH)
   const [contextWidth, setContextWidth] = useState(DEFAULT_CONTEXT_WIDTH)
+  const [timeline, setTimeline] = useState<ListTimelineResponse | null>(null)
+  const [timelineLoading, setTimelineLoading] = useState(false)
+  const [editorReloadToken, setEditorReloadToken] = useState(0)
+  const [historyDialogState, setHistoryDialogState] = useState<{
+    mode: 'diff' | 'restore'
+    title: string
+    subtitle?: string
+    sourceTimelineEventId?: string
+    diff: DiffDocumentResponse | RestoreDocumentResponse['preview']
+  } | null>(null)
+  const [historyDialogBusy, setHistoryDialogBusy] = useState(false)
+  const [workspaceView, setWorkspaceView] = useState<'editor' | 'timeline' | 'outliner' | 'corkboard' | 'scrivenings'>('editor')
+  const [documentSummaries, setDocumentSummaries] = useState<
+    Array<{
+      nodeId: string
+      documentId: string
+      title: string
+      path: string
+      status: string
+      tags: string[]
+      summary: string
+      includeInExport: boolean
+      updatedAt: string
+      wordCount: number
+      body: string
+    }>
+  >([])
+  const [editorSelectionRange, setEditorSelectionRange] = useState<{ startOffset: number; endOffset: number } | null>(null)
 
   useEffect(() => {
     setEditorSnapshot('')
@@ -66,6 +106,10 @@ export function Workspace({
     setDirtyDocumentId(null)
     setCurrentWordCount(0)
     setIngestedDocumentId(null)
+    setTimeline(null)
+    setWorkspaceView('editor')
+    setDocumentSummaries([])
+    setEditorSelectionRange(null)
   }, [project.projectPath])
 
   useEffect(() => {
@@ -163,6 +207,64 @@ export function Workspace({
     void refreshAttachments()
   }, [refreshAttachments])
 
+  const refreshTimeline = useCallback(async () => {
+    setTimelineLoading(true)
+    try {
+      const response = await window.pecie.invokeSafe('history:listTimeline', {
+        projectPath: project.projectPath
+      })
+      setTimeline(response)
+    } finally {
+      setTimelineLoading(false)
+    }
+  }, [project.projectPath])
+
+  useEffect(() => {
+    void refreshTimeline()
+  }, [refreshTimeline])
+
+  const refreshDocumentSummaries = useCallback(async () => {
+    const documentNodes = project.binder.nodes.filter(
+      (node): node is typeof node & { documentId: string; path: string } =>
+        node.type === 'document' && typeof node.documentId === 'string' && typeof node.path === 'string'
+    )
+    const loadedDocuments = await Promise.all(
+      documentNodes.map(async (node) => {
+        const response = await window.pecie.invokeSafe('document:load', {
+          projectPath: project.projectPath,
+          documentId: node.documentId
+        })
+        const tags = Array.isArray(response.document.frontmatter.tags)
+          ? response.document.frontmatter.tags.filter((tag): tag is string => typeof tag === 'string')
+          : []
+        const status = typeof response.document.frontmatter.status === 'string' ? response.document.frontmatter.status : 'draft'
+        const summary = typeof response.document.frontmatter.summary === 'string' ? response.document.frontmatter.summary : ''
+        const includeInExport =
+          typeof response.document.frontmatter.includeInExport === 'boolean' ? response.document.frontmatter.includeInExport : true
+        const updatedAt = typeof response.document.frontmatter.updatedAt === 'string' ? response.document.frontmatter.updatedAt : ''
+        const wordCount = response.document.body.trim() ? response.document.body.trim().split(/\s+/).length : 0
+        return {
+          nodeId: node.id,
+          documentId: node.documentId,
+          title: response.document.title,
+          path: response.document.path,
+          status,
+          tags,
+          summary,
+          includeInExport,
+          updatedAt,
+          wordCount,
+          body: response.document.body
+        }
+      })
+    )
+    setDocumentSummaries(loadedDocuments)
+  }, [project.binder.nodes, project.projectPath])
+
+  useEffect(() => {
+    void refreshDocumentSummaries()
+  }, [refreshDocumentSummaries])
+
   const handleDocumentSaved = useCallback(
     (document: DocumentRecord) => {
       onProjectChange({
@@ -172,6 +274,29 @@ export function Workspace({
           nodes: project.binder.nodes.map((node) => (node.documentId === document.documentId ? { ...node, title: document.title } : node))
         }
       })
+      setDocumentSummaries((current) =>
+        current.map((item) =>
+          item.documentId === document.documentId
+            ? {
+                ...item,
+                title: document.title,
+                path: document.path,
+                status: typeof document.frontmatter.status === 'string' ? document.frontmatter.status : item.status,
+                tags: Array.isArray(document.frontmatter.tags)
+                  ? document.frontmatter.tags.filter((tag): tag is string => typeof tag === 'string')
+                  : item.tags,
+                summary: typeof document.frontmatter.summary === 'string' ? document.frontmatter.summary : item.summary,
+                includeInExport:
+                  typeof document.frontmatter.includeInExport === 'boolean'
+                    ? document.frontmatter.includeInExport
+                    : item.includeInExport,
+                updatedAt: typeof document.frontmatter.updatedAt === 'string' ? document.frontmatter.updatedAt : item.updatedAt,
+                wordCount: document.body.trim() ? document.body.trim().split(/\s+/).length : 0,
+                body: document.body
+              }
+            : item
+        )
+      )
     },
     [onProjectChange, project]
   )
@@ -180,6 +305,113 @@ export function Workspace({
     () => project.binder.nodes.filter((node) => node.type === 'document' && typeof node.path === 'string' && node.path.startsWith('research/notes/')),
     [project.binder.nodes]
   )
+
+  const scriveningsDocuments = useMemo(() => {
+    if (!selectedNode) {
+      return documentSummaries
+    }
+    if (selectedNode.type === 'document') {
+      return documentSummaries.filter((item) => item.nodeId === selectedNode.id)
+    }
+    const descendantIds = new Set<string>()
+    const queue = [...(selectedNode.children ?? [])]
+    while (queue.length > 0) {
+      const nextId = queue.shift()
+      if (!nextId) continue
+      descendantIds.add(nextId)
+      const nextNode = project.binder.nodes.find((node) => node.id === nextId)
+      if (nextNode?.children) {
+        queue.push(...nextNode.children)
+      }
+    }
+    return documentSummaries.filter((item) => descendantIds.has(item.nodeId))
+  }, [documentSummaries, project.binder.nodes, selectedNode])
+
+  const handleOpenPreviousVersionDiff = useCallback(async () => {
+    if (!selectedNode?.documentId) {
+      return
+    }
+    const diff = await window.pecie.invokeSafe('history:diffDocument', {
+      projectPath: project.projectPath,
+      documentId: selectedNode.documentId,
+      baseline: { kind: 'previous-version' }
+    })
+    setHistoryDialogState({
+      mode: 'diff',
+      title: t(locale, 'comparePreviousVersion'),
+      subtitle: selectedNode.title,
+      sourceTimelineEventId: undefined,
+      diff
+    })
+  }, [locale, project.projectPath, selectedNode])
+
+  const handleOpenTimelineDiff = useCallback(
+    async (timelineEventId: string, kind: 'checkpoint' | 'milestone' | 'restore') => {
+      if (!selectedNode?.documentId) {
+        return
+      }
+      const diff = await window.pecie.invokeSafe('history:diffDocument', {
+        projectPath: project.projectPath,
+        documentId: selectedNode.documentId,
+        baseline: { kind, timelineEventId }
+      })
+      setHistoryDialogState({
+        mode: 'diff',
+        title: t(locale, 'compareWithHistoricalVersion'),
+        subtitle: selectedNode.title,
+        sourceTimelineEventId: timelineEventId,
+        diff
+      })
+    },
+    [locale, project.projectPath, selectedNode]
+  )
+
+  const handleOpenRestorePreview = useCallback(
+    async (timelineEventId: string) => {
+      if (!selectedNode?.documentId) {
+        return
+      }
+      const response = await window.pecie.invokeSafe('history:restoreDocument', {
+        projectPath: project.projectPath,
+        documentId: selectedNode.documentId,
+        sourceTimelineEventId: timelineEventId,
+        mode: 'preview',
+        authorProfile
+      })
+      setHistoryDialogState({
+        mode: 'restore',
+        title: t(locale, 'restoreDocumentTitle'),
+        subtitle: selectedNode.title,
+        sourceTimelineEventId: timelineEventId,
+        diff: response.preview
+      })
+    },
+    [authorProfile, locale, project.projectPath, selectedNode]
+  )
+
+  const handleCreateMilestone = useCallback(
+    async ({ label, noteMarkdown }: { label: string; noteMarkdown?: string }) => {
+      await window.pecie.invokeSafe('history:createMilestone', {
+        projectPath: project.projectPath,
+        label,
+        noteMarkdown,
+        authorProfile
+      })
+      await refreshTimeline()
+      await refreshDocumentSummaries()
+      onNotify(t(locale, 'timelineMilestoneCreated'), 'success')
+    },
+    [authorProfile, locale, onNotify, project.projectPath, refreshDocumentSummaries, refreshTimeline]
+  )
+
+  const handleRepairTimeline = useCallback(async () => {
+    await window.pecie.invokeSafe('history:repairTimeline', {
+      projectPath: project.projectPath
+    })
+    await refreshTimeline()
+    await refreshDocumentSummaries()
+    onNotify(t(locale, 'timelineRepaired'), 'info')
+  }, [locale, onNotify, project.projectPath, refreshDocumentSummaries, refreshTimeline])
 
   const importAttachments = useCallback(
     async (paths?: string[]) => {
@@ -232,6 +464,81 @@ export function Workspace({
         open={isGlobalSearchOpen}
         projectPath={project.projectPath}
       />
+      <HistoryDiffDialog
+        busy={historyDialogBusy}
+        canRestore={historyDialogState?.mode === 'restore'}
+        diff={historyDialogState?.diff ?? null}
+        locale={locale}
+        onClose={() => setHistoryDialogState(null)}
+        onRestore={
+          historyDialogState?.mode === 'restore' && historyDialogState.sourceTimelineEventId && selectedNode?.documentId
+            ? async () => {
+                const documentId = selectedNode.documentId
+                const sourceTimelineEventId = historyDialogState.sourceTimelineEventId
+                setHistoryDialogBusy(true)
+                try {
+                  const response = await window.pecie.invokeSafe('history:restoreDocument', {
+                    projectPath: project.projectPath,
+                    documentId: documentId!,
+                    sourceTimelineEventId: sourceTimelineEventId!,
+                    mode: 'apply',
+                    authorProfile
+                  })
+                  if (response.restoredDocument) {
+                    handleDocumentSaved(response.restoredDocument)
+                  }
+                  setEditorReloadToken((current) => current + 1)
+                  await refreshTimeline()
+                  setHistoryDialogState(null)
+                  onNotify(t(locale, 'documentRestoredFromHistory'), 'success')
+                } finally {
+                  setHistoryDialogBusy(false)
+                }
+              }
+            : undefined
+        }
+        onRestoreSelection={
+          historyDialogState?.mode === 'diff' && selectedNode?.documentId && historyDialogState.sourceTimelineEventId
+            ? async (selection) => {
+                if (!editorSelectionRange) {
+                  return
+                }
+                setHistoryDialogBusy(true)
+                try {
+                  const response = await window.pecie.invokeSafe('history:restoreSelection', {
+                    projectPath: project.projectPath,
+                    documentId: selectedNode.documentId!,
+                    sourceTimelineEventId: historyDialogState.sourceTimelineEventId!,
+                    sourceSelection: selection,
+                    insertAt:
+                      editorSelectionRange.endOffset > editorSelectionRange.startOffset
+                        ? {
+                            kind: 'replace-selection',
+                            startOffset: editorSelectionRange.startOffset,
+                            endOffset: editorSelectionRange.endOffset
+                          }
+                        : {
+                            kind: 'cursor',
+                            offset: editorSelectionRange.startOffset
+                          },
+                    authorProfile
+                  })
+                  handleDocumentSaved(response.restoredDocument)
+                  setEditorReloadToken((current) => current + 1)
+                  await refreshTimeline()
+                  await refreshDocumentSummaries()
+                  setHistoryDialogState(null)
+                  onNotify(t(locale, 'selectionRestoredFromHistory'), 'success')
+                } finally {
+                  setHistoryDialogBusy(false)
+                }
+              }
+            : undefined
+        }
+        open={Boolean(historyDialogState)}
+        subtitle={historyDialogState?.subtitle}
+        title={historyDialogState?.title ?? ''}
+      />
       <WorkspaceHeader
         binderCollapsed={binderCollapsed}
         contextCollapsed={contextCollapsed}
@@ -244,11 +551,13 @@ export function Workspace({
         onOpenGuide={onOpenGuide}
         onOpenProject={onOpenProject}
         onOpenSettings={onOpenSettings}
+        onChangeWorkspaceView={setWorkspaceView}
         onSelectNode={setSelectedId}
         onToggleBinder={() => setBinderCollapsed((current) => !current)}
         onToggleContext={() => setContextCollapsed((current) => !current)}
         project={project}
         selectedNode={selectedNode}
+        workspaceView={workspaceView}
       />
       <div
         className={`workspace-grid${preferences.focusMode ? ' workspace-grid--focus' : ''}${binderCollapsed ? ' workspace-grid--binder-collapsed' : ''}${contextCollapsed ? ' workspace-grid--context-collapsed' : ''}`}
@@ -302,45 +611,93 @@ export function Workspace({
             onResizeEnd={() => undefined}
           />
         ) : null}
-        <EditorSurface
-          authorProfile={authorProfile}
-          ingestedDocumentId={ingestedDocumentId}
-          locale={locale}
-          onImportAttachments={importAttachments}
-          onAbsorbSupportNode={
-            selectedNode?.documentId
-              ? async ({ sourceNodeId, targetDocumentId, insertion, offset }) => {
-                  const response = await window.pecie.invokeSafe('binder:absorb-node', {
-                    projectPath: project.projectPath,
-                    sourceNodeId,
-                    targetDocumentId,
-                    insertion,
-                    offset
-                  })
-                  onProjectChange({
-                    ...project,
-                    binder: response.binder
-                  })
-                  setIngestedDocumentId(targetDocumentId)
-                  window.setTimeout(
-                    () => setIngestedDocumentId((current) => (current === targetDocumentId ? null : current)),
-                    1800
-                  )
-                  onNotify(t(locale, 'noteMergedIntoDocument'), 'success')
-                  return response.targetDocument
-                }
-              : undefined
-          }
-          onBodySnapshot={setEditorSnapshot}
-          onDocumentSaved={handleDocumentSaved}
-          onManualSaved={onManualDocumentSaved}
-          onPreferencesChange={setPreferences}
-          onSaveStateChange={(saveState, documentId) => setDirtyDocumentId(saveState === 'dirty' ? documentId : null)}
-          onWordCountChange={(wordCount) => setCurrentWordCount(wordCount)}
-          preferences={preferences}
-          project={project}
-          selectedNode={selectedNode}
-        />
+        {workspaceView === 'editor' ? (
+          <EditorSurface
+            authorProfile={authorProfile}
+            ingestedDocumentId={ingestedDocumentId}
+            locale={locale}
+            onImportAttachments={importAttachments}
+            onAbsorbSupportNode={
+              selectedNode?.documentId
+                ? async ({ sourceNodeId, targetDocumentId, insertion, offset }) => {
+                    const response = await window.pecie.invokeSafe('binder:absorb-node', {
+                      projectPath: project.projectPath,
+                      sourceNodeId,
+                      targetDocumentId,
+                      insertion,
+                      offset
+                    })
+                    onProjectChange({
+                      ...project,
+                      binder: response.binder
+                    })
+                    setIngestedDocumentId(targetDocumentId)
+                    window.setTimeout(
+                      () => setIngestedDocumentId((current) => (current === targetDocumentId ? null : current)),
+                      1800
+                    )
+                    onNotify(t(locale, 'noteMergedIntoDocument'), 'success')
+                    return response.targetDocument
+                  }
+                : undefined
+            }
+            onBodySnapshot={setEditorSnapshot}
+            onDocumentSaved={handleDocumentSaved}
+            onManualSaved={() => {
+              onManualDocumentSaved()
+              void refreshTimeline()
+              void refreshDocumentSummaries()
+            }}
+            onPreferencesChange={setPreferences}
+            reloadToken={editorReloadToken}
+            onSaveStateChange={(saveState, documentId) => setDirtyDocumentId(saveState === 'dirty' ? documentId : null)}
+            onSelectionRangeChange={setEditorSelectionRange}
+            onWordCountChange={(wordCount) => setCurrentWordCount(wordCount)}
+            preferences={preferences}
+            project={project}
+            selectedNode={selectedNode}
+          />
+        ) : workspaceView === 'timeline' ? (
+          <TimelineView
+            locale={locale}
+            onCreateMilestone={handleCreateMilestone}
+            onOpenPreviousVersionDiff={handleOpenPreviousVersionDiff}
+            onOpenRestorePreview={handleOpenRestorePreview}
+            onOpenTimelineDiff={handleOpenTimelineDiff}
+            onRepairTimeline={handleRepairTimeline}
+            selectedNode={selectedNode}
+            timeline={timeline}
+            timelineLoading={timelineLoading}
+          />
+        ) : workspaceView === 'outliner' ? (
+          <OutlinerView
+            documents={documentSummaries}
+            locale={locale}
+            onSelectNode={(nodeId) => {
+              setSelectedId(nodeId)
+            }}
+            selectedNodeId={selectedNode?.id ?? null}
+          />
+        ) : workspaceView === 'corkboard' ? (
+          <CorkboardView
+            documents={documentSummaries}
+            locale={locale}
+            onSelectNode={(nodeId) => {
+              setSelectedId(nodeId)
+            }}
+            selectedNodeId={selectedNode?.id ?? null}
+          />
+        ) : (
+          <ScriveningsView
+            documents={scriveningsDocuments}
+            locale={locale}
+            onSelectNode={(nodeId) => {
+              setSelectedId(nodeId)
+            }}
+            selectedNodeId={selectedNode?.id ?? null}
+            title={selectedNode?.title ?? project.manifest.title}
+          />
+        )}
         {!preferences.focusMode && !contextCollapsed ? (
           <ResizeHandle
             side="right"
@@ -360,6 +717,7 @@ export function Workspace({
             manifest={project.manifest}
             maxAttachmentSizeBytes={maxAttachmentSizeBytes}
             onImportAttachments={() => importAttachments()}
+            onOpenTimelineWorkspace={() => setWorkspaceView('timeline')}
             onOpenAttachment={(absolutePath) => {
               const attachment = attachments.find((entry) => entry.absolutePath === absolutePath) ?? null
               if (attachment) {
@@ -370,10 +728,13 @@ export function Workspace({
               if (!attachmentsDirectoryPath) return
               void window.pecie.invokeSafe('path:openInFileManager', { path: attachmentsDirectoryPath })
             }}
+            onOpenPreviousVersionDiff={handleOpenPreviousVersionDiff}
             onOpenWritingHubNode={(nodeId) => setSelectedId(nodeId)}
             onToggleCollapsed={() => setContextCollapsed((current) => !current)}
             project={project}
             selectedNode={selectedNode}
+            timeline={timeline}
+            timelineLoading={timelineLoading}
             writingHubNodes={writingHubNodes}
           />
         ) : null}

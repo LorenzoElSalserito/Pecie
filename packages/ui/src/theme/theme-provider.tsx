@@ -15,14 +15,21 @@ function resolveTheme(mode: ThemeMode): ResolvedThemeMode {
 export function ThemeProvider({
   children,
   defaultMode = 'system',
-  fontPreference = 'classic'
+  fontPreference = 'classic',
+  uiZoom = 100
 }: {
   children: ReactNode
   defaultMode?: ThemeMode
   fontPreference?: 'classic' | 'dyslexic'
+  uiZoom?: 50 | 75 | 100 | 125 | 150
 }): React.JSX.Element {
   const [mode, setMode] = useState<ThemeMode>(defaultMode)
   const [resolvedMode, setResolvedMode] = useState<ResolvedThemeMode>(() => resolveTheme(defaultMode))
+
+  useEffect(() => {
+    setMode(defaultMode)
+    setResolvedMode(resolveTheme(defaultMode))
+  }, [defaultMode])
 
   useEffect(() => {
     const nextMode = resolveTheme(mode)
@@ -41,6 +48,11 @@ export function ThemeProvider({
   useEffect(() => {
     document.documentElement.dataset.font = fontPreference
   }, [fontPreference])
+
+  useEffect(() => {
+    document.documentElement.style.zoom = `${uiZoom}%`
+    document.documentElement.style.setProperty('--pecie-ui-zoom', `${uiZoom}%`)
+  }, [uiZoom])
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')

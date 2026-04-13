@@ -1,5 +1,7 @@
 export * from './app/app-settings-service'
 export * from './fs/project-file-system'
+export * from './history/git-adapter'
+export * from './history/history-service'
 export * from './ipc/register-project-handlers'
 export * from './ipc/register-settings-handlers'
 export * from './ipc/register-shell-handlers'

@@ -8,6 +8,8 @@ import { SUPPORTED_LOCALES, localeLabel, t } from '../i18n'
 import type { AuthorFieldsProps, SetupWizardProps, WorkspaceFieldsProps } from './types'
 import { authorRoles } from './types'
 
+const UI_ZOOM_OPTIONS = [50, 75, 100, 125, 150] as const
+
 export function WorkspaceFields({ locale, settings, setSettings }: WorkspaceFieldsProps): React.JSX.Element {
   return (
     <div className="dialog-block">
@@ -84,6 +86,25 @@ export function WorkspaceFields({ locale, settings, setSettings }: WorkspaceFiel
         >
           <option value="classic">{t(locale, 'fontClassic')}</option>
           <option value="dyslexic">{t(locale, 'fontDyslexic')}</option>
+        </select>
+      </label>
+
+      <label className="field">
+        <span>{t(locale, 'uiZoom')}</span>
+        <select
+          value={settings.uiZoom}
+          onChange={(event) =>
+            setSettings({
+              ...settings,
+              uiZoom: Number(event.target.value) as AppSettings['uiZoom']
+            })
+          }
+        >
+          {UI_ZOOM_OPTIONS.map((zoom) => (
+            <option key={zoom} value={zoom}>
+              {zoom}%
+            </option>
+          ))}
         </select>
       </label>
     </div>
@@ -166,7 +187,7 @@ export function AuthorFields({ locale, settings, setSettings, nameError }: Autho
   )
 }
 
-export function SetupWizard({ bootstrap, onComplete }: SetupWizardProps): React.JSX.Element {
+export function SetupWizard({ bootstrap, onPreviewChange, onComplete }: SetupWizardProps): React.JSX.Element {
   const [step, setStep] = useState(0)
   const [displayedStep, setDisplayedStep] = useState(0)
   const [draft, setDraft] = useState<AppSettings>(bootstrap.settings)
@@ -252,6 +273,18 @@ export function SetupWizard({ bootstrap, onComplete }: SetupWizardProps): React.
     }
   }, [])
 
+  useEffect(() => {
+    onPreviewChange?.({
+      theme: draft.theme,
+      fontPreference: draft.fontPreference,
+      uiZoom: draft.uiZoom
+    })
+
+    return () => {
+      onPreviewChange?.(null)
+    }
+  }, [draft.fontPreference, draft.theme, draft.uiZoom, onPreviewChange])
+
   return (
     <main className="setup-shell">
       <section className="setup-card">
@@ -287,6 +320,10 @@ export function SetupWizard({ bootstrap, onComplete }: SetupWizardProps): React.
           <article className="setup-overview__card">
             <span>{t(locale, 'fontPreference')}</span>
             <strong>{t(locale, draft.fontPreference === 'dyslexic' ? 'fontDyslexic' : 'fontClassic')}</strong>
+          </article>
+          <article className="setup-overview__card">
+            <span>{t(locale, 'uiZoom')}</span>
+            <strong>{draft.uiZoom}%</strong>
           </article>
         </section>
 
@@ -360,6 +397,7 @@ export function SetupWizard({ bootstrap, onComplete }: SetupWizardProps): React.
                 setIsCompleting(true)
                 clearCompletionTimeout()
                 completionTimeoutRef.current = window.setTimeout(() => {
+                  onPreviewChange?.(null)
                   void onComplete({ ...draft, onboardingCompleted: false })
                 }, prefersReducedMotion ? 1200 : 1500)
               }}

@@ -29,6 +29,34 @@ export const ipcContracts = {
     request: 'SaveDocumentRequest',
     response: 'SaveDocumentResponse'
   },
+  'history:createCheckpoint': {
+    request: 'CreateCheckpointRequest',
+    response: 'CreateCheckpointResponse'
+  },
+  'history:createMilestone': {
+    request: 'CreateMilestoneRequest',
+    response: 'CreateMilestoneResponse'
+  },
+  'history:listTimeline': {
+    request: 'ListTimelineRequest',
+    response: 'ListTimelineResponse'
+  },
+  'history:repairTimeline': {
+    request: 'RepairTimelineRequest',
+    response: 'RepairTimelineResponse'
+  },
+  'history:diffDocument': {
+    request: 'DiffDocumentRequest',
+    response: 'DiffDocumentResponse'
+  },
+  'history:restoreDocument': {
+    request: 'RestoreDocumentRequest',
+    response: 'RestoreDocumentResponse'
+  },
+  'history:restoreSelection': {
+    request: 'RestoreSelectionRequest',
+    response: 'RestoreSelectionResponse'
+  },
   'binder:add-node': {
     request: 'AddBinderNodeRequest',
     response: 'AddBinderNodeResponse'

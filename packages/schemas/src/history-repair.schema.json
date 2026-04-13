@@ -1,0 +1,12 @@
+{
+  "$id": "history-repair.schema.json",
+  "type": "object",
+  "required": [
+    "totalCommits",
+    "eventsOk",
+    "eventsRepaired",
+    "eventsMissingCommit",
+    "eventsMissingMetadata",
+    "warnings"
+  ]
+}

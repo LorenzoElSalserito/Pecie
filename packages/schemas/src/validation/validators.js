@@ -23,6 +23,9 @@ export function validateManifest(value) {
     assertString(value.schemaUris.manifest, 'schemaUris.manifest', schemaName);
     assertString(value.schemaUris.project, 'schemaUris.project', schemaName);
     assertString(value.schemaUris.binder, 'schemaUris.binder', schemaName);
+    assertString(value.schemaUris.timeline, 'schemaUris.timeline', schemaName);
+    assertString(value.schemaUris.milestones, 'schemaUris.milestones', schemaName);
+    assertString(value.schemaUris.historyRepair, 'schemaUris.historyRepair', schemaName);
     return value;
 }
 export function validateProjectMetadata(value) {
@@ -75,4 +78,94 @@ export function validateBinderDocument(value) {
         throw new SchemaValidationError(schemaName, 'rootId must reference an existing node');
     }
     return { rootId: value.rootId, nodes };
+}
+function validateTimelineAuthorRecord(value, schemaName, path) {
+    assertRecord(value, schemaName);
+    assertString(value.pecieAuthorId, `${path}.pecieAuthorId`, schemaName);
+    assertString(value.pecieDisplayName, `${path}.pecieDisplayName`, schemaName);
+    assertString(value.gitName, `${path}.gitName`, schemaName);
+    assertString(value.gitEmail, `${path}.gitEmail`, schemaName);
+    return value;
+}
+function validateTimelineEventRecord(value, index) {
+    const schemaName = 'timeline';
+    assertRecord(value, schemaName);
+    assertString(value.timelineEventId, `events[${index}].timelineEventId`, schemaName);
+    assertString(value.commitHash, `events[${index}].commitHash`, schemaName);
+    assertString(value.kind, `events[${index}].kind`, schemaName);
+    assertString(value.label, `events[${index}].label`, schemaName);
+    assertString(value.createdAt, `events[${index}].createdAt`, schemaName);
+    validateTimelineAuthorRecord(value.author, schemaName, `events[${index}].author`);
+    assertArray(value.touchedPaths, `events[${index}].touchedPaths`, schemaName);
+    value.touchedPaths.forEach((item, itemIndex) => assertString(item, `events[${index}].touchedPaths[${itemIndex}]`, schemaName));
+    assertString(value.integrity, `events[${index}].integrity`, schemaName);
+    if (value.noteMarkdown !== undefined) {
+        assertString(value.noteMarkdown, `events[${index}].noteMarkdown`, schemaName);
+    }
+    return value;
+}
+function validateTimelineGroup(value, index) {
+    const schemaName = 'timeline';
+    assertRecord(value, schemaName);
+    assertString(value.groupId, `groups[${index}].groupId`, schemaName);
+    assertString(value.label, `groups[${index}].label`, schemaName);
+    assertString(value.dayKey, `groups[${index}].dayKey`, schemaName);
+    assertString(value.sessionLabel, `groups[${index}].sessionLabel`, schemaName);
+    assertArray(value.eventIds, `groups[${index}].eventIds`, schemaName);
+    value.eventIds.forEach((item, itemIndex) => assertString(item, `groups[${index}].eventIds[${itemIndex}]`, schemaName));
+    return value;
+}
+export function validateHistoryRepairResult(value) {
+    const schemaName = 'historyRepair';
+    assertRecord(value, schemaName);
+    for (const field of ['totalCommits', 'eventsOk', 'eventsRepaired', 'eventsMissingCommit', 'eventsMissingMetadata']) {
+        if (typeof value[field] !== 'number') {
+            throw new SchemaValidationError(schemaName, `Field "${field}" must be a number`);
+        }
+    }
+    assertArray(value.warnings, 'warnings', schemaName);
+    value.warnings.forEach((warning, index) => assertString(warning, `warnings[${index}]`, schemaName));
+    return value;
+}
+export function validateTimelineSnapshot(value) {
+    const schemaName = 'timeline';
+    assertRecord(value, schemaName);
+    assertString(value.version, 'version', schemaName);
+    assertString(value.generatedAt, 'generatedAt', schemaName);
+    assertArray(value.events, 'events', schemaName);
+    assertArray(value.groups, 'groups', schemaName);
+    const events = value.events.map((event, index) => validateTimelineEventRecord(event, index));
+    const groups = value.groups.map((group, index) => validateTimelineGroup(group, index));
+    const integrityReport = validateHistoryRepairResult(value.integrityReport);
+    return {
+        version: value.version,
+        generatedAt: value.generatedAt,
+        events,
+        groups,
+        integrityReport
+    };
+}
+function validateMilestoneRecord(value, index) {
+    const schemaName = 'milestones';
+    assertRecord(value, schemaName);
+    assertString(value.timelineEventId, `milestones[${index}].timelineEventId`, schemaName);
+    assertString(value.commitHash, `milestones[${index}].commitHash`, schemaName);
+    assertString(value.label, `milestones[${index}].label`, schemaName);
+    assertString(value.createdAt, `milestones[${index}].createdAt`, schemaName);
+    if (value.noteMarkdown !== undefined) {
+        assertString(value.noteMarkdown, `milestones[${index}].noteMarkdown`, schemaName);
+    }
+    return value;
+}
+export function validateMilestonesSnapshot(value) {
+    const schemaName = 'milestones';
+    assertRecord(value, schemaName);
+    assertString(value.version, 'version', schemaName);
+    assertString(value.generatedAt, 'generatedAt', schemaName);
+    assertArray(value.milestones, 'milestones', schemaName);
+    return {
+        version: value.version,
+        generatedAt: value.generatedAt,
+        milestones: value.milestones.map((milestone, index) => validateMilestoneRecord(milestone, index))
+    };
 }

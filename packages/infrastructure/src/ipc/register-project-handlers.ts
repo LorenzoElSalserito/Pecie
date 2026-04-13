@@ -3,11 +3,13 @@ import { ipcMain } from 'electron'
 import type { IpcContractMap } from '@pecie/schemas'
 
 import { AppSettingsService } from '../app/app-settings-service'
+import { HistoryService } from '../history/history-service'
 import { AppLoggerService } from '../logging/app-logger-service'
 import { ProjectService } from '../project/project-service'
 
 export function registerProjectHandlers(
   projectService: ProjectService,
+  historyService: HistoryService,
   appSettingsService: AppSettingsService,
   logger: AppLoggerService
 ): void {
@@ -33,6 +35,7 @@ export function registerProjectHandlers(
     'project:open',
     async (_event, payload: IpcContractMap['project:open']['request']) => {
       const response = await projectService.openProject(payload)
+      await historyService.initialize(response.projectPath)
       await appSettingsService.rememberProject(response.projectPath)
       await logger.log({
         level: 'info',
@@ -69,6 +72,41 @@ export function registerProjectHandlers(
       })
       return response
     }
+  )
+
+  ipcMain.handle(
+    'history:createCheckpoint',
+    async (_event, payload: IpcContractMap['history:createCheckpoint']['request']) => historyService.createCheckpoint(payload)
+  )
+
+  ipcMain.handle(
+    'history:createMilestone',
+    async (_event, payload: IpcContractMap['history:createMilestone']['request']) => historyService.createMilestone(payload)
+  )
+
+  ipcMain.handle(
+    'history:listTimeline',
+    async (_event, payload: IpcContractMap['history:listTimeline']['request']) => historyService.listTimeline(payload)
+  )
+
+  ipcMain.handle(
+    'history:repairTimeline',
+    async (_event, payload: IpcContractMap['history:repairTimeline']['request']) => historyService.repairTimeline(payload)
+  )
+
+  ipcMain.handle(
+    'history:diffDocument',
+    async (_event, payload: IpcContractMap['history:diffDocument']['request']) => projectService.diffDocument(payload)
+  )
+
+  ipcMain.handle(
+    'history:restoreDocument',
+    async (_event, payload: IpcContractMap['history:restoreDocument']['request']) => projectService.restoreDocument(payload)
+  )
+
+  ipcMain.handle(
+    'history:restoreSelection',
+    async (_event, payload: IpcContractMap['history:restoreSelection']['request']) => projectService.restoreSelection(payload)
   )
 
   ipcMain.handle(

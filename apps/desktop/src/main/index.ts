@@ -7,6 +7,9 @@ import {
   AppSettingsService,
   AppLoggerService,
   ExportService,
+  GitAdapter,
+  HistoryService,
+  ProjectFileSystem,
   ProjectService,
   registerProjectHandlers,
   registerSettingsHandlers,
@@ -188,8 +191,10 @@ app.whenReady().then(async () => {
 
   const logger = new AppLoggerService(appDataDirectory)
   const appSettingsService = new AppSettingsService(appDataDirectory, app.getPath('documents'), app.getLocale())
+  const projectFileSystem = new ProjectFileSystem()
+  const historyService = new HistoryService(projectFileSystem, new GitAdapter(), logger)
   registerSettingsHandlers(appSettingsService, logger)
-  registerProjectHandlers(new ProjectService(undefined, undefined, logger), appSettingsService, logger)
+  registerProjectHandlers(new ProjectService(projectFileSystem, undefined, logger, historyService), historyService, appSettingsService, logger)
   registerShellHandlers(new ExportService(), logger, appDataDirectory)
 
   const splashWindow = createSplashWindow()

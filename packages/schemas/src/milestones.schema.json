@@ -1,0 +1,5 @@
+{
+  "$id": "milestones.schema.json",
+  "type": "object",
+  "required": ["version", "generatedAt", "milestones"]
+}
