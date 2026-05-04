@@ -9,9 +9,33 @@ export const ipcContracts = {
     request: 'SaveAppSettingsRequest',
     response: 'SaveAppSettingsResponse'
   },
+  'preview:getMode': {
+    request: 'GetPreviewModeRequest',
+    response: 'GetPreviewModeResponse'
+  },
+  'preview:setMode': {
+    request: 'SetPreviewModeRequest',
+    response: 'SetPreviewModeResponse'
+  },
+  'preview:getPageBreaks': {
+    request: 'GetPageBreaksRequest',
+    response: 'GetPageBreaksResponse'
+  },
+  'preview:renderFast': {
+    request: 'RenderFastRequest',
+    response: 'RenderFastResponse'
+  },
+  'preview:renderAccurate': {
+    request: 'RenderAccurateRequest',
+    response: 'RenderAccurateResponse'
+  },
   'log:event': {
     request: 'LogEventRequest',
     response: 'LogEventResponse'
+  },
+  'plugins:listInstalled': {
+    request: 'ListInstalledPluginsRequest',
+    response: 'ListInstalledPluginsResponse'
   },
   'project:create': {
     request: 'CreateProjectRequest',
@@ -28,6 +52,70 @@ export const ipcContracts = {
   'document:save': {
     request: 'SaveDocumentRequest',
     response: 'SaveDocumentResponse'
+  },
+  'citations:loadLibrary': {
+    request: 'LoadCitationLibraryRequest',
+    response: 'LoadCitationLibraryResponse'
+  },
+  'citations:suggest': {
+    request: 'SuggestCiteKeyRequest',
+    response: 'SuggestCiteKeyResponse'
+  },
+  'citations:listProfiles': {
+    request: 'ListCitationProfilesRequest',
+    response: 'ListCitationProfilesResponse'
+  },
+  'citations:saveProfile': {
+    request: 'SaveCitationProfileRequest',
+    response: 'SaveCitationProfileResponse'
+  },
+  'citations:setDefaultProfile': {
+    request: 'SetDefaultCitationProfileRequest',
+    response: 'SetDefaultCitationProfileResponse'
+  },
+  'research:listNotes': {
+    request: 'ListResearchNotesRequest',
+    response: 'ListResearchNotesResponse'
+  },
+  'research:createNote': {
+    request: 'CreateResearchNoteRequest',
+    response: 'CreateResearchNoteResponse'
+  },
+  'research:listPdfLibrary': {
+    request: 'ListPdfLibraryRequest',
+    response: 'ListPdfLibraryResponse'
+  },
+  'research:importPdf': {
+    request: 'ImportPdfRequest',
+    response: 'ImportPdfResponse'
+  },
+  'research:getGraph': {
+    request: 'GetResearchGraphRequest',
+    response: 'GetResearchGraphResponse'
+  },
+  'research:createLink': {
+    request: 'CreateResearchLinkRequest',
+    response: 'CreateResearchLinkResponse'
+  },
+  'share:previewPackage': {
+    request: 'PreviewSharePackageRequest',
+    response: 'PreviewSharePackageResponse'
+  },
+  'share:createPackage': {
+    request: 'CreateSharePackageRequest',
+    response: 'CreateSharePackageResponse'
+  },
+  'share:importPackage': {
+    request: 'ImportSharePackageRequest',
+    response: 'ImportSharePackageResponse'
+  },
+  'privacy:getInventory': {
+    request: 'GetPrivacyInventoryRequest',
+    response: 'PrivacyInventoryResponse'
+  },
+  'privacy:runMaintenance': {
+    request: 'RunMaintenanceRequest',
+    response: 'RunMaintenanceResponse'
   },
   'history:createCheckpoint': {
     request: 'CreateCheckpointRequest',
@@ -104,6 +192,18 @@ export const ipcContracts = {
   'path:openInFileManager': {
     request: 'OpenPathRequest',
     response: 'OpenPathResponse'
+  },
+  'export:listProfiles': {
+    request: 'ListExportProfilesRequest',
+    response: 'ListExportProfilesResponse'
+  },
+  'export:getRuntimeCapabilities': {
+    request: 'GetRuntimeCapabilitiesRequest',
+    response: 'GetRuntimeCapabilitiesResponse'
+  },
+  'export:preview': {
+    request: 'PreviewExportRequest',
+    response: 'PreviewExportResponse'
   },
   'attachment:list': {
     request: 'ListAttachmentsRequest',

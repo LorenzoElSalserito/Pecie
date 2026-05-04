@@ -10,6 +10,12 @@ import {
   type AbsorbBinderNodeRequest,
   type AbsorbBinderNodeResponse,
   binderSchema,
+  citationLibrarySchema,
+  citationProfileSchema,
+  exportProfileSchema,
+  pageBreakMapSchema,
+  paginatedPreviewSchema,
+  previewProfileBindingSchema,
   type CreateProjectRequest,
   type CreateProjectResponse,
   type DiffDocumentRequest,
@@ -39,6 +45,10 @@ import {
   type ProjectManifest,
   type ProjectMetadata,
   projectSchema,
+  pdfLibrarySchema,
+  researchLinkMapSchema,
+  researchNoteSchema,
+  sharePackageManifestSchema,
   type ArchiveProjectRequest,
   type ArchiveProjectResponse,
   type AddBinderNodeRequest,
@@ -64,9 +74,12 @@ import {
   addBinderNode,
   createProjectMetadata,
   deleteBinderNode,
+  defaultExportProfileAssets,
+  getDefaultExportProfiles,
   moveBinderNode,
   projectTemplates,
-  type ProjectTemplateDocumentBlueprint
+  type ProjectTemplateDocumentBlueprint,
+  type ProjectTemplateId
 } from '@pecie/domain'
 
 import { ProjectFileSystem } from '../fs/project-file-system'
@@ -101,6 +114,7 @@ const PROJECT_DIRECTORIES = [
   'assets/attachments',
   'citations/csl',
   'citations/styles',
+  'citations/profiles',
   'history/snapshots',
   'history/exchange',
   'exports/profiles',
@@ -111,8 +125,22 @@ const PROJECT_DIRECTORIES = [
   'cache/search',
   'cache/thumbnails',
   'cache/derived',
+  'cache/preview/fast',
+  'cache/preview/accurate',
+  'cache/preview/page-breaks',
+  'cache/preview/export-step',
   'logs/local-audit',
   'schemas'
+]
+
+const PROJECT_GITIGNORE_ENTRIES = [
+  'cache/index.sqlite*',
+  'cache/search/',
+  'cache/thumbnails/',
+  'cache/derived/',
+  'cache/preview/',
+  'exports/out/',
+  'logs/local-audit/*.log'
 ]
 
 const APP_MIN_VERSION = '0.1.0'
@@ -197,13 +225,23 @@ export class ProjectService {
       throw new Error(`Esiste gia un progetto in ${projectPath}`)
     }
 
-    await Promise.all(PROJECT_DIRECTORIES.map((directory) => this.fileSystem.ensureDir(projectPath, directory)))
+    await this.ensureProjectDirectories(projectPath)
     await this.fileSystem.writeJson(projectPath, 'manifest.json', manifest)
     await this.fileSystem.writeJson(projectPath, 'project.json', project)
     await this.fileSystem.writeJson(projectPath, 'binder.json', binder)
     await this.fileSystem.writeJson(projectPath, schemaRegistry.manifest, manifestSchema)
     await this.fileSystem.writeJson(projectPath, schemaRegistry.project, projectSchema)
     await this.fileSystem.writeJson(projectPath, schemaRegistry.binder, binderSchema)
+    await this.fileSystem.writeJson(projectPath, schemaRegistry.exportProfile, exportProfileSchema)
+    await this.fileSystem.writeJson(projectPath, schemaRegistry.previewProfileBinding, previewProfileBindingSchema)
+    await this.fileSystem.writeJson(projectPath, schemaRegistry.paginatedPreview, paginatedPreviewSchema)
+    await this.fileSystem.writeJson(projectPath, schemaRegistry.pageBreakMap, pageBreakMapSchema)
+    await this.fileSystem.writeJson(projectPath, schemaRegistry.citationProfile, citationProfileSchema)
+    await this.fileSystem.writeJson(projectPath, schemaRegistry.citationLibrary, citationLibrarySchema)
+    await this.fileSystem.writeJson(projectPath, schemaRegistry.researchNote, researchNoteSchema)
+    await this.fileSystem.writeJson(projectPath, schemaRegistry.researchLinkMap, researchLinkMapSchema)
+    await this.fileSystem.writeJson(projectPath, schemaRegistry.pdfLibrary, pdfLibrarySchema)
+    await this.fileSystem.writeJson(projectPath, schemaRegistry.sharePackageManifest, sharePackageManifestSchema)
     await this.fileSystem.writeJson(projectPath, 'workspace.json', {
       theme: 'system',
       editor: {
@@ -233,13 +271,34 @@ export class ProjectService {
       generatedAt: createdAt,
       milestones: []
     })
-    await this.fileSystem.writeText(
-      projectPath,
-      '.gitignore',
-      ['cache/index.sqlite*', 'cache/search/', 'cache/thumbnails/', 'exports/out/', 'logs/local-audit/*.log'].join(
-        '\n'
-      )
-    )
+    await this.fileSystem.writeJson(projectPath, 'research/pdf-library.json', {
+      version: '1.0.0',
+      generatedAt: createdAt,
+      items: []
+    })
+    await this.fileSystem.writeJson(projectPath, 'research/link-map.json', {
+      version: '1.0.0',
+      generatedAt: createdAt,
+      links: []
+    })
+    await this.writeProjectGitignore(projectPath)
+    await this.fileSystem.writeText(projectPath, 'citations/references.bib', '')
+    await this.fileSystem.writeJson(projectPath, 'citations/profiles/default.json', {
+      id: 'default',
+      schemaVersion: 1,
+      label: 'Default citation profile',
+      bibliographySources: ['citations/references.bib'],
+      citationStyle: 'citations/csl/apa.csl',
+      locale: input.language,
+      linkCitations: false,
+      suppressBibliography: false,
+      bibliographyTitle: {
+        'it-IT': 'Bibliografia',
+        'en-US': 'References'
+      }
+    })
+    await this.fileSystem.writeText(projectPath, 'citations/csl/apa.csl', '')
+    await this.ensureDefaultExportProfiles(projectPath, input.template)
 
     for (const node of binder.nodes) {
       if (node.type === 'document' && node.path) {
@@ -304,11 +363,15 @@ export class ProjectService {
 
     const manifest = validateManifest(await this.fileSystem.readJson(input.projectPath, 'manifest.json'))
     const binder = validateBinderDocument(await this.fileSystem.readJson(input.projectPath, 'binder.json'))
+    const rawProject = validateProjectMetadata(await this.fileSystem.readJson(input.projectPath, 'project.json'))
+    await this.ensureProjectDirectories(input.projectPath)
+    await this.ensureProjectGitignore(input.projectPath)
+    await this.ensureDefaultExportProfiles(input.projectPath, rawProject.documentKind as ProjectTemplateId)
     await this.rebuildDerivedIndex(input.projectPath, binder)
     const project = await this.refreshProjectAuthorship(
       input.projectPath,
       binder,
-      validateProjectMetadata(await this.fileSystem.readJson(input.projectPath, 'project.json'))
+      rawProject
     )
     await this.log({
       level: 'info',
@@ -326,6 +389,32 @@ export class ProjectService {
       project,
       binder
     }
+  }
+
+  private async ensureProjectDirectories(projectPath: string): Promise<void> {
+    await Promise.all(PROJECT_DIRECTORIES.map((directory) => this.fileSystem.ensureDir(projectPath, directory)))
+  }
+
+  private async writeProjectGitignore(projectPath: string): Promise<void> {
+    await this.fileSystem.writeText(projectPath, '.gitignore', `${PROJECT_GITIGNORE_ENTRIES.join('\n')}\n`)
+  }
+
+  private async ensureProjectGitignore(projectPath: string): Promise<void> {
+    const current = await this.fileSystem.readText(projectPath, '.gitignore').catch(() => '')
+    const existing = new Set(
+      current
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0)
+    )
+    const missing = PROJECT_GITIGNORE_ENTRIES.filter((entry) => !existing.has(entry))
+
+    if (missing.length === 0) {
+      return
+    }
+
+    const separator = current.length > 0 && !current.endsWith('\n') ? '\n' : ''
+    await this.fileSystem.writeText(projectPath, '.gitignore', `${current}${separator}${missing.join('\n')}\n`)
   }
 
   public async loadDocument(input: LoadDocumentRequest): Promise<LoadDocumentResponse> {
@@ -794,6 +883,7 @@ export class ProjectService {
   }
 
   private async rebuildDerivedIndex(projectPath: string, binder: { rootId: string; nodes: BinderNode[] }): Promise<void> {
+    await this.fileSystem.ensureDir(projectPath, 'cache')
     const indexPath = this.getIndexPath(projectPath)
     this.indexAdapter.initialize(indexPath)
 
@@ -1170,6 +1260,33 @@ export class ProjectService {
         GIT_COMMITTER_EMAIL: 'local@pecie.app'
       }
     })
+  }
+
+  private async ensureDefaultExportProfiles(projectPath: string, templateId: ProjectTemplateId): Promise<void> {
+    if (!(templateId in projectTemplates)) {
+      return
+    }
+
+    for (const profile of getDefaultExportProfiles(templateId)) {
+      const profilePath = `exports/profiles/${profile.id}.json`
+      const exists = await this.fileSystem
+        .readJson(projectPath, profilePath)
+        .then(() => true)
+        .catch(() => false)
+      if (!exists) {
+        await this.fileSystem.writeJson(projectPath, profilePath, profile)
+      }
+    }
+
+    for (const [assetPath, content] of Object.entries(defaultExportProfileAssets)) {
+      const exists = await this.fileSystem
+        .readText(projectPath, assetPath)
+        .then(() => true)
+        .catch(() => false)
+      if (!exists) {
+        await this.fileSystem.writeText(projectPath, assetPath, content)
+      }
+    }
   }
 
   private buildBinderPath(nodes: BinderNode[], nodeId: string): string[] {
@@ -1678,6 +1795,27 @@ export class ProjectService {
     })
 
     return { asset, markdownSnippet, deduplicated: false }
+  }
+
+  public async rebuildDerivedIndexForMaintenance(projectPath: string): Promise<void> {
+    this.fileSystem.assertProjectPath(projectPath)
+    const binder = validateBinderDocument(await this.fileSystem.readJson(projectPath, 'binder.json'))
+    await this.fileSystem.deleteEntry(projectPath, 'cache/index.sqlite')
+    await this.fileSystem.deleteEntry(projectPath, 'cache/index.sqlite-shm')
+    await this.fileSystem.deleteEntry(projectPath, 'cache/index.sqlite-wal')
+    await this.fileSystem.deleteEntry(projectPath, 'cache/search')
+    await this.fileSystem.deleteEntry(projectPath, 'cache/derived')
+    await this.ensureProjectDirectories(projectPath)
+    await this.rebuildDerivedIndex(projectPath, binder)
+    await this.log({
+      level: 'info',
+      category: 'project',
+      event: 'derived-index-rebuilt',
+      message: 'Derived index rebuilt for privacy maintenance.',
+      context: {
+        projectPath
+      }
+    })
   }
 
   private computeImageMarkdownRef(altText: string, assetRelativePath: string, documentRelativePath: string): string {

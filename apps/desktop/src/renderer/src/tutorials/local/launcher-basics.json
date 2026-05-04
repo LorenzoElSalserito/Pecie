@@ -1,0 +1,48 @@
+{
+  "id": "launcher-basics",
+  "schemaVersion": 1,
+  "icon": "bi-rocket-takeoff",
+  "titleKey": "onboardingTitle",
+  "steps": [
+    {
+      "id": "create-project",
+      "bodyKey": "onboardingStep1",
+      "targetLabelKey": "tutorialTargetProjectTitle",
+      "action": "focus",
+      "target": {
+        "kind": "tutorial-id",
+        "value": "launcher-project-title"
+      }
+    },
+    {
+      "id": "choose-template",
+      "bodyKey": "onboardingStep2",
+      "targetLabelKey": "tutorialTargetTemplatePicker",
+      "action": "click",
+      "target": {
+        "kind": "tutorial-id",
+        "value": "launcher-template-picker"
+      }
+    },
+    {
+      "id": "choose-destination",
+      "bodyKey": "onboardingStep3",
+      "targetLabelKey": "tutorialTargetDestination",
+      "action": "focus",
+      "target": {
+        "kind": "tutorial-id",
+        "value": "launcher-destination-directory"
+      }
+    },
+    {
+      "id": "open-settings",
+      "bodyKey": "onboardingStep4",
+      "targetLabelKey": "tutorialTargetSettings",
+      "action": "click",
+      "target": {
+        "kind": "tutorial-id",
+        "value": "launcher-open-settings"
+      }
+    }
+  ]
+}

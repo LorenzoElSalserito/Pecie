@@ -4,6 +4,7 @@ const assetIconBasePath = path.resolve(__dirname, 'src/renderer/src/asset/Icon')
 const assetPngIconPath = `${assetIconBasePath}.png`
 const assetIcoIconPath = `${assetIconBasePath}.ico`
 const assetIcnsIconPath = `${assetIconBasePath}.icns`
+const exportRuntimeResourcePath = path.resolve(__dirname, 'resources/export-runtime')
 const macPkgIdentity = process.env.PECIE_MAC_PKG_IDENTITY
 
 const makers = [
@@ -90,6 +91,7 @@ module.exports = {
     appCategoryType: 'public.app-category.productivity',
     appCopyright: 'Copyright © Lorenzo DM',
     asar: true,
+    extraResource: [exportRuntimeResourcePath],
     ignore: [],
     icon: assetIconBasePath,
     win32metadata: {

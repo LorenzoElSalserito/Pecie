@@ -1,0 +1,13 @@
+{
+  "$id": "research-note.schema.json",
+  "type": "object",
+  "required": [
+    "id",
+    "title",
+    "kind",
+    "path",
+    "includeInExport",
+    "createdAt",
+    "updatedAt"
+  ]
+}

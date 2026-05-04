@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { Button, Dialog } from '@pecie/ui'
 
@@ -18,16 +18,32 @@ export function HistoryDiffDialog({
   onRestoreSelection
 }: HistoryDiffDialogProps): React.JSX.Element | null {
   const [selectedRange, setSelectedRange] = useState<{ startOffset: number; endOffset: number } | null>(null)
+  const historicalTextareaRef = useRef<HTMLTextAreaElement | null>(null)
+
+  function resolveSelectedRange(): { startOffset: number; endOffset: number } | null {
+    if (selectedRange) {
+      return selectedRange
+    }
+
+    const textarea = historicalTextareaRef.current
+    if (!textarea) {
+      return null
+    }
+
+    const startOffset = textarea.selectionStart ?? 0
+    const endOffset = textarea.selectionEnd ?? 0
+    return endOffset > startOffset ? { startOffset, endOffset } : null
+  }
+
+  useEffect(() => {
+    setSelectedRange(null)
+  }, [diff, open])
 
   if (!open || !diff) {
     return null
   }
 
   const hasSelectionRestore = Boolean(onRestoreSelection)
-
-  useEffect(() => {
-    setSelectedRange(null)
-  }, [diff, open])
 
   return (
     <Dialog open={open} onClose={onClose} size="wide" icon="bi-layout-text-window-reverse" title={title} description={subtitle}>
@@ -42,6 +58,7 @@ export function HistoryDiffDialog({
               className="history-diff-pane__content history-diff-pane__content--textarea"
               defaultValue={diff.before.content}
               readOnly
+              ref={historicalTextareaRef}
               onSelect={(event) => {
                 if (!hasSelectionRestore) {
                   return
@@ -70,8 +87,13 @@ export function HistoryDiffDialog({
           </Button>
           {hasSelectionRestore ? (
             <Button
-              disabled={!selectedRange}
-              onClick={() => (selectedRange ? void onRestoreSelection?.(selectedRange) : undefined)}
+              onClick={() => {
+                const range = resolveSelectedRange()
+                if (!range) {
+                  return
+                }
+                void onRestoreSelection?.(range)
+              }}
               size="sm"
               type="button"
               variant="ghost"

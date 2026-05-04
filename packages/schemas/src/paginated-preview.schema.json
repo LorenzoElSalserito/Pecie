@@ -1,0 +1,5 @@
+{
+  "$id": "paginated-preview.schema.json",
+  "type": "object",
+  "required": ["profileId", "format", "mode", "paginated", "totalPages", "pages", "generatedAt", "cacheKey", "warnings"]
+}

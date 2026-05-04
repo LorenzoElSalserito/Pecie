@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import type { LoadedProject, VisibleBinderNode } from '../components/types'
-import { flattenVisibleNodes } from '../components/utils'
+import { flattenVisibleNodes, getInitialExpandedFolderIds } from '../components/utils'
 
 export function useBinderSelection(project: NonNullable<LoadedProject>): {
   selectedNode: VisibleBinderNode | null
@@ -11,7 +11,7 @@ export function useBinderSelection(project: NonNullable<LoadedProject>): {
   visibleNodes: VisibleBinderNode[]
 } {
   const [expandedFolderIds, setExpandedFolderIds] = useState<Set<string>>(
-    () => new Set(project.binder.nodes.filter((node) => node.type === 'folder').map((node) => node.id))
+    () => getInitialExpandedFolderIds(project.binder.nodes, project.binder.rootId)
   )
   const visibleNodes = useMemo(
     () => flattenVisibleNodes(project.binder.nodes, project.binder.rootId, expandedFolderIds),
@@ -27,8 +27,8 @@ export function useBinderSelection(project: NonNullable<LoadedProject>): {
   }, [defaultSelectedId, project.projectPath])
 
   useEffect(() => {
-    setExpandedFolderIds(new Set(project.binder.nodes.filter((node) => node.type === 'folder').map((node) => node.id)))
-  }, [project.binder.nodes, project.projectPath])
+    setExpandedFolderIds(getInitialExpandedFolderIds(project.binder.nodes, project.binder.rootId))
+  }, [project.binder.nodes, project.binder.rootId, project.projectPath])
 
   useEffect(() => {
     if (selectedId === project.binder.rootId) {

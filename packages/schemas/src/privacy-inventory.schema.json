@@ -1,0 +1,48 @@
+{
+  "$id": "privacy-inventory.schema.json",
+  "type": "object",
+  "required": ["generatedAt", "items", "totals"],
+  "properties": {
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "category",
+          "label",
+          "relativePath",
+          "sizeBytes",
+          "containsSensitiveData",
+          "deletable",
+          "source"
+        ],
+        "properties": {
+          "id": { "type": "string" },
+          "category": {
+            "type": "string",
+            "enum": ["settings", "project", "cache", "sqlite", "logs", "exports", "history", "attachments"]
+          },
+          "label": { "type": "string" },
+          "relativePath": { "type": "string" },
+          "sizeBytes": { "type": "number", "minimum": 0 },
+          "containsSensitiveData": { "type": "boolean" },
+          "deletable": { "type": "boolean" },
+          "source": { "type": "string", "enum": ["app", "project"] },
+          "maintenanceAction": { "type": "string" },
+          "descriptionKey": { "type": "string" }
+        }
+      }
+    },
+    "totals": {
+      "type": "object",
+      "required": ["sizeBytes", "sensitiveItems", "deletableItems"],
+      "properties": {
+        "sizeBytes": { "type": "number", "minimum": 0 },
+        "sensitiveItems": { "type": "number", "minimum": 0 },
+        "deletableItems": { "type": "number", "minimum": 0 }
+      }
+    }
+  }
+}

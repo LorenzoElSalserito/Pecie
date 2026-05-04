@@ -19,6 +19,7 @@ import { OnboardingOverlay } from './components/OnboardingOverlay'
 import { OpenProjectDialog } from './components/OpenProjectDialog'
 import { ProjectLibraryDialog } from './components/ProjectLibraryDialog'
 import { SettingsDialog } from './components/SettingsDialog'
+import { ShareDialog } from './components/ShareDialog'
 import { SetupWizard } from './components/SetupWizard'
 import { ToastViewport } from './components/ToastViewport'
 import type { GuideCenterSection, LoadedProject, ToastItem, ToastTone } from './components/types'
@@ -37,11 +38,13 @@ function AppShell(): React.JSX.Element {
   const [isOpenDialogOpen, setIsOpenDialogOpen] = useState(false)
   const [isProjectLibraryOpen, setIsProjectLibraryOpen] = useState(false)
   const [isExportOpen, setIsExportOpen] = useState(false)
+  const [isShareOpen, setIsShareOpen] = useState(false)
   const [previewAttachment, setPreviewAttachment] = useState<AttachmentRecord | null>(null)
   const [attachmentPreview, setAttachmentPreview] = useState<AttachmentPreviewResponse['preview'] | null>(null)
   const [isGuideCenterOpen, setIsGuideCenterOpen] = useState(false)
   const [guideCenterSection, setGuideCenterSection] = useState<GuideCenterSection>('quick-start')
   const [isInfoOpen, setIsInfoOpen] = useState(false)
+  const [activeTutorialId, setActiveTutorialId] = useState<string | null>(null)
   const [settingsPreview, setSettingsPreview] = useState<Pick<AppSettings, 'theme' | 'fontPreference' | 'uiZoom'> | null>(null)
   const lastToastRef = useRef<{ message: string; tone: ToastTone; at: number } | null>(null)
 
@@ -89,6 +92,15 @@ function AppShell(): React.JSX.Element {
     },
     [pushToast]
   )
+
+  const updateSettingsSilently = useCallback(async (nextSettings: AppSettings) => {
+    const response = await window.pecie.invokeSafe('settings:save', { settings: nextSettings })
+    setBootstrap((currentBootstrap) =>
+      currentBootstrap
+        ? { ...currentBootstrap, settings: response.settings, firstRun: !response.settings.authorProfile.name.trim() }
+        : null
+    )
+  }, [])
 
   const openProject = useCallback(
     async (projectPath: string) => {
@@ -147,7 +159,16 @@ function AppShell(): React.JSX.Element {
     return <main className="app-loading">{t(locale, 'loadingApp')}</main>
   }
 
-  const onboardingOpen = !settings.onboardingCompleted && !bootstrap.firstRun && !project
+  const onboardingTutorialId = 'launcher-basics'
+  const onboardingOpen =
+    !settings.onboardingCompleted &&
+    !bootstrap.firstRun &&
+    !project &&
+    !settings.tutorialProgress.completedTutorialIds.includes(onboardingTutorialId)
+  const tutorialOverlayOpen = onboardingOpen || activeTutorialId !== null
+  const tutorialId = activeTutorialId ?? onboardingTutorialId
+  const tutorialSession = settings.tutorialProgress.activeSession
+  const initialTutorialStepIndex = tutorialSession?.tutorialId === tutorialId ? tutorialSession.stepIndex : 0
   const effectiveSettings = settingsPreview ? { ...settings, ...settingsPreview } : settings
 
   return (
@@ -171,8 +192,43 @@ function AppShell(): React.JSX.Element {
         <GuideCenterDialog
           initialSection={guideCenterSection}
           locale={locale}
+          onStartTutorial={(nextTutorialId) => {
+            const hasActiveSession = settings.tutorialProgress.activeSession?.tutorialId === nextTutorialId
+            void updateSettingsSilently({
+              ...settings,
+              tutorialProgress: {
+                completedTutorialIds: settings.tutorialProgress.completedTutorialIds.filter((id) => id !== nextTutorialId),
+                skippedTutorialIds: settings.tutorialProgress.skippedTutorialIds.filter((id) => id !== nextTutorialId),
+                lastTutorialId: nextTutorialId,
+                activeSession: hasActiveSession
+                  ? settings.tutorialProgress.activeSession
+                  : {
+                      tutorialId: nextTutorialId,
+                      stepIndex: 0,
+                      status: 'running'
+                    }
+              }
+            })
+            setIsGuideCenterOpen(false)
+            setActiveTutorialId(nextTutorialId)
+          }}
+          onResetTutorial={(nextTutorialId) => {
+            void updateSettingsSilently({
+              ...settings,
+              tutorialProgress: {
+                completedTutorialIds: settings.tutorialProgress.completedTutorialIds.filter((id) => id !== nextTutorialId),
+                skippedTutorialIds: settings.tutorialProgress.skippedTutorialIds.filter((id) => id !== nextTutorialId),
+                lastTutorialId: settings.tutorialProgress.lastTutorialId === nextTutorialId ? undefined : settings.tutorialProgress.lastTutorialId,
+                activeSession:
+                  settings.tutorialProgress.activeSession?.tutorialId === nextTutorialId
+                    ? undefined
+                    : settings.tutorialProgress.activeSession
+              }
+            })
+          }}
           onClose={() => setIsGuideCenterOpen(false)}
           open={isGuideCenterOpen}
+          tutorialProgress={settings.tutorialProgress}
         />
         <InfoDialog locale={locale} onClose={() => setIsInfoOpen(false)} open={isInfoOpen} version={desktopPackage.version} />
         <a className="skip-link" href="#app-main-content">
@@ -184,6 +240,7 @@ function AppShell(): React.JSX.Element {
             <SetupWizard bootstrap={bootstrap} onComplete={saveSettings} onPreviewChange={setSettingsPreview} />
           ) : project ? (
             <Workspace
+              appSettings={effectiveSettings}
               authorProfile={effectiveSettings.authorProfile}
               locale={locale}
               onBackToProjects={() => {
@@ -195,6 +252,7 @@ function AppShell(): React.JSX.Element {
               onNewProject={() => setProject(null)}
               onNotify={pushToast}
               onOpenExport={() => setIsExportOpen(true)}
+              onOpenShare={() => setIsShareOpen(true)}
               onOpenGuide={() => {
                 setGuideCenterSection('markdown-guide')
                 setIsGuideCenterOpen(true)
@@ -222,6 +280,7 @@ function AppShell(): React.JSX.Element {
                   })
               }}
               onProjectChange={setProject}
+              onUpdateAppSettings={updateSettingsSilently}
               onSelectionChange={setSelectedNode}
               project={project}
             />
@@ -293,23 +352,61 @@ function AppShell(): React.JSX.Element {
         />
 
         <ExportDialog
+          appSettings={settings}
           locale={locale}
           onClose={() => setIsExportOpen(false)}
+          onUpdateAppSettings={updateSettingsSilently}
           open={isExportOpen}
           project={project}
           selectedNode={selectedNode}
           workspaceDirectory={settings.workspaceDirectory}
         />
 
-        <OnboardingOverlay
+        <ShareDialog
           locale={locale}
-          onClose={() =>
-            void saveSettings({
+          onClose={() => setIsShareOpen(false)}
+          onImportOpenedProject={openProject}
+          open={isShareOpen}
+          project={project}
+          workspaceDirectory={settings.workspaceDirectory}
+        />
+
+        <OnboardingOverlay
+          initialStepIndex={initialTutorialStepIndex}
+          locale={locale}
+          onProgress={(payload) =>
+            void updateSettingsSilently({
               ...settings,
-              onboardingCompleted: true
+              tutorialProgress: {
+                ...settings.tutorialProgress,
+                lastTutorialId: payload.tutorialId,
+                activeSession: payload
+              }
             })
           }
-          open={onboardingOpen}
+          onDismiss={(result) =>
+            void (async () => {
+              setActiveTutorialId(null)
+              await saveSettings({
+                ...settings,
+                tutorialProgress: {
+                  completedTutorialIds:
+                    result === 'completed'
+                      ? Array.from(new Set([...settings.tutorialProgress.completedTutorialIds, tutorialId]))
+                      : settings.tutorialProgress.completedTutorialIds,
+                  skippedTutorialIds:
+                    result === 'skipped'
+                      ? Array.from(new Set([...settings.tutorialProgress.skippedTutorialIds, tutorialId]))
+                      : settings.tutorialProgress.skippedTutorialIds,
+                  lastTutorialId: tutorialId,
+                  activeSession: undefined
+                },
+                onboardingCompleted: tutorialId === onboardingTutorialId ? true : settings.onboardingCompleted
+              })
+            })()
+          }
+          open={tutorialOverlayOpen}
+          tutorialId={tutorialId}
         />
       </>
     </ThemeProvider>

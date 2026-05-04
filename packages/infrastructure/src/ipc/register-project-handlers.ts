@@ -3,12 +3,18 @@ import { ipcMain } from 'electron'
 import type { IpcContractMap } from '@pecie/schemas'
 
 import { AppSettingsService } from '../app/app-settings-service'
+import { CitationService } from '../citations/citation-service'
 import { HistoryService } from '../history/history-service'
 import { AppLoggerService } from '../logging/app-logger-service'
 import { ProjectService } from '../project/project-service'
+import { ResearchService } from '../research/research-service'
+import { ShareService } from '../share/share-service'
 
 export function registerProjectHandlers(
   projectService: ProjectService,
+  citationService: CitationService,
+  researchService: ResearchService,
+  shareService: ShareService,
   historyService: HistoryService,
   appSettingsService: AppSettingsService,
   logger: AppLoggerService
@@ -72,6 +78,77 @@ export function registerProjectHandlers(
       })
       return response
     }
+  )
+
+  ipcMain.handle(
+    'citations:loadLibrary',
+    async (_event, payload: IpcContractMap['citations:loadLibrary']['request']) => citationService.loadLibrary(payload)
+  )
+
+  ipcMain.handle(
+    'citations:suggest',
+    async (_event, payload: IpcContractMap['citations:suggest']['request']) => citationService.suggest(payload)
+  )
+
+  ipcMain.handle(
+    'citations:listProfiles',
+    async (_event, payload: IpcContractMap['citations:listProfiles']['request']) => citationService.listProfiles(payload)
+  )
+
+  ipcMain.handle(
+    'citations:saveProfile',
+    async (_event, payload: IpcContractMap['citations:saveProfile']['request']) => citationService.saveProfile(payload)
+  )
+
+  ipcMain.handle(
+    'citations:setDefaultProfile',
+    async (_event, payload: IpcContractMap['citations:setDefaultProfile']['request']) =>
+      citationService.setDefaultProfile(payload)
+  )
+
+  ipcMain.handle(
+    'research:listNotes',
+    async (_event, payload: IpcContractMap['research:listNotes']['request']) => researchService.listResearchNotes(payload)
+  )
+
+  ipcMain.handle(
+    'research:createNote',
+    async (_event, payload: IpcContractMap['research:createNote']['request']) => researchService.createResearchNote(payload)
+  )
+
+  ipcMain.handle(
+    'research:listPdfLibrary',
+    async (_event, payload: IpcContractMap['research:listPdfLibrary']['request']) => researchService.listPdfLibrary(payload)
+  )
+
+  ipcMain.handle(
+    'research:importPdf',
+    async (_event, payload: IpcContractMap['research:importPdf']['request']) => researchService.importPdf(payload)
+  )
+
+  ipcMain.handle(
+    'research:getGraph',
+    async (_event, payload: IpcContractMap['research:getGraph']['request']) => researchService.getResearchGraph(payload)
+  )
+
+  ipcMain.handle(
+    'research:createLink',
+    async (_event, payload: IpcContractMap['research:createLink']['request']) => researchService.createLink(payload)
+  )
+
+  ipcMain.handle(
+    'share:previewPackage',
+    async (_event, payload: IpcContractMap['share:previewPackage']['request']) => shareService.previewPackage(payload)
+  )
+
+  ipcMain.handle(
+    'share:createPackage',
+    async (_event, payload: IpcContractMap['share:createPackage']['request']) => shareService.createPackage(payload)
+  )
+
+  ipcMain.handle(
+    'share:importPackage',
+    async (_event, payload: IpcContractMap['share:importPackage']['request']) => shareService.importPackage(payload)
   )
 
   ipcMain.handle(

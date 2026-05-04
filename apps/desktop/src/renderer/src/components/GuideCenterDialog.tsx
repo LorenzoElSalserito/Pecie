@@ -262,6 +262,9 @@ export function GuideCenterDialog({
   open,
   locale,
   initialSection,
+  tutorialProgress,
+  onStartTutorial,
+  onResetTutorial,
   onClose
 }: GuideCenterDialogProps): React.JSX.Element | null {
   const [activeSection, setActiveSection] = useState<GuideCenterSection>(initialSection)
@@ -319,6 +322,28 @@ export function GuideCenterDialog({
         { label: t(locale, 'focusMode'), shortcut: 'Toggle chip' },
         { label: t(locale, 'typewriterMode'), shortcut: 'Toggle chip' }
       ]
+    }
+  ]
+  const tutorialCards = [
+    {
+      id: 'launcher-basics',
+      title: t(locale, 'tutorialLauncherTitle'),
+      body: t(locale, 'tutorialLauncherBody')
+    },
+    {
+      id: 'workspace-basics',
+      title: t(locale, 'tutorialWorkspaceTitle'),
+      body: t(locale, 'tutorialWorkspaceBody')
+    },
+    {
+      id: 'timeline-basics',
+      title: t(locale, 'tutorialTimelineTitle'),
+      body: t(locale, 'tutorialTimelineBody')
+    },
+    {
+      id: 'export-basics',
+      title: t(locale, 'tutorialExportTitle'),
+      body: t(locale, 'tutorialExportBody')
     }
   ]
 
@@ -386,6 +411,33 @@ export function GuideCenterDialog({
             <div className="dialog-form">
               <section className="context-card context-card--soft guide-intro">
                 <p>{t(locale, 'guideCenterUiTourIntro')}</p>
+              </section>
+              <section className="guide-grid guide-grid--dense">
+                {tutorialCards.map((tutorial) => {
+                  const completed = tutorialProgress.completedTutorialIds.includes(tutorial.id)
+                  const skipped = tutorialProgress.skippedTutorialIds.includes(tutorial.id)
+                  const resumable = tutorialProgress.activeSession?.tutorialId === tutorial.id
+
+                  return (
+                    <article className="guide-card" key={tutorial.id}>
+                      <div className="stack-list stack-list--tight">
+                        <h4>{tutorial.title}</h4>
+                        <p>{tutorial.body}</p>
+                        <p>{completed ? t(locale, 'tutorialStatusCompleted') : resumable ? t(locale, 'tutorialStatusResumable') : t(locale, 'tutorialStatusNotStarted')}</p>
+                        <div className="dialog-actions dialog-actions--inline">
+                          <Button onClick={() => onStartTutorial(tutorial.id)} size="sm" type="button" variant="secondary">
+                            {resumable ? t(locale, 'tutorialResume') : completed || skipped ? t(locale, 'tutorialReplay') : t(locale, 'openTutorial')}
+                          </Button>
+                          {completed || skipped || resumable ? (
+                            <Button onClick={() => onResetTutorial(tutorial.id)} size="sm" type="button" variant="ghost">
+                              {t(locale, 'tutorialReset')}
+                            </Button>
+                          ) : null}
+                        </div>
+                      </div>
+                    </article>
+                  )
+                })}
               </section>
               <div className="guide-grid guide-grid--dense">
                 {knowledgeBlocks.map((block) => (

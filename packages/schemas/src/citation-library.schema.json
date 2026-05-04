@@ -1,0 +1,12 @@
+{
+  "$id": "citation-library.schema.json",
+  "type": "object",
+  "required": [
+    "version",
+    "generatedAt",
+    "profile",
+    "entries",
+    "sources",
+    "diagnostics"
+  ]
+}

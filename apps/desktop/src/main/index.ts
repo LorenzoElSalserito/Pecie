@@ -6,17 +6,27 @@ import { is } from '@electron-toolkit/utils'
 import {
   AppSettingsService,
   AppLoggerService,
+  CitationService,
   ExportService,
   GitAdapter,
   HistoryService,
+  PreviewService,
+  PrivacyService,
   ProjectFileSystem,
   ProjectService,
+  ResearchService,
+  ShareService,
+  ExportRuntimeResolver,
   registerProjectHandlers,
   registerSettingsHandlers,
   registerShellHandlers
 } from '@pecie/infrastructure'
 import appIconPath from '../renderer/src/asset/Icon.png'
 import splashLogoSvg from '../renderer/src/asset/Icon.svg?raw'
+
+function uniquePaths(paths: string[]): string[] {
+  return Array.from(new Set(paths))
+}
 
 function getAppIconPath(): string {
   return appIconPath
@@ -142,7 +152,16 @@ function createWindow(splashWindow: BrowserWindow | null): void {
   })
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    void shell.openExternal(url)
+    let protocol = ''
+    try {
+      protocol = new URL(url).protocol
+    } catch {
+      protocol = ''
+    }
+
+    if (['https:', 'http:', 'mailto:'].includes(protocol)) {
+      void shell.openExternal(url)
+    }
     return { action: 'deny' }
   })
 
@@ -192,10 +211,36 @@ app.whenReady().then(async () => {
   const logger = new AppLoggerService(appDataDirectory)
   const appSettingsService = new AppSettingsService(appDataDirectory, app.getPath('documents'), app.getLocale())
   const projectFileSystem = new ProjectFileSystem()
+  const citationService = new CitationService(projectFileSystem)
+  const researchService = new ResearchService(projectFileSystem)
+  const shareService = new ShareService(projectFileSystem)
+  const exportRuntimeResolver = new ExportRuntimeResolver({
+    resourceRoots: uniquePaths([
+      join(app.getAppPath(), 'resources'),
+      join(__dirname, '../../resources'),
+      process.resourcesPath
+    ])
+  })
   const historyService = new HistoryService(projectFileSystem, new GitAdapter(), logger)
-  registerSettingsHandlers(appSettingsService, logger)
-  registerProjectHandlers(new ProjectService(projectFileSystem, undefined, logger, historyService), historyService, appSettingsService, logger)
-  registerShellHandlers(new ExportService(), logger, appDataDirectory)
+  const projectService = new ProjectService(projectFileSystem, undefined, logger, historyService)
+  const privacyService = new PrivacyService(appDataDirectory, projectFileSystem, projectService, logger)
+  registerSettingsHandlers(appSettingsService, privacyService, logger)
+  registerProjectHandlers(
+    projectService,
+    citationService,
+    researchService,
+    shareService,
+    historyService,
+    appSettingsService,
+    logger
+  )
+  registerShellHandlers(
+    new ExportService(projectFileSystem, undefined, exportRuntimeResolver),
+    new PreviewService(projectFileSystem),
+    appSettingsService,
+    logger,
+    appDataDirectory
+  )
 
   const splashWindow = createSplashWindow()
   createWindow(splashWindow)

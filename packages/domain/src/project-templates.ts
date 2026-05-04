@@ -541,6 +541,7 @@ export function createProjectMetadata(input: CreateProjectRequest, createdAt: st
       name: input.authorProfile.name,
       role: input.authorProfile.role
     },
+    defaultCitationProfileId: 'default',
     authors: [
       {
         id: 'author-primary',

@@ -265,6 +265,38 @@ describe('ProjectService', () => {
 
     expect(openedProject.manifest.title).toBe('Thesis Demo')
     expect(openedProject.binder.nodes.length).toBeGreaterThan(0)
+    expect(openedProject.manifest.schemaUris.exportProfile).toBe('schemas/export-profile.schema.json')
+    const exportProfile = JSON.parse(
+      await readFile(path.join(createdProject.projectPath, 'exports/profiles/thesis-pdf.json'), 'utf8')
+    ) as { id: string }
+    expect(exportProfile.id).toBe('thesis-pdf')
+    const requiredSeedProfiles = [
+      'thesis-docx',
+      'thesis-odt',
+      'thesis-pdf',
+      'thesis-epub',
+      'thesis-html',
+      'thesis-md',
+      'thesis-txt',
+      'thesis-latex'
+    ]
+    for (const profileId of requiredSeedProfiles) {
+      const profile = JSON.parse(
+        await readFile(path.join(createdProject.projectPath, `exports/profiles/${profileId}.json`), 'utf8')
+      ) as { id: string }
+      expect(profile.id).toBe(profileId)
+    }
+    for (const cacheDirectory of [
+      'cache/preview/fast',
+      'cache/preview/accurate',
+      'cache/preview/page-breaks',
+      'cache/preview/export-step'
+    ]) {
+      await expect(fileSystem.statEntry(createdProject.projectPath, cacheDirectory)).resolves.toBeTruthy()
+    }
+    const gitignore = await fileSystem.readText(createdProject.projectPath, '.gitignore')
+    expect(gitignore).toContain('cache/derived/')
+    expect(gitignore).toContain('cache/preview/')
   })
 
   it('creates blank projects with a neutral structure that stays fully customizable', async () => {
@@ -302,6 +334,106 @@ describe('ProjectService', () => {
     expect(projectSheet.document.body).toContain('## Come usare questo progetto')
     expect(openingDocument.document.frontmatter.type).toBe('chapter')
     expect(openingDocument.document.body).toContain('Inizia da qui oppure riorganizza liberamente il binder')
+  })
+
+  it('backfills missing export profiles for existing projects on open', async () => {
+    const baseDirectory = await mkdtemp(path.join(tmpdir(), 'pecie-project-service-'))
+    cleanupPaths.push(baseDirectory)
+
+    const service = new ProjectService(undefined, noopIndexAdapter)
+    const createdProject = await service.createProject({
+      directory: baseDirectory,
+      projectName: 'blank-backfill',
+      title: 'Blank Backfill',
+      language: 'it-IT',
+      template: 'blank',
+      authorProfile: {
+        name: 'Fixture Author',
+        role: 'writer',
+        preferredLanguage: 'it-IT'
+      }
+    })
+
+    await rm(path.join(createdProject.projectPath, 'exports/profiles/blank-html.json'))
+    await rm(path.join(createdProject.projectPath, 'exports/profiles/blank-jats.json'))
+    await rm(path.join(createdProject.projectPath, 'exports/profiles/blank-tei.json'))
+
+    await service.openProject({
+      projectPath: createdProject.projectPath
+    })
+
+    for (const profileId of ['blank-html', 'blank-jats', 'blank-tei']) {
+      const profile = JSON.parse(
+        await readFile(path.join(createdProject.projectPath, `exports/profiles/${profileId}.json`), 'utf8')
+      ) as { id: string }
+      expect(profile.id).toBe(profileId)
+    }
+  })
+
+  it('backfills missing technical directories for existing projects on open', async () => {
+    const baseDirectory = await mkdtemp(path.join(tmpdir(), 'pecie-project-service-'))
+    cleanupPaths.push(baseDirectory)
+
+    const fileSystem = new ProjectFileSystem()
+    const service = new ProjectService(fileSystem, noopIndexAdapter)
+    const createdProject = await service.createProject({
+      directory: baseDirectory,
+      projectName: 'blank-directory-backfill',
+      title: 'Blank Directory Backfill',
+      language: 'it-IT',
+      template: 'blank',
+      authorProfile: {
+        name: 'Fixture Author',
+        role: 'writer',
+        preferredLanguage: 'it-IT'
+      }
+    })
+
+    await rm(path.join(createdProject.projectPath, 'cache/preview/fast'), { force: true, recursive: true })
+    await rm(path.join(createdProject.projectPath, 'cache/preview/accurate'), { force: true, recursive: true })
+
+    await service.openProject({
+      projectPath: createdProject.projectPath
+    })
+
+    await expect(fileSystem.statEntry(createdProject.projectPath, 'cache/preview/fast')).resolves.toBeTruthy()
+    await expect(fileSystem.statEntry(createdProject.projectPath, 'cache/preview/accurate')).resolves.toBeTruthy()
+  })
+
+  it('backfills generated cache gitignore entries for existing projects on open', async () => {
+    const baseDirectory = await mkdtemp(path.join(tmpdir(), 'pecie-project-service-'))
+    cleanupPaths.push(baseDirectory)
+
+    const fileSystem = new ProjectFileSystem()
+    const service = new ProjectService(fileSystem, noopIndexAdapter)
+    const createdProject = await service.createProject({
+      directory: baseDirectory,
+      projectName: 'blank-gitignore-backfill',
+      title: 'Blank Gitignore Backfill',
+      language: 'it-IT',
+      template: 'blank',
+      authorProfile: {
+        name: 'Fixture Author',
+        role: 'writer',
+        preferredLanguage: 'it-IT'
+      }
+    })
+
+    await fileSystem.writeText(
+      createdProject.projectPath,
+      '.gitignore',
+      ['# Local machine rules', '', 'cache/index.sqlite*', 'exports/out/', 'custom-local-only/'].join('\n')
+    )
+
+    await service.openProject({
+      projectPath: createdProject.projectPath
+    })
+
+    const gitignore = await fileSystem.readText(createdProject.projectPath, '.gitignore')
+    expect(gitignore.startsWith('# Local machine rules\n\ncache/index.sqlite*')).toBe(true)
+    expect(gitignore).toContain('custom-local-only/')
+    expect(gitignore).toContain('cache/derived/')
+    expect(gitignore).toContain('cache/preview/')
   })
 
   it('creates thesis projects with a prefilled editable frontespiece', async () => {

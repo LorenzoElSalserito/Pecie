@@ -1,0 +1,58 @@
+{
+  "id": "export-basics",
+  "schemaVersion": 1,
+  "icon": "bi-box-arrow-up",
+  "titleKey": "tutorialExportTitle",
+  "steps": [
+    {
+      "id": "open-export",
+      "bodyKey": "tutorialExportStep1",
+      "targetLabelKey": "tutorialTargetWorkspaceExport",
+      "action": "click",
+      "target": {
+        "kind": "tutorial-id",
+        "value": "workspace-open-export"
+      }
+    },
+    {
+      "id": "choose-format",
+      "bodyKey": "tutorialExportStep2",
+      "targetLabelKey": "tutorialTargetExportFormat",
+      "action": "focus",
+      "target": {
+        "kind": "tutorial-id",
+        "value": "export-format"
+      }
+    },
+    {
+      "id": "choose-profile",
+      "bodyKey": "tutorialExportStep3",
+      "targetLabelKey": "tutorialTargetExportProfile",
+      "action": "focus",
+      "target": {
+        "kind": "tutorial-id",
+        "value": "export-profile"
+      }
+    },
+    {
+      "id": "review-output",
+      "bodyKey": "tutorialExportStep4",
+      "targetLabelKey": "tutorialTargetExportOutput",
+      "action": "focus",
+      "target": {
+        "kind": "tutorial-id",
+        "value": "export-output-path"
+      }
+    },
+    {
+      "id": "start-export",
+      "bodyKey": "tutorialExportStep5",
+      "targetLabelKey": "tutorialTargetExportStart",
+      "action": "focus",
+      "target": {
+        "kind": "tutorial-id",
+        "value": "export-start"
+      }
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schemas/export-profile-support-decision.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profileId", "supported", "availability", "requiredCapabilities", "missingCapabilities", "messageKey"],
+  "properties": {
+    "profileId": { "type": "string" },
+    "supported": { "type": "boolean" },
+    "availability": {
+      "type": "string",
+      "enum": ["ready", "addon-required", "unsupported"]
+    },
+    "requiredCapabilities": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "missingCapabilities": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "messageKey": { "type": "string" }
+  }
+}

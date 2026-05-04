@@ -14,8 +14,15 @@ import type {
   DiffDocumentResponse,
   ListTimelineResponse,
   OpenProjectResponse,
+  PdfLibraryItem,
+  ResearchLinkMap,
+  ResearchLinkRelation,
+  ResearchNoteKind,
+  ResearchNoteRecord,
+  ShareImportMode,
+  ShareIncludeKind,
+  SharePackageManifest,
   RestoreDocumentResponse,
-  RestoreSelectionResponse,
   SupportedLocale
 } from '@pecie/schemas'
 
@@ -46,9 +53,11 @@ export type EditorFormatAction =
   | 'subscript'
   | 'table'
 export type EditorViewMode = 'write' | 'preview' | 'split'
-export type WorkspaceViewMode = 'editor' | 'timeline' | 'outliner' | 'corkboard' | 'scrivenings'
+export type WorkspaceViewMode = 'editor' | 'research' | 'timeline' | 'outliner' | 'corkboard' | 'scrivenings'
 export type BinderDropPlacement = 'before' | 'after' | 'inside'
-export type ExportFormatId = 'pdf' | 'docx' | 'odt' | 'rtf' | 'epub' | 'latex' | 'jats' | 'tei' | 'md' | 'txt'
+export type ExportFormatId = 'pdf' | 'docx' | 'odt' | 'rtf' | 'epub' | 'html' | 'latex' | 'jats' | 'tei' | 'md' | 'txt'
+export type ShareIncludeId = ShareIncludeKind
+export type ShareImportModeId = ShareImportMode
 export type GuideCenterSection = 'quick-start' | 'ui-tour' | 'markdown-guide' | 'how-to' | 'shortcuts'
 
 export type ToastItem = {
@@ -145,6 +154,7 @@ export type WorkspaceHeaderProps = {
   onNewProject: () => void
   onOpenProject: () => void
   onOpenExport: () => void
+  onOpenShare: () => void
   onOpenGuide: () => void
   onOpenSettings: () => void
   binderCollapsed: boolean
@@ -201,6 +211,7 @@ export type BinderPanelProps = {
 export type EditorSurfaceProps = {
   locale: SupportedLocale
   project: NonNullable<LoadedProject>
+  appSettings: AppSettings
   selectedNode: VisibleBinderNode | null
   reloadToken?: number
   authorProfile: AuthorProfile
@@ -214,6 +225,7 @@ export type EditorSurfaceProps = {
   }) => Promise<DocumentRecord | void>
   preferences: WorkspacePreferences
   onPreferencesChange: (preferences: WorkspacePreferences) => void
+  onUpdateAppSettings: (settings: AppSettings) => Promise<void>
   onDocumentSaved: (document: DocumentRecord) => void
   onManualSaved: () => void
   onBodySnapshot: (body: string) => void
@@ -236,6 +248,29 @@ export type WorkspaceDocumentSummary = {
   body: string
 }
 
+export type ResearchViewProps = {
+  locale: SupportedLocale
+  projectPath: string
+  notes: ResearchNoteRecord[]
+  pdfItems: PdfLibraryItem[]
+  graph: ResearchLinkMap | null
+  selectedNoteId: string | null
+  selectedPdfId: string | null
+  selectedBinderDocumentId: string | null
+  onSelectNote: (noteId: string) => void
+  onSelectPdf: (pdfId: string) => void
+  onCreateNote: (payload: { title: string; kind: ResearchNoteKind; body: string }) => Promise<void>
+  onImportPdf: (sourcePaths?: string[]) => Promise<void>
+  onCreateLink: (payload: {
+    sourceType: 'note' | 'pdf' | 'binder-document'
+    sourceId: string
+    targetType: 'note' | 'pdf' | 'binder-document'
+    targetId: string
+    relation: ResearchLinkRelation
+  }) => Promise<void>
+  binderDocuments: WorkspaceDocumentSummary[]
+}
+
 export type ContextPanelProps = {
   locale: SupportedLocale
   project: NonNullable<LoadedProject>
@@ -252,6 +287,7 @@ export type ContextPanelProps = {
   timelineLoading: boolean
   onOpenTimelineWorkspace: () => void
   onOpenPreviousVersionDiff: () => Promise<void>
+  onDefaultCitationProfileChange: (profileId: string) => void
   onOpenWritingHubNode: (nodeId: string) => void
   onImportAttachments: () => void
   onOpenAttachmentsDirectory: () => void
@@ -277,8 +313,10 @@ export type WorkspaceProps = {
   locale: SupportedLocale
   project: NonNullable<LoadedProject>
   authorProfile: AuthorProfile
+  appSettings: AppSettings
   onSelectionChange: (node: BinderNode | null) => void
   onProjectChange: (project: NonNullable<LoadedProject>) => void
+  onUpdateAppSettings: (settings: AppSettings) => Promise<void>
   onManualDocumentSaved: () => void
   onNotify: (message: string, tone?: ToastTone) => void
   onPreviewAttachment: (attachment: AttachmentRecord | null) => void
@@ -288,6 +326,7 @@ export type WorkspaceProps = {
   onNewProject: () => void
   onOpenProject: () => void
   onOpenExport: () => void
+  onOpenShare: () => void
   onOpenSettings: () => void
 }
 
@@ -337,16 +376,35 @@ export type GlobalSearchDialogProps = {
 export type ExportDialogProps = {
   open: boolean
   locale: SupportedLocale
+  appSettings: AppSettings
   project: NonNullable<LoadedProject> | null
   selectedNode: BinderNode | null
   workspaceDirectory: string
+  onUpdateAppSettings: (settings: AppSettings) => Promise<void>
   onClose: () => void
+}
+
+export type ShareDialogProps = {
+  open: boolean
+  locale: SupportedLocale
+  project: NonNullable<LoadedProject> | null
+  workspaceDirectory: string
+  onClose: () => void
+  onImportOpenedProject: (projectPath: string) => Promise<void>
+}
+
+export type SharePreviewState = {
+  manifest: SharePackageManifest
+  outputPath: string
 }
 
 export type OnboardingOverlayProps = {
   open: boolean
   locale: SupportedLocale
-  onClose: () => void
+  tutorialId: string
+  initialStepIndex?: number
+  onProgress: (payload: { tutorialId: string; stepIndex: number; status: 'running' | 'paused' }) => void
+  onDismiss: (result: 'completed' | 'skipped') => void
 }
 
 export type AttachmentPreviewDialogProps = {
@@ -370,6 +428,9 @@ export type GuideCenterDialogProps = {
   open: boolean
   locale: SupportedLocale
   initialSection: GuideCenterSection
+  tutorialProgress: AppSettings['tutorialProgress']
+  onStartTutorial: (tutorialId: string) => void
+  onResetTutorial: (tutorialId: string) => void
   onClose: () => void
 }
 
@@ -396,11 +457,12 @@ export const exportFormats: Array<{ id: ExportFormatId; label: string; extension
   { id: 'odt', label: 'ODT', extension: 'odt' },
   { id: 'rtf', label: 'RTF', extension: 'rtf' },
   { id: 'epub', label: 'EPUB', extension: 'epub' },
-  { id: 'latex', label: 'LaTeX', extension: 'tex' },
+  { id: 'html', label: 'HTML', extension: 'html' },
+  { id: 'latex', label: 'LaTeX (.tex)', extension: 'tex' },
   { id: 'jats', label: 'JATS XML', extension: 'xml' },
   { id: 'tei', label: 'TEI XML', extension: 'xml' },
-  { id: 'md', label: 'MD', extension: 'md' },
-  { id: 'txt', label: 'TXT', extension: 'txt' }
+  { id: 'md', label: 'Markdown', extension: 'md' },
+  { id: 'txt', label: 'Plain Text', extension: 'txt' }
 ]
 
 export type AddBinderNodeResult = AddBinderNodeResponse

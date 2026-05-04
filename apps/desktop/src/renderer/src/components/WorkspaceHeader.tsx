@@ -19,6 +19,7 @@ export function WorkspaceHeader({
   onNewProject,
   onOpenProject,
   onOpenExport,
+  onOpenShare,
   onOpenGuide,
   onOpenSettings,
   binderCollapsed,
@@ -62,9 +63,16 @@ export function WorkspaceHeader({
     label: string
     onClick: () => void
     shortcut?: string
+    tutorialId?: string
   }): React.JSX.Element {
     return (
-      <button className="overflow-menu__item" onClick={params.onClick} role="menuitem" type="button">
+      <button
+        className="overflow-menu__item"
+        data-tutorial-id={params.tutorialId}
+        onClick={params.onClick}
+        role="menuitem"
+        type="button"
+      >
         <span aria-hidden="true" className="overflow-menu__item-icon">
           <i className={`bi ${params.icon}`}></i>
         </span>
@@ -146,6 +154,7 @@ export function WorkspaceHeader({
         <div className="workspace-header__view-switcher" role="tablist" aria-label={t(locale, 'workspaceViewsTitle')}>
           {([
             ['editor', t(locale, 'workspaceViewEditor')],
+            ['research', t(locale, 'workspaceViewResearch')],
             ['timeline', t(locale, 'workspaceViewTimeline')],
             ['outliner', t(locale, 'workspaceViewOutliner')],
             ['corkboard', t(locale, 'workspaceViewCorkboard')],
@@ -154,9 +163,11 @@ export function WorkspaceHeader({
             <button
               aria-selected={workspaceView === view}
               className={`workspace-view-chip${workspaceView === view ? ' workspace-view-chip--active' : ''}`}
+              data-tutorial-id={`workspace-view-${view}`}
               key={view}
               onClick={() => onChangeWorkspaceView(view)}
               role="tab"
+              tabIndex={workspaceView === view ? 0 : -1}
               type="button"
             >
               {label}
@@ -168,7 +179,7 @@ export function WorkspaceHeader({
       {/* ── Right: Primary Actions + Overflow ── */}
       <div className="workspace-header__actions">
         <div className="workspace-header__action-group workspace-header__action-group--primary">
-          <Button onClick={onOpenExport} size="sm" variant="secondary">
+          <Button data-tutorial-id="workspace-open-export" onClick={onOpenExport} size="sm" variant="secondary">
             <i aria-hidden="true" className="bi bi-box-arrow-up"></i>
             {t(locale, 'export')}
           </Button>
@@ -183,6 +194,7 @@ export function WorkspaceHeader({
           <Button
             aria-expanded={overflowOpen}
             aria-label={t(locale, 'moreActions')}
+            data-tutorial-id="workspace-overflow-menu"
             onClick={() => setOverflowOpen((current) => !current)}
             size="sm"
             variant="ghost"
@@ -215,8 +227,17 @@ export function WorkspaceHeader({
                   }
                 })}
                 {renderOverflowItem({
+                  icon: 'bi-share',
+                  label: t(locale, 'shareTitle'),
+                  onClick: () => {
+                    onOpenShare()
+                    setOverflowOpen(false)
+                  }
+                })}
+                {renderOverflowItem({
                   icon: 'bi-book',
                   label: t(locale, 'guideCenterTitle'),
+                  tutorialId: 'workspace-open-guide',
                   onClick: () => {
                     onOpenGuide()
                     setOverflowOpen(false)
@@ -226,6 +247,7 @@ export function WorkspaceHeader({
                 {renderOverflowItem({
                   icon: 'bi-gear',
                   label: t(locale, 'settings'),
+                  tutorialId: 'workspace-open-settings',
                   onClick: () => {
                     onOpenSettings()
                     setOverflowOpen(false)

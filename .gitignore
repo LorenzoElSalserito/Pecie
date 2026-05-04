@@ -70,6 +70,8 @@ derived/
 *.db-wal
 # Workspace effimero
 workspace.json
+# Checklist manuali locali di chiusura fase
+MANUALCHECK.md
 # Output di esportazione non versionabili (es. PDF temporanei, DOCX di test)
 exports/out/
 # Progressi tutorial locali
@@ -174,6 +176,9 @@ UI.md
 *PRD*.md
 docs/prd/
 docs/adr/
+docs/a11y/
+docs/*closure-report.md
+docs/phase-*.md
 
 # =========================
 # File generati da Pandoc e LaTeX (durante l'export test)
@@ -193,3 +198,8 @@ docs/adr/
 *.xdv
 *.pdfsync
 *.synctex.gz
+
+# Vendored export runtime binaries are local build artifacts unless explicitly curated.
+apps/desktop/resources/export-runtime/**
+third_party/export-runtime/**
+!third_party/export-runtime/

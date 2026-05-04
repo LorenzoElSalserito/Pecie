@@ -1,0 +1,5 @@
+{
+  "$id": "page-break-map.schema.json",
+  "type": "object",
+  "required": ["profileId", "format", "mode", "pipeline", "totalEstimatedPages", "breaks", "computedAt", "cacheKey"]
+}

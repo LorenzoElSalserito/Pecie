@@ -7,17 +7,23 @@ import { dialog, ipcMain, shell } from 'electron'
 
 import type { IpcContractMap } from '@pecie/schemas'
 
+import { AppSettingsService } from '../app/app-settings-service'
 import { AppLoggerService } from '../logging/app-logger-service'
+import { PluginService } from '../plugins/plugin-service'
 import { ExportService } from '../project/export-service'
+import { PreviewService } from '../preview/preview-service'
 
 const execFileAsync = promisify(execFile)
 
 export function registerShellHandlers(
   exportService: ExportService,
+  previewService: PreviewService,
+  appSettingsService: AppSettingsService,
   logger: AppLoggerService,
   appDataDirectory: string
 ): void {
   const legacyHomeDataDirectory = join(dirname(appDataDirectory), 'pecie')
+  const pluginService = new PluginService(appDataDirectory)
 
   ipcMain.handle('path:pickDirectory', async (_event, payload: IpcContractMap['path:pickDirectory']['request']) => {
     const result = await dialog.showOpenDialog({
@@ -141,7 +147,134 @@ export function registerShellHandlers(
     return response
   })
 
+  ipcMain.handle('export:listProfiles', async (_event, payload: IpcContractMap['export:listProfiles']['request']) => {
+    const response = await exportService.listProfiles(payload)
+    await logger.log({
+      level: 'info',
+      category: 'export',
+      event: 'export-list-profiles',
+      message: 'Export profiles listed.',
+      context: {
+        projectPath: payload.projectPath,
+        profileCount: response.profiles.length,
+        diagnosticCount: response.diagnostics.length
+      }
+    })
+    return response
+  })
+
+  ipcMain.handle(
+    'export:getRuntimeCapabilities',
+    async () => {
+      const response = await exportService.getRuntimeCapabilities()
+      await logger.log({
+        level: 'info',
+        category: 'export',
+        event: 'export-runtime-capabilities',
+        message: 'Export runtime capabilities evaluated.',
+        context: {
+          capabilityCount: response.capabilities.length,
+          runtimeVersion: response.runtimeVersion ?? null
+        }
+      })
+      return response
+    }
+  )
+
+  ipcMain.handle('export:preview', async (_event, payload: IpcContractMap['export:preview']['request']) => {
+    const mode = (await appSettingsService.getPreviewMode()).mode
+    const response = await exportService.renderPreview(payload, mode)
+    await logger.log({
+      level: response.status === 'error' ? 'warn' : 'info',
+      category: 'export',
+      event: 'export-preview',
+      message: 'Export preview rendered.',
+      context: {
+        projectPath: payload.projectPath,
+        scope: payload.scope,
+        documentId: payload.documentId ?? null,
+        profileId: payload.profileId ?? null,
+        status: response.status,
+        mode
+      }
+    })
+    return response
+  })
+
+  ipcMain.handle('preview:getPageBreaks', async (_event, payload: IpcContractMap['preview:getPageBreaks']['request']) => {
+    const mode = (await appSettingsService.getPreviewMode()).mode
+    const response = await previewService.getPageBreaks(payload, mode)
+    await logger.log({
+      level: 'info',
+      category: 'export',
+      event: 'preview-page-breaks',
+      message: 'Page break map generated.',
+      context: {
+        projectPath: payload.projectPath,
+        documentId: payload.documentId,
+        profileId: response.binding.profileId,
+        mode
+      }
+    })
+    return response
+  })
+
+  ipcMain.handle('preview:renderFast', async (_event, payload: IpcContractMap['preview:renderFast']['request']) => {
+    const mode = (await appSettingsService.getPreviewMode()).mode
+    const response = await previewService.renderFast(payload, mode)
+    await logger.log({
+      level: response.status === 'error' ? 'warn' : 'info',
+      category: 'export',
+      event: 'preview-render-fast',
+      message: 'Preview engine fast pipeline executed.',
+      context: {
+        projectPath: payload.projectPath,
+        documentId: payload.documentId,
+        status: response.status,
+        cacheKey: response.preview?.cacheKey ?? null,
+        regeneratedInMs: response.regeneratedInMs ?? null,
+        mode
+      }
+    })
+    return response
+  })
+
+  ipcMain.handle('preview:renderAccurate', async (_event, payload: IpcContractMap['preview:renderAccurate']['request']) => {
+    const mode = (await appSettingsService.getPreviewMode()).mode
+    const response = await previewService.renderAccurate(payload, mode)
+    await logger.log({
+      level: response.status === 'error' ? 'warn' : 'info',
+      category: 'export',
+      event: 'preview-render-accurate',
+      message: 'Preview engine accurate pipeline executed.',
+      context: {
+        projectPath: payload.projectPath,
+        documentId: payload.documentId,
+        status: response.status,
+        cacheKey: response.preview?.cacheKey ?? null,
+        regeneratedInMs: response.regeneratedInMs ?? null,
+        mode
+      }
+    })
+    return response
+  })
+
   ipcMain.handle('log:event', async (_event, payload: IpcContractMap['log:event']['request']) => logger.log(payload))
+
+  ipcMain.handle('plugins:listInstalled', async () => {
+    const response = await pluginService.listInstalledPlugins()
+    await logger.log({
+      level: response.diagnostics.length > 0 ? 'warn' : 'info',
+      category: 'settings',
+      event: 'plugins-list-installed',
+      message: 'Installed plugins listed.',
+      context: {
+        pluginCount: response.plugins.length,
+        diagnosticCount: response.diagnostics.length
+      }
+    })
+    return response
+  })
 
   ipcMain.handle('bug-report:compose', async (_event, payload: IpcContractMap['bug-report:compose']['request']) => {
     const bundle = await logger.createBugReportBundle(payload)

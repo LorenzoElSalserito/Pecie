@@ -9,6 +9,12 @@
     "out/**/*",
     "package.json"
   ],
+  "extraResources": [
+    {
+      "from": "resources/export-runtime",
+      "to": "export-runtime"
+    }
+  ],
   "extraMetadata": {
     "main": "out/main/index.js"
   },

@@ -20,8 +20,11 @@
     "dist:linux:appimage": "npm run make:linux:appimage",
     "dist:win": "npm run make:win",
     "dist:mac": "npm run make:mac",
+    "ensure:pandoc-runtime": "node ../../scripts/ensure-pandoc-runtime.mjs",
+    "check:export-runtime": "node ../../scripts/check-export-runtime.mjs",
     "prepare:runtime-links": "node ../../scripts/ensure-desktop-runtime-links.mjs",
-    "build": "npm run typecheck && electron-vite build",
+    "prepare:export-runtime": "node ../../scripts/prepare-export-runtime.mjs",
+    "build": "npm run ensure:pandoc-runtime && npm run prepare:export-runtime && npm run check:export-runtime && npm run typecheck && electron-vite build",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "package": "npm run prepare:runtime-links && npm run build && node ../../scripts/run-desktop-forge.mjs package",
     "make": "npm run package && node ../../scripts/run-desktop-forge.mjs make",
@@ -32,7 +35,8 @@
     "make:linux:release": "npm run make:linux && npm run make:linux:appimage",
     "make:win": "npm run package && node ../../scripts/run-desktop-forge.mjs make --platform win32",
     "make:mac": "npm run package && node ../../scripts/run-desktop-forge.mjs make --platform darwin",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test:unit": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "better-sqlite3": "^9.0.0"

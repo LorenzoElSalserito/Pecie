@@ -7,11 +7,15 @@ import type {
   AuthorProfile,
   BinderDocument,
   BinderNode,
+  GetPreviewModeResponse,
+  SetPreviewModeRequest,
+  SetPreviewModeResponse,
   SaveAppSettingsRequest,
   SaveAppSettingsResponse,
   SupportedLocale
 } from '@pecie/schemas'
 import { validateBinderDocument } from '@pecie/schemas'
+import type { PreviewMode } from '@pecie/schemas'
 
 import { ProjectFileSystem } from '../fs/project-file-system'
 
@@ -56,6 +60,37 @@ export class AppSettingsService {
     await mkdir(settings.workspaceDirectory, { recursive: true })
     await this.persist(settings)
     return { settings }
+  }
+
+  public async getPreviewMode(): Promise<GetPreviewModeResponse> {
+    const settings = this.normalizeSettings((await this.readSettings()) ?? undefined)
+    return {
+      mode: settings.preview.mode,
+      disclosuresSeen: settings.preview.disclosuresSeen
+    }
+  }
+
+  public async setPreviewMode(input: SetPreviewModeRequest): Promise<SetPreviewModeResponse> {
+    const current = this.normalizeSettings((await this.readSettings()) ?? undefined)
+    const mode = this.normalizePreviewMode(input.mode)
+    const settings: AppSettings = {
+      ...current,
+      preview: {
+        ...current.preview,
+        mode,
+        disclosuresSeen: input.markDisclosureSeen
+          ? {
+              ...current.preview.disclosuresSeen,
+              [mode]: true
+            }
+          : current.preview.disclosuresSeen
+      }
+    }
+    await this.persist(settings)
+    return {
+      mode,
+      settings
+    }
   }
 
   public async rememberProject(projectPath: string): Promise<void> {
@@ -134,6 +169,7 @@ export class AppSettingsService {
         candidate?.uiZoom === 150
           ? candidate.uiZoom
           : 100,
+      expertModeEnabled: candidate?.expertModeEnabled === true,
       recentProjectPaths: Array.isArray(candidate?.recentProjectPaths)
         ? candidate.recentProjectPaths.filter((item): item is string => typeof item === 'string')
         : [],
@@ -143,6 +179,108 @@ export class AppSettingsService {
       authorProfile: {
         ...authorProfile,
         preferredLanguage: locale
+      },
+      preview: {
+        mode: this.normalizePreviewMode(candidate?.preview?.mode),
+        disclosuresSeen:
+          candidate?.preview?.disclosuresSeen && typeof candidate.preview.disclosuresSeen === 'object'
+            ? {
+                'ultra-performance': Boolean(candidate.preview.disclosuresSeen['ultra-performance']),
+                performance: Boolean(candidate.preview.disclosuresSeen.performance),
+                full: Boolean(candidate.preview.disclosuresSeen.full)
+              }
+            : {},
+        pageMarkers: {
+          byProjectAndProfile:
+            candidate?.preview?.pageMarkers?.byProjectAndProfile &&
+            typeof candidate.preview.pageMarkers.byProjectAndProfile === 'object'
+              ? Object.fromEntries(
+                  Object.entries(candidate.preview.pageMarkers.byProjectAndProfile).flatMap(([key, value]) => {
+                    if (!value || typeof value !== 'object') {
+                      return []
+                    }
+                    const projectId = typeof value.projectId === 'string' ? value.projectId.trim() : ''
+                    const profileId = typeof value.profileId === 'string' ? value.profileId.trim() : ''
+                    if (!projectId || !profileId) {
+                      return []
+                    }
+                    return [
+                      [
+                        key,
+                        {
+                          projectId,
+                          profileId,
+                          showPageMarkers: value.showPageMarkers !== false
+                        }
+                      ]
+                    ]
+                  })
+                )
+              : {}
+        },
+        exportPreview: {
+          byProfile:
+            candidate?.preview?.exportPreview?.byProfile && typeof candidate.preview.exportPreview.byProfile === 'object'
+              ? Object.fromEntries(
+                  Object.entries(candidate.preview.exportPreview.byProfile).flatMap(([key, value]) => {
+                    if (!value || typeof value !== 'object') {
+                      return []
+                    }
+
+                    const profileId = typeof value.profileId === 'string' ? value.profileId.trim() : ''
+                    if (!profileId) {
+                      return []
+                    }
+
+                    const lastDisclosureShownForMode =
+                      value.lastDisclosureShownForMode === 'ultra-performance' ||
+                      value.lastDisclosureShownForMode === 'performance' ||
+                      value.lastDisclosureShownForMode === 'full'
+                        ? value.lastDisclosureShownForMode
+                        : null
+
+                    return [
+                      [
+                        key,
+                        {
+                          profileId,
+                          showPreviewBeforeSave: value.showPreviewBeforeSave === true,
+                          lastDisclosureShownForMode
+                        }
+                      ]
+                    ]
+                  })
+                )
+              : {},
+          globalDefault: false
+        }
+      },
+      tutorialProgress: {
+        completedTutorialIds: Array.isArray(candidate?.tutorialProgress?.completedTutorialIds)
+          ? candidate.tutorialProgress.completedTutorialIds.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+          : [],
+        skippedTutorialIds: Array.isArray(candidate?.tutorialProgress?.skippedTutorialIds)
+          ? candidate.tutorialProgress.skippedTutorialIds.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+          : [],
+        lastTutorialId:
+          typeof candidate?.tutorialProgress?.lastTutorialId === 'string' && candidate.tutorialProgress.lastTutorialId.trim().length > 0
+            ? candidate.tutorialProgress.lastTutorialId.trim()
+            : undefined,
+        activeSession:
+          candidate?.tutorialProgress?.activeSession &&
+          typeof candidate.tutorialProgress.activeSession === 'object' &&
+          typeof candidate.tutorialProgress.activeSession.tutorialId === 'string' &&
+          candidate.tutorialProgress.activeSession.tutorialId.trim().length > 0 &&
+          Number.isInteger(candidate.tutorialProgress.activeSession.stepIndex) &&
+          candidate.tutorialProgress.activeSession.stepIndex >= 0 &&
+          (candidate.tutorialProgress.activeSession.status === 'running' ||
+            candidate.tutorialProgress.activeSession.status === 'paused')
+            ? {
+                tutorialId: candidate.tutorialProgress.activeSession.tutorialId.trim(),
+                stepIndex: candidate.tutorialProgress.activeSession.stepIndex,
+                status: candidate.tutorialProgress.activeSession.status
+              }
+            : undefined
       },
       onboardingCompleted: Boolean(candidate?.onboardingCompleted)
     }
@@ -187,6 +325,10 @@ export class AppSettingsService {
     }
 
     return 'en-US'
+  }
+
+  private normalizePreviewMode(mode: string | undefined): PreviewMode {
+    return mode === 'ultra-performance' || mode === 'full' ? mode : 'performance'
   }
 
   private async persist(settings: AppSettings): Promise<void> {

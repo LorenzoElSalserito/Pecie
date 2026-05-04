@@ -493,22 +493,22 @@ export function BinderPanel({
           </button>
         )}
         <div className={`binder-actions${collapsed ? ' binder-actions--collapsed' : ''}`}>
-          <Button disabled={busy} onClick={() => setIsCreateDialogOpen(true)} size="sm" variant="secondary">
+          <Button aria-label={collapsed ? t(locale, 'newNode') : undefined} disabled={busy} onClick={() => setIsCreateDialogOpen(true)} size="sm" variant="secondary">
             {collapsed ? <i aria-hidden="true" className="bi bi-plus-lg"></i> : t(locale, 'newNode')}
           </Button>
         </div>
         <div className={`binder-actions binder-actions--secondary${collapsed ? ' binder-actions--collapsed' : ''}`}>
-          <Button disabled={busy || !selectedNode} onClick={() => void moveSelected('up')} size="sm" variant="ghost">
+          <Button aria-label={collapsed ? t(locale, 'moveUp') : undefined} disabled={busy || !selectedNode} onClick={() => void moveSelected('up')} size="sm" variant="ghost">
             {collapsed ? <i aria-hidden="true" className="bi bi-arrow-up"></i> : t(locale, 'moveUp')}
           </Button>
-          <Button disabled={busy || !selectedNode} onClick={() => void moveSelected('down')} size="sm" variant="ghost">
+          <Button aria-label={collapsed ? t(locale, 'moveDown') : undefined} disabled={busy || !selectedNode} onClick={() => void moveSelected('down')} size="sm" variant="ghost">
             {collapsed ? <i aria-hidden="true" className="bi bi-arrow-down"></i> : t(locale, 'moveDown')}
           </Button>
-          <Button disabled={busy || !selectedNode} onClick={() => void deleteSelected()} size="sm" variant="ghost">
+          <Button aria-label={collapsed ? t(locale, 'deleteNode') : undefined} disabled={busy || !selectedNode} onClick={() => void deleteSelected()} size="sm" variant="ghost">
             {collapsed ? <i aria-hidden="true" className="bi bi-trash3"></i> : t(locale, 'deleteNode')}
           </Button>
         </div>
-        <div aria-label={t(locale, 'binder')} className="binder-tree" onKeyDown={handleKeyDown} ref={treeRef} role="tree" tabIndex={0}>
+        <div aria-label={t(locale, 'binder')} className="binder-tree" onKeyDown={handleKeyDown} ref={treeRef} role="tree" tabIndex={-1}>
           {visibleNodes.map((node, index) => {
             const isSupport = isSupportNoteNode(node)
             const previousNode = visibleNodes[index - 1]

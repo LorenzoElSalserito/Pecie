@@ -96,24 +96,26 @@ export function upsertDerivedIndexDocument(
   input: IndexedDocumentInput & { nodeId: string }
 ): void {
   withDatabase(databasePath, (database) => {
-    database
-      .prepare(
-        `
-          INSERT INTO documents (document_id, node_id, path, title, updated_at)
-          VALUES (@documentId, @nodeId, @path, @title, @updatedAt)
-          ON CONFLICT(document_id) DO UPDATE SET
-            node_id = excluded.node_id,
-            path = excluded.path,
-            title = excluded.title,
-            updated_at = excluded.updated_at
-        `
-      )
-      .run(input)
+    upsertDocumentInDatabase(database, input)
+  })
+}
 
-    database.prepare(`DELETE FROM documents_fts WHERE document_id = ?`).run(input.documentId)
-    database
-      .prepare(`INSERT INTO documents_fts (node_id, document_id, title, body) VALUES (@nodeId, @documentId, @title, @body)`)
-      .run(input)
+export function upsertDerivedIndexDocuments(
+  databasePath: string,
+  inputs: ReadonlyArray<IndexedDocumentInput & { nodeId: string }>
+): void {
+  if (inputs.length === 0) {
+    return
+  }
+
+  withDatabase(databasePath, (database) => {
+    const upsertMany = database.transaction((records: ReadonlyArray<IndexedDocumentInput & { nodeId: string }>) => {
+      for (const record of records) {
+        upsertDocumentInDatabase(database, record)
+      }
+    })
+
+    upsertMany(inputs)
   })
 }
 
@@ -236,4 +238,25 @@ export function searchDerivedIndex(
       attachments: attachmentStatement.all(ftsQuery, safeLimit) as SearchAttachmentIndexResult[]
     }
   })
+}
+
+function upsertDocumentInDatabase(database: Database.Database, input: IndexedDocumentInput & { nodeId: string }): void {
+  database
+    .prepare(
+      `
+        INSERT INTO documents (document_id, node_id, path, title, updated_at)
+        VALUES (@documentId, @nodeId, @path, @title, @updatedAt)
+        ON CONFLICT(document_id) DO UPDATE SET
+          node_id = excluded.node_id,
+          path = excluded.path,
+          title = excluded.title,
+          updated_at = excluded.updated_at
+      `
+    )
+    .run(input)
+
+  database.prepare(`DELETE FROM documents_fts WHERE document_id = ?`).run(input.documentId)
+  database
+    .prepare(`INSERT INTO documents_fts (node_id, document_id, title, body) VALUES (@nodeId, @documentId, @title, @body)`)
+    .run(input)
 }

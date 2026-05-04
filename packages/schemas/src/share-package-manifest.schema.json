@@ -1,0 +1,14 @@
+{
+  "$id": "share-package-manifest.schema.json",
+  "type": "object",
+  "required": [
+    "sharePackageVersion",
+    "projectId",
+    "projectTitle",
+    "createdAt",
+    "include",
+    "selectedMilestoneIds",
+    "privacyWarnings",
+    "excludedPaths"
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "$id": "app-preview-settings.schema.json",
+  "type": "object",
+  "required": ["mode", "disclosuresSeen", "pageMarkers", "exportPreview"]
+}

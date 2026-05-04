@@ -76,24 +76,85 @@ export function stringAccentColor(value: string): string {
 
 export function flattenVisibleNodes(nodes: BinderNode[], rootId: string, expandedFolderIds: Set<string>): VisibleBinderNode[] {
   const nodeMap = new Map(nodes.map((node) => [node.id, node]))
+  const visibleNodes: VisibleBinderNode[] = []
+  const stack: Array<{ nodeId: string; depth: number; parentId: string | null }> = [{ nodeId: rootId, depth: 0, parentId: null }]
 
-  function visit(nodeId: string, depth: number, parentId: string | null): VisibleBinderNode[] {
-    const node = nodeMap.get(nodeId)
+  while (stack.length > 0) {
+    const current = stack.pop()
+    if (!current) {
+      continue
+    }
+
+    const node = nodeMap.get(current.nodeId)
     if (!node) {
-      return []
+      continue
     }
 
     const isExpanded = node.type === 'folder' ? expandedFolderIds.has(node.id) : undefined
-    const visibleNode: VisibleBinderNode = { ...node, depth, parentId, isExpanded }
-    const descendants =
-      nodeId === rootId || node.type !== 'folder' || isExpanded
-        ? (node.children ?? []).flatMap((childId) => visit(childId, depth + 1, node.id))
-        : []
 
-    return nodeId === rootId ? descendants : [visibleNode, ...descendants]
+    if (current.nodeId !== rootId) {
+      visibleNodes.push({
+        ...node,
+        depth: current.depth,
+        parentId: current.parentId,
+        isExpanded
+      })
+    }
+
+    if (current.nodeId !== rootId && node.type === 'folder' && !isExpanded) {
+      continue
+    }
+
+    const children = node.children ?? []
+    for (let index = children.length - 1; index >= 0; index -= 1) {
+      stack.push({
+        nodeId: children[index],
+        depth: current.depth + 1,
+        parentId: node.id
+      })
+    }
   }
 
-  return visit(rootId, 0, null)
+  return visibleNodes
+}
+
+export function getInitialExpandedFolderIds(nodes: BinderNode[], rootId: string, lazyThreshold = 1000): Set<string> {
+  const folderIds = nodes.filter((node) => node.type === 'folder').map((node) => node.id)
+  if (nodes.length <= lazyThreshold) {
+    return new Set(folderIds)
+  }
+
+  const nodeMap = new Map(nodes.map((node) => [node.id, node]))
+  const expandedIds = new Set<string>([rootId])
+  const stack: Array<{ nodeId: string; ancestorFolderIds: string[] }> = [{ nodeId: rootId, ancestorFolderIds: [rootId] }]
+
+  while (stack.length > 0) {
+    const current = stack.pop()
+    if (!current) {
+      continue
+    }
+
+    const node = nodeMap.get(current.nodeId)
+    if (!node) {
+      continue
+    }
+
+    if (current.nodeId !== rootId && node.type === 'document') {
+      current.ancestorFolderIds.forEach((folderId) => expandedIds.add(folderId))
+      return expandedIds
+    }
+
+    const nextAncestors = node.type === 'folder' ? [...current.ancestorFolderIds, node.id] : current.ancestorFolderIds
+    const children = node.children ?? []
+    for (let index = children.length - 1; index >= 0; index -= 1) {
+      stack.push({
+        nodeId: children[index],
+        ancestorFolderIds: nextAncestors
+      })
+    }
+  }
+
+  return expandedIds
 }
 
 export function getInsertionOptions(

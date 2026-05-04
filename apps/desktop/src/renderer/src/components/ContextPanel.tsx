@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { Button } from '@pecie/ui'
 
+import type { CitationLibraryDiagnostic, ListCitationProfilesResponse } from '@pecie/schemas'
+
 import { localeLabel, t } from '../i18n'
 import type { ContextPanelProps, TemplateId } from './types'
 import { formatFileSize, formatNodeType, formatPercentage, formatSessionDuration, formatTemplateLabel, getWordCount, stringAccentColor } from './utils'
@@ -62,6 +64,7 @@ export function ContextPanel({
   timeline,
   timelineLoading,
   onOpenTimelineWorkspace,
+  onDefaultCitationProfileChange,
   onOpenWritingHubNode,
   onImportAttachments,
   onOpenAttachmentsDirectory,
@@ -83,6 +86,13 @@ export function ContextPanel({
   const [sessionStartWords] = useState(() => totalWords)
   const [sessionDuration, setSessionDuration] = useState('')
   const [touchedDocumentIds, setTouchedDocumentIds] = useState<string[]>([])
+  const [citationProfiles, setCitationProfiles] = useState<ListCitationProfilesResponse['profiles']>([])
+  const [citationDiagnostics, setCitationDiagnostics] = useState<ListCitationProfilesResponse['diagnostics']>([])
+  const [citationLibraryDiagnostics, setCitationLibraryDiagnostics] = useState<CitationLibraryDiagnostic[]>([])
+  const [citationLibraryLoading, setCitationLibraryLoading] = useState(false)
+  const [citationProfilesLoading, setCitationProfilesLoading] = useState(false)
+  const [citationProfilesBusy, setCitationProfilesBusy] = useState(false)
+  const [citationDiagnosticsReloadToken, setCitationDiagnosticsReloadToken] = useState(0)
   const latestTimelineEvent = timeline?.snapshot.events[0] ?? null
   const milestoneCount = timeline?.snapshot.events.filter((event) => event.kind === 'milestone').length ?? 0
   const inconsistentTimelineEvents = timeline?.snapshot.events.filter((event) => event.integrity !== 'ok').length ?? 0
@@ -104,6 +114,63 @@ export function ContextPanel({
       currentIds.includes(selectedNode.documentId as string) ? currentIds : [...currentIds, selectedNode.documentId as string]
     )
   }, [selectedNode])
+
+  useEffect(() => {
+    let ignore = false
+
+    setCitationProfilesLoading(true)
+    void window.pecie
+      .invokeSafe('citations:listProfiles', {
+        projectPath: project.projectPath
+      })
+      .then((response) => {
+        if (ignore) {
+          return
+        }
+        setCitationProfiles(response.profiles)
+        setCitationDiagnostics(response.diagnostics)
+      })
+      .finally(() => {
+        if (!ignore) {
+          setCitationProfilesLoading(false)
+        }
+      })
+
+    return () => {
+      ignore = true
+    }
+  }, [citationDiagnosticsReloadToken, project.project.defaultCitationProfileId, project.projectPath])
+
+  useEffect(() => {
+    let ignore = false
+
+    setCitationLibraryLoading(true)
+    void window.pecie
+      .invokeSafe('citations:loadLibrary', {
+        projectPath: project.projectPath,
+        profileId: project.project.defaultCitationProfileId
+      })
+      .then((response) => {
+        if (ignore) {
+          return
+        }
+        setCitationLibraryDiagnostics(response.library.diagnostics)
+      })
+      .catch(() => {
+        if (!ignore) {
+          setCitationLibraryDiagnostics([])
+        }
+      })
+      .finally(() => {
+        if (!ignore) {
+          setCitationLibraryLoading(false)
+        }
+      })
+
+    return () => {
+      ignore = true
+    }
+  }, [citationDiagnosticsReloadToken, project.project.defaultCitationProfileId, project.projectPath])
 
   return (
     <aside aria-labelledby="context-panel-title" className={`workspace-context${collapsed ? ' workspace-context--collapsed' : ''}`}>
@@ -160,6 +227,7 @@ export function ContextPanel({
               <span className="status-pill">{formatTemplateLabel(locale, project.project.documentKind as TemplateId)}</span>
               <span className="status-pill">{localeLabel(manifest.language as typeof locale)}</span>
               <span className="status-pill">{manifest.defaultExportProfile}</span>
+              <span className="status-pill">{project.project.defaultCitationProfileId || 'default'}</span>
             </div>
 
             {authorshipStats.length > 0 ? (
@@ -199,8 +267,158 @@ export function ContextPanel({
               <div><dt>{t(locale, 'projectLanguage')}</dt><dd>{localeLabel(manifest.language as typeof locale)}</dd></div>
               <div><dt>{t(locale, 'primaryAuthor')}</dt><dd>{project.project.author.name}</dd></div>
               <div><dt>{t(locale, 'format')}</dt><dd>{manifest.defaultExportProfile}</dd></div>
+              <div><dt>{t(locale, 'citationProfile')}</dt><dd>{project.project.defaultCitationProfileId || 'default'}</dd></div>
               <div><dt>{t(locale, 'privacy')}</dt><dd>{manifest.privacyMode}</dd></div>
             </dl>
+          </CollapsibleSection>
+
+          <CollapsibleSection title={t(locale, 'citationProfilesTitle')} defaultOpen={false}>
+            <div className="context-card context-card--soft">
+              <div className="context-card__heading">
+                <h4>{t(locale, 'citationProfilesTitle')}</h4>
+                <span className="count-chip">{citationProfiles.length}</span>
+              </div>
+              <p className="muted-copy">{t(locale, 'citationProfilesBody')}</p>
+              <div className="context-card__actions">
+                <Button
+                  disabled={citationProfilesLoading || citationLibraryLoading}
+                  onClick={() => setCitationDiagnosticsReloadToken((current) => current + 1)}
+                  size="sm"
+                  type="button"
+                  variant="secondary"
+                >
+                  {t(locale, 'citationRefreshDiagnostics')}
+                </Button>
+              </div>
+              <label className="field">
+                <span>{t(locale, 'citationProfile')}</span>
+                <select
+                  disabled={citationProfilesBusy || citationProfilesLoading || citationProfiles.length === 0}
+                  onChange={(event) => {
+                    const profileId = event.target.value
+                    setCitationProfilesBusy(true)
+                    void window.pecie
+                      .invokeSafe('citations:setDefaultProfile', {
+                        projectPath: project.projectPath,
+                        profileId
+                      })
+                      .then(() => {
+                        setCitationProfiles((currentProfiles) =>
+                          currentProfiles.map((profile) => ({
+                            ...profile,
+                            isDefault: profile.id === profileId
+                          }))
+                        )
+                        onDefaultCitationProfileChange(profileId)
+                      })
+                      .finally(() => setCitationProfilesBusy(false))
+                  }}
+                  value={project.project.defaultCitationProfileId || 'default'}
+                >
+                  {citationProfiles.map((profile) => (
+                    <option key={profile.id} value={profile.id}>
+                      {profile.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {citationProfiles.length > 0 ? (
+                <ul className="stack-list stack-list--tight">
+                  {citationProfiles.map((profile) => (
+                    <li key={profile.id}>
+                      <div className="attachment-row">
+                        <div>
+                          <strong>{profile.label}</strong>
+                          <span>
+                            {profile.id} · {profile.bibliographySourceCount} {t(locale, 'citationSourcesCount')}
+                          </span>
+                        </div>
+                        {profile.isDefault ? <span className="status-pill">{t(locale, 'citationProfileDefault')}</span> : null}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              {citationProfilesLoading ? <p>{t(locale, 'loading')}</p> : null}
+              {citationDiagnostics.length > 0 ? (
+                <>
+                  <div className="context-card__heading">
+                    <h4>{t(locale, 'citationDiagnosticsTitle')}</h4>
+                    <span className="count-chip">{citationDiagnostics.length}</span>
+                  </div>
+                  <ul className="stack-list stack-list--tight">
+                    {citationDiagnostics.map((diagnostic) => (
+                      <li key={`${diagnostic.profileId ?? 'profile'}:${diagnostic.sourcePath}:${diagnostic.message}`}>
+                        <div className="attachment-row">
+                          <div>
+                            <strong>{diagnostic.profileId ?? t(locale, 'citationProfile')}</strong>
+                            <span>{diagnostic.message}</span>
+                            <span>{diagnostic.sourcePath}</span>
+                          </div>
+                          <Button
+                            onClick={() =>
+                              void window.pecie.invokeSafe('path:openInFileManager', {
+                                path: `${project.projectPath}/${diagnostic.sourcePath}`
+                              })
+                            }
+                            size="sm"
+                            type="button"
+                            variant="ghost"
+                          >
+                            {t(locale, 'openCitationSource')}
+                          </Button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : (
+                <p>{t(locale, 'citationDiagnosticsEmpty')}</p>
+              )}
+              <div className="context-card__heading">
+                <h4>{t(locale, 'citationLibraryDiagnosticsTitle')}</h4>
+                <span className="count-chip">{citationLibraryDiagnostics.length}</span>
+              </div>
+              {citationLibraryLoading ? <p>{t(locale, 'loading')}</p> : null}
+              {citationLibraryDiagnostics.length > 0 ? (
+                <ul className="citation-library-diagnostics stack-list stack-list--tight">
+                  {citationLibraryDiagnostics.map((diagnostic, index) => (
+                    <li key={`${diagnostic.sourcePath}:${diagnostic.severity}:${index}`}>
+                      <div className="attachment-row">
+                        <div>
+                          <strong>
+                            <span
+                              className={`citation-library-diagnostic__severity citation-library-diagnostic__severity--${diagnostic.severity}`}
+                              data-severity={diagnostic.severity}
+                            >
+                              {diagnostic.severity === 'error'
+                                ? t(locale, 'citationLibraryDiagnosticSeverityError')
+                                : t(locale, 'citationLibraryDiagnosticSeverityWarning')}
+                            </span>
+                          </strong>
+                          <span>{diagnostic.message}</span>
+                          <span>{diagnostic.sourcePath}</span>
+                        </div>
+                        <Button
+                          onClick={() =>
+                            void window.pecie.invokeSafe('path:openInFileManager', {
+                              path: `${project.projectPath}/${diagnostic.sourcePath}`
+                            })
+                          }
+                          size="sm"
+                          type="button"
+                          variant="ghost"
+                        >
+                          {t(locale, 'openCitationSource')}
+                        </Button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : !citationLibraryLoading ? (
+                <p>{t(locale, 'citationLibraryDiagnosticsEmpty')}</p>
+              ) : null}
+            </div>
           </CollapsibleSection>
 
           {/* ── Support Library (collapsible, open by default) ── */}

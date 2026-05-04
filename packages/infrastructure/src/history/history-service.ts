@@ -66,13 +66,15 @@ type ResolvedHistoryBaseline =
       kind: 'previous-version'
       label: string
       createdAt: string
-      content: string
+      rawContent: string
+      bodyContent: string
     }
   | {
       kind: 'timeline-event'
       label: string
       createdAt: string
-      content: string
+      rawContent: string
+      bodyContent: string
       sourceEvent: TimelineEventRecord
     }
 
@@ -187,7 +189,7 @@ export class HistoryService {
     const baseline = await this.resolveBaseline(input.projectPath, input.relativePath, input.baseline)
     return {
       before: {
-        content: baseline.content,
+        content: baseline.bodyContent,
         createdAt: baseline.createdAt,
         label: baseline.label
       },
@@ -217,7 +219,7 @@ export class HistoryService {
           label: 'Versione corrente'
         },
         after: {
-          content: baseline.content,
+          content: baseline.bodyContent,
           createdAt: baseline.createdAt,
           label: baseline.label
         },
@@ -235,7 +237,7 @@ export class HistoryService {
       kind: 'timeline-event',
       timelineEventId: input.sourceTimelineEventId
     })
-    return baseline.content
+    return baseline.rawContent
   }
 
   public async readHistoricalBodySelection(input: {
@@ -245,14 +247,13 @@ export class HistoryService {
     startOffset: number
     endOffset: number
   }): Promise<string> {
-    const content = await this.readHistoricalDocument({
-      projectPath: input.projectPath,
-      relativePath: input.relativePath,
-      sourceTimelineEventId: input.sourceTimelineEventId
+    const baseline = await this.resolveBaseline(input.projectPath, input.relativePath, {
+      kind: 'timeline-event',
+      timelineEventId: input.sourceTimelineEventId
     })
-    const boundedStart = Math.max(0, Math.min(input.startOffset, content.length))
-    const boundedEnd = Math.max(boundedStart, Math.min(input.endOffset, content.length))
-    return content.slice(boundedStart, boundedEnd)
+    const boundedStart = Math.max(0, Math.min(input.startOffset, baseline.bodyContent.length))
+    const boundedEnd = Math.max(boundedStart, Math.min(input.endOffset, baseline.bodyContent.length))
+    return baseline.bodyContent.slice(boundedStart, boundedEnd)
   }
 
   public async commitRestore(input: {
@@ -316,16 +317,19 @@ export class HistoryService {
           kind: 'previous-version',
           label: 'Nessuna versione precedente',
           createdAt: new Date().toISOString(),
-          content: ''
+          rawContent: '',
+          bodyContent: ''
         }
       }
       const gitLog = await this.git.log(projectPath)
       const commit = gitLog.find((entry) => entry.hash === commitHash)
+      const rawContent = await this.git.showFile(projectPath, commitHash, relativePath)
       return {
         kind: 'previous-version',
         label: 'Versione precedente',
         createdAt: commit?.createdAt ?? new Date().toISOString(),
-        content: await this.git.showFile(projectPath, commitHash, relativePath)
+        rawContent,
+        bodyContent: this.extractDocumentBody(rawContent)
       }
     }
 
@@ -339,13 +343,24 @@ export class HistoryService {
       throw new Error(`Evento timeline non trovato: ${baseline.timelineEventId}`)
     }
 
+    const rawContent = await this.git.showFile(projectPath, sourceEvent.commitHash, relativePath)
     return {
       kind: 'timeline-event',
       label: sourceEvent.label,
       createdAt: sourceEvent.createdAt,
-      content: await this.git.showFile(projectPath, sourceEvent.commitHash, relativePath),
+      rawContent,
+      bodyContent: this.extractDocumentBody(rawContent),
       sourceEvent
     }
+  }
+
+  private extractDocumentBody(rawDocument: string): string {
+    const parts = rawDocument.split('---')
+    if (parts.length < 3) {
+      return rawDocument
+    }
+
+    return parts.slice(2).join('---').trimStart()
   }
 
   private async writeTimelineMaterialization(projectPath: string): Promise<{

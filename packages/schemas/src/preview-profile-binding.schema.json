@@ -1,0 +1,5 @@
+{
+  "$id": "preview-profile-binding.schema.json",
+  "type": "object",
+  "required": ["projectId", "profileId", "format", "supportsPageMarkers", "previewKind"]
+}

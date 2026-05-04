@@ -1,0 +1,14 @@
+{
+  "$id": "citation-profile.schema.json",
+  "type": "object",
+  "required": [
+    "id",
+    "schemaVersion",
+    "label",
+    "bibliographySources",
+    "citationStyle",
+    "locale",
+    "linkCitations",
+    "suppressBibliography"
+  ]
+}

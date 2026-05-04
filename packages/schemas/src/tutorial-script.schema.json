@@ -1,0 +1,63 @@
+{
+  "$id": "tutorial-script.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "schemaVersion", "icon", "titleKey", "steps"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "icon": {
+      "type": "string",
+      "minLength": 1
+    },
+    "titleKey": {
+      "type": "string",
+      "minLength": 1
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "bodyKey", "targetLabelKey", "action", "target"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "bodyKey": {
+            "type": "string",
+            "minLength": 1
+          },
+          "targetLabelKey": {
+            "type": "string",
+            "minLength": 1
+          },
+          "action": {
+            "enum": ["click", "focus", "wait-visible", "wait-document-open", "switch-workspace-view"]
+          },
+          "target": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "value"],
+            "properties": {
+              "kind": {
+                "enum": ["selector", "tutorial-id", "workspace-view"]
+              },
+              "value": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

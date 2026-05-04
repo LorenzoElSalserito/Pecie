@@ -1,0 +1,9 @@
+{
+  "$id": "pdf-library.schema.json",
+  "type": "object",
+  "required": [
+    "version",
+    "generatedAt",
+    "items"
+  ]
+}

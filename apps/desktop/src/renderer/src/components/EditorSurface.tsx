@@ -33,6 +33,7 @@ import { applyMarkdownFormat, getWordCount, insertMarkdownTable, replaceEditorSe
 
 const MonacoEditor = Editor as unknown as MonacoEditorComponent
 const WORD_GOAL_STORAGE_KEY = 'pecie.documentWordGoals'
+const CITEKEY_PATTERN = /(?:^|[\s([{\u201c\u2018])@([A-Za-z0-9:_-]*)$/
 
 type FormattingActionDefinition = {
   action: EditorFormatAction
@@ -44,6 +45,46 @@ type FormattingActionDefinition = {
 type IngestHighlightState = {
   token: number
   position: number
+}
+
+type CitationLibraryStatus = {
+  entryCount: number
+  diagnosticsCount: number
+}
+
+type PageBreakState = {
+  binding: {
+    profileId: string
+    format: string
+    supportsPageMarkers: boolean
+    previewKind: 'visual' | 'approximate' | 'reader' | 'text'
+  }
+  pageBreakMap: {
+    totalEstimatedPages: number
+    breaks: Array<{ sourceOffset: number; estimatedPageNumber: number }>
+  }
+}
+
+function getPageMarkersPreferenceKey(projectId: string, profileId: string): string {
+  return `${projectId}:${profileId}`
+}
+
+function getCitationCompletionContext(
+  model: Monaco.editor.ITextModel,
+  position: Monaco.Position
+): { prefix: string; startColumn: number; endColumn: number } | null {
+  const linePrefix = model.getLineContent(position.lineNumber).slice(0, position.column - 1)
+  const match = linePrefix.match(CITEKEY_PATTERN)
+  if (!match) {
+    return null
+  }
+
+  const prefix = match[1] ?? ''
+  return {
+    prefix,
+    startColumn: position.column - prefix.length - 1,
+    endColumn: position.column
+  }
 }
 
 function toProjectFileBaseUrl(projectPath: string, documentRelativePath: string): string {
@@ -101,6 +142,7 @@ const formattingShortcuts: Partial<Record<EditorFormatAction, string>> = {
 export function EditorSurface({
   locale,
   project,
+  appSettings,
   selectedNode,
   reloadToken,
   authorProfile,
@@ -109,6 +151,7 @@ export function EditorSurface({
   onAbsorbSupportNode,
   preferences,
   onPreferencesChange,
+  onUpdateAppSettings,
   onDocumentSaved,
   onManualSaved,
   onBodySnapshot,
@@ -117,6 +160,7 @@ export function EditorSurface({
   onSelectionRangeChange
 }: EditorSurfaceProps): React.JSX.Element {
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null)
+  const citationCompletionDisposableRef = useRef<Monaco.IDisposable | null>(null)
   const [monacoTheme, setMonacoTheme] = useState<'vs' | 'vs-dark'>(document.documentElement.dataset.theme === 'dark' ? 'vs-dark' : 'vs')
   const [viewMode, setViewMode] = useState<EditorViewMode>('write')
   const [isTableDialogOpen, setIsTableDialogOpen] = useState(false)
@@ -127,8 +171,14 @@ export function EditorSurface({
   const [wordGoalsByDocument, setWordGoalsByDocument] = useState<Record<string, number>>({})
   const [wordGoalInput, setWordGoalInput] = useState('')
   const [ingestHighlight, setIngestHighlight] = useState<IngestHighlightState | null>(null)
+  const [citationLibraryStatus, setCitationLibraryStatus] = useState<CitationLibraryStatus | null>(null)
   const [sessionStartWordCount, setSessionStartWordCount] = useState(0)
+  const [pageBreakState, setPageBreakState] = useState<PageBreakState | null>(null)
+  const [pageMarkerAnnouncement, setPageMarkerAnnouncement] = useState('')
+  const [editorSelectionRangeState, setEditorSelectionRangeState] = useState<{ startOffset: number; endOffset: number } | null>(null)
   const sessionBaselineDocumentIdRef = useRef<string | null>(null)
+  const pageMarkerDecorationsRef = useRef<string[]>([])
+  const pageMarkerStyleElementRef = useRef<HTMLStyleElement | null>(null)
   const formatPlaceholders: Record<Exclude<EditorFormatAction, 'table'>, string> = {
     heading: t(locale, 'markdownPlaceholderHeading'),
     bold: t(locale, 'markdownPlaceholderBold'),
@@ -185,6 +235,9 @@ export function EditorSurface({
   const deferredDraftBody = useDeferredValue(draftBody)
   const wordCount = useMemo(() => getWordCount(draftBody), [draftBody])
   const activeDocumentId = selectedNode?.documentId ?? null
+  const activeProfileId = project.manifest.defaultExportProfile
+  const pageMarkersPreferenceKey = getPageMarkersPreferenceKey(project.manifest.projectId, activeProfileId)
+  const showPageMarkers = appSettings.preview.pageMarkers.byProjectAndProfile[pageMarkersPreferenceKey]?.showPageMarkers === true
   const currentWordGoal = activeDocumentId ? wordGoalsByDocument[activeDocumentId] ?? null : null
   const wordGoalProgress = currentWordGoal ? Math.min(wordCount / currentWordGoal, 1) : 0
   const sessionWordDelta = wordCount - sessionStartWordCount
@@ -205,11 +258,49 @@ export function EditorSurface({
   )
 
   useEffect(() => {
+    let ignore = false
+
+    void window.pecie
+      .invokeSafe('citations:loadLibrary', {
+        projectPath: project.projectPath,
+        profileId: project.project.defaultCitationProfileId
+      })
+      .then((response) => {
+        if (ignore) {
+          return
+        }
+
+        setCitationLibraryStatus({
+          entryCount: response.library.entries.length,
+          diagnosticsCount: response.library.diagnostics.length
+        })
+      })
+      .catch(() => {
+        if (!ignore) {
+          setCitationLibraryStatus(null)
+        }
+      })
+
+    return () => {
+      ignore = true
+    }
+  }, [project.project.defaultCitationProfileId, project.projectPath])
+
+  useEffect(() => {
     const observer = new MutationObserver(() => {
       setMonacoTheme(document.documentElement.dataset.theme === 'dark' ? 'vs-dark' : 'vs')
     })
     observer.observe(document.documentElement, { attributeFilter: ['data-theme'] })
     return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      citationCompletionDisposableRef.current?.dispose()
+      citationCompletionDisposableRef.current = null
+      pageMarkerStyleElementRef.current?.remove()
+      pageMarkerStyleElementRef.current = null
+    }
   }, [])
 
   useEffect(() => {
@@ -398,6 +489,143 @@ export function EditorSurface({
     }
   }
 
+  async function persistPageMarkersPreference(nextValue: boolean): Promise<void> {
+    await onUpdateAppSettings({
+      ...appSettings,
+      preview: {
+        ...appSettings.preview,
+        pageMarkers: {
+          byProjectAndProfile: {
+            ...appSettings.preview.pageMarkers.byProjectAndProfile,
+            [pageMarkersPreferenceKey]: {
+              projectId: project.manifest.projectId,
+              profileId: activeProfileId,
+              showPageMarkers: nextValue
+            }
+          }
+        }
+      }
+    })
+  }
+
+  useEffect(() => {
+    if (!selectedNode?.documentId || !showPageMarkers) {
+      setPageBreakState(null)
+      setPageMarkerAnnouncement('')
+      return
+    }
+
+    let ignore = false
+    void window.pecie
+      .invokeSafe('preview:getPageBreaks', {
+        projectPath: project.projectPath,
+        documentId: selectedNode.documentId,
+        profileId: activeProfileId
+      })
+      .then((response) => {
+        if (!ignore) {
+          setPageBreakState(response)
+        }
+      })
+      .catch(() => {
+        if (!ignore) {
+          setPageBreakState(null)
+        }
+      })
+
+    return () => {
+      ignore = true
+    }
+  }, [activeProfileId, appSettings.preview.mode, project.projectPath, selectedNode?.documentId, showPageMarkers])
+
+  useEffect(() => {
+    if (saveState !== 'saved' || !selectedNode?.documentId || !showPageMarkers) {
+      return
+    }
+
+    void window.pecie
+      .invokeSafe('preview:getPageBreaks', {
+        projectPath: project.projectPath,
+        documentId: selectedNode.documentId,
+        profileId: activeProfileId
+      })
+      .then((response) => setPageBreakState(response))
+      .catch(() => setPageBreakState(null))
+  }, [activeProfileId, project.projectPath, saveState, selectedNode?.documentId, showPageMarkers])
+
+  useEffect(() => {
+    const editor = editorRef.current
+    const model = editor?.getModel()
+    if (!editor || !model) {
+      return
+    }
+
+    if (pageMarkerStyleElementRef.current === null) {
+      const styleElement = document.createElement('style')
+      styleElement.dataset.peciePageMarkers = 'true'
+      document.head.appendChild(styleElement)
+      pageMarkerStyleElementRef.current = styleElement
+    }
+
+    if (!showPageMarkers || !pageBreakState?.binding.supportsPageMarkers) {
+      pageMarkerStyleElementRef.current.textContent = ''
+      pageMarkerDecorationsRef.current = editor.deltaDecorations(pageMarkerDecorationsRef.current, [])
+      return
+    }
+
+    const rules: string[] = []
+    const decorations = pageBreakState.pageBreakMap.breaks.map((entry, index) => {
+      const lineNumber = model.getPositionAt(entry.sourceOffset).lineNumber
+      const className = `page-marker-glyph--${index}`
+      rules.push(`.monaco-editor .${className}::after { content: "p. ${entry.estimatedPageNumber}"; }`)
+      return {
+        range: {
+          startLineNumber: lineNumber,
+          startColumn: 1,
+          endLineNumber: lineNumber,
+          endColumn: 1
+        },
+        options: {
+          isWholeLine: true,
+          glyphMarginClassName: `page-marker-glyph ${className}`,
+          glyphMarginHoverMessage: {
+            value: t(locale, 'pageMarkersAnnouncement', {
+              current: String(entry.estimatedPageNumber),
+              total: String(pageBreakState.pageBreakMap.totalEstimatedPages)
+            })
+          }
+        }
+      }
+    })
+
+    pageMarkerStyleElementRef.current.textContent = rules.join('\n')
+    pageMarkerDecorationsRef.current = editor.deltaDecorations(pageMarkerDecorationsRef.current, decorations)
+  }, [locale, pageBreakState, showPageMarkers])
+
+  useEffect(() => {
+    if (!showPageMarkers || !pageBreakState?.binding.supportsPageMarkers || !editorSelectionRangeState) {
+      setPageMarkerAnnouncement('')
+      return
+    }
+
+    const breaks = pageBreakState.pageBreakMap.breaks
+    const currentOffset = editorSelectionRangeState.startOffset
+    const currentPage =
+      breaks.filter((entry) => entry.sourceOffset <= currentOffset).slice(-1)[0]?.estimatedPageNumber ??
+      (pageBreakState.pageBreakMap.totalEstimatedPages > 0 ? 1 : 0)
+
+    if (currentPage > 0) {
+      setPageMarkerAnnouncement(
+        t(locale, 'pageMarkersAnnouncement', {
+          current: String(currentPage),
+          total: String(pageBreakState.pageBreakMap.totalEstimatedPages)
+        })
+      )
+    } else {
+      setPageMarkerAnnouncement('')
+    }
+  }, [editorSelectionRangeState, locale, pageBreakState, showPageMarkers])
+
   return (
     <section
       aria-labelledby="editor-surface-title"
@@ -443,6 +671,16 @@ export function EditorSurface({
                 >
                   {currentWordGoal ? t(locale, 'editWordGoal') : t(locale, 'setWordGoal')}
                 </button>
+                <button
+                  aria-pressed={showPageMarkers}
+                  className={`toggle-chip${showPageMarkers ? ' toggle-chip--accent' : ''}`}
+                  onClick={() => {
+                    void persistPageMarkersPreference(!showPageMarkers)
+                  }}
+                  type="button"
+                >
+                  {t(locale, 'showPageMarkers')}
+                </button>
                 <div aria-label={t(locale, 'editorViewMode')} className="segmented-control" role="tablist">
                   {([
                     ['write', t(locale, 'editorViewWrite')],
@@ -455,6 +693,7 @@ export function EditorSurface({
                       key={mode}
                       onClick={() => setViewMode(mode)}
                       role="tab"
+                      tabIndex={viewMode === mode ? 0 : -1}
                       type="button"
                     >
                       {label}
@@ -528,6 +767,18 @@ export function EditorSurface({
               </div>
             ) : null}
 
+            <div className="editor-page-markers-meta" aria-live="polite">
+              <strong>{t(locale, 'pageMarkersEstimated')}</strong>
+              <span>
+                {!showPageMarkers
+                  ? t(locale, 'pageMarkersUnavailable')
+                  : pageBreakState && !pageBreakState.binding.supportsPageMarkers
+                    ? t(locale, 'pageMarkersUnsupported')
+                    : t(locale, 'pageMarkersEstimateBody')}
+              </span>
+              {pageMarkerAnnouncement ? <span className="sr-only">{pageMarkerAnnouncement}</span> : null}
+            </div>
+
             {/* ── Title (inline editable) ── */}
             <div className="editor-title-field">
               <input
@@ -596,6 +847,11 @@ export function EditorSurface({
                             setIsImageDialogOpen(true)
                             return
                           }
+                          if (entry.action === 'citation') {
+                            replaceEditorSelection(editorRef.current, '@', 1, 1)
+                            editorRef.current.trigger('pecie-citation', 'editor.action.triggerSuggest', {})
+                            return
+                          }
                           applyMarkdownFormat(editorRef.current, entry.action, formatPlaceholders)
                         }}
                         title={formatToolbarTooltip(entry)}
@@ -640,10 +896,47 @@ export function EditorSurface({
                     height="100%"
                     language="markdown"
                     onChange={(value: string | undefined) => setDraftBody(value ?? '')}
-                    onMount={(editor: Monaco.editor.IStandaloneCodeEditor) => {
+                    onMount={(editor: Monaco.editor.IStandaloneCodeEditor, monaco: typeof Monaco) => {
                       editorRef.current = editor
+                      citationCompletionDisposableRef.current?.dispose()
+                      citationCompletionDisposableRef.current = monaco.languages.registerCompletionItemProvider('markdown', {
+                        triggerCharacters: ['@'],
+                        provideCompletionItems: async (model, position) => {
+                          const context = getCitationCompletionContext(model, position)
+                          if (!context) {
+                            return { suggestions: [] }
+                          }
+
+                          const response = await window.pecie.invokeSafe('citations:suggest', {
+                            projectPath: project.projectPath,
+                            prefix: context.prefix,
+                            limit: 8,
+                            profileId: project.project.defaultCitationProfileId
+                          })
+
+                          return {
+                            suggestions: response.suggestions.map((suggestion) => ({
+                              label: `@${suggestion.citeKey}`,
+                              kind: monaco.languages.CompletionItemKind.Reference,
+                              insertText: `[@${suggestion.citeKey}]`,
+                              detail: [suggestion.authorsShort, suggestion.year].filter(Boolean).join(' • '),
+                              documentation: `${suggestion.displayTitle}\n${suggestion.sourcePath}`,
+                              range: new monaco.Range(
+                                position.lineNumber,
+                                context.startColumn,
+                                position.lineNumber,
+                                context.endColumn
+                              )
+                            }))
+                          }
+                        }
+                      })
                       const model = editor.getModel()
                       if (model) {
+                        setEditorSelectionRangeState({
+                          startOffset: 0,
+                          endOffset: 0
+                        })
                         onSelectionRangeChange?.({
                           startOffset: 0,
                           endOffset: 0
@@ -652,13 +945,16 @@ export function EditorSurface({
                       editor.onDidChangeCursorSelection((event) => {
                         const currentModel = editor.getModel()
                         if (!currentModel) {
+                          setEditorSelectionRangeState(null)
                           onSelectionRangeChange?.(null)
                           return
                         }
-                        onSelectionRangeChange?.({
+                        const nextRange = {
                           startOffset: currentModel.getOffsetAt(event.selection.getStartPosition()),
                           endOffset: currentModel.getOffsetAt(event.selection.getEndPosition())
-                        })
+                        }
+                        setEditorSelectionRangeState(nextRange)
+                        onSelectionRangeChange?.(nextRange)
                       })
                       editor.focus()
                     }}
@@ -668,7 +964,7 @@ export function EditorSurface({
                       fontFamily: 'var(--pecie-font-body)',
                       fontSize: preferences.focusMode ? 17 : 16,
                       folding: false,
-                      glyphMargin: false,
+                      glyphMargin: true,
                       lineHeight: preferences.focusMode ? 32 : 28,
                       lineNumbers: 'off',
                       minimap: { enabled: false },
@@ -706,6 +1002,21 @@ export function EditorSurface({
             {/* ── Compact status footer ── */}
             <div className="editor-footer">
               <span>{wordCount} {t(locale, 'wordCount').toLowerCase()}</span>
+              {citationLibraryStatus ? (
+                <>
+                  <span className="editor-footer__divider" aria-hidden="true"></span>
+                  <span>
+                    {t(locale, 'citationLibraryReady', {
+                      count: citationLibraryStatus.entryCount.toLocaleString(locale)
+                    })}
+                    {citationLibraryStatus.diagnosticsCount > 0
+                      ? ` · ${t(locale, 'citationLibraryIssues', {
+                          count: citationLibraryStatus.diagnosticsCount.toLocaleString(locale)
+                        })}`
+                      : ''}
+                  </span>
+                </>
+              ) : null}
               <span className="editor-footer__divider" aria-hidden="true"></span>
               <span
                 className={`editor-footer__session${

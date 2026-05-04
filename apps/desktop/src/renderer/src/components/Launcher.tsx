@@ -119,7 +119,7 @@ export function Launcher({
               <Button onClick={onOpenProjectLibrary} size="sm" variant="secondary">
                 {t(locale, 'manageProjects')}
               </Button>
-              <Button onClick={onOpenProjectDialog} size="sm" variant="secondary">
+              <Button data-tutorial-id="launcher-open-project" onClick={onOpenProjectDialog} size="sm" variant="secondary">
                 {t(locale, 'openExisting')}
               </Button>
             </div>
@@ -130,7 +130,7 @@ export function Launcher({
               <Button onClick={onOpenInfo} size="sm" variant="ghost">
                 {t(locale, 'info')}
               </Button>
-              <Button onClick={onOpenSettings} size="sm" variant="ghost">
+              <Button data-tutorial-id="launcher-open-settings" onClick={onOpenSettings} size="sm" variant="ghost">
                 {t(locale, 'settings')}
               </Button>
             </div>
@@ -177,6 +177,7 @@ export function Launcher({
                     <span>{t(locale, 'projectTitle')}</span>
                     <div className="field-input-shell">
                       <input
+                        data-tutorial-id="launcher-project-title"
                         className="field-input--hero"
                         placeholder=""
                         value={draft.title}
@@ -207,7 +208,12 @@ export function Launcher({
                 {/* ── Template Picker Cards ── */}
                 <div className="field">
                   <span>{t(locale, 'template')}</span>
-                  <div className="template-card-grid" role="radiogroup" aria-label={t(locale, 'template')}>
+                  <div
+                    className="template-card-grid"
+                    role="radiogroup"
+                    aria-label={t(locale, 'template')}
+                    data-tutorial-id="launcher-template-picker"
+                  >
                     {templateIds.map((templateId) => (
                       <button
                         key={templateId}
@@ -263,6 +269,7 @@ export function Launcher({
                   <div className="field launcher-cta-field">
                     <span aria-hidden="true">&nbsp;</span>
                     <Button
+                      data-tutorial-id="launcher-create-project"
                       disabled={busy || !draft.title.trim() || !draft.projectName.trim() || !draft.directory.trim()}
                       onClick={async () => {
                         setBusy(true)
@@ -357,7 +364,11 @@ export function Launcher({
               <label className="field">
                 <span>{t(locale, 'destinationDirectory')}</span>
                 <div className="field-with-action">
-                  <input value={draft.directory} onChange={(event) => setDraft({ ...draft, directory: event.target.value })} />
+                  <input
+                    data-tutorial-id="launcher-destination-directory"
+                    value={draft.directory}
+                    onChange={(event) => setDraft({ ...draft, directory: event.target.value })}
+                  />
                   <Button
                     onClick={async () => {
                       const result = await window.pecie.invokeSafe('path:pickDirectory', {

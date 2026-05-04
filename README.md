@@ -1,196 +1,161 @@
 # Pecie
-![Icon.png](apps/desktop/src/renderer/src/asset/Icon.png)
-Pecie is a local-first editorial studio for long-form writing, structured documents, and technical documentation.
 
-It is built as a desktop application with Electron, React, and TypeScript, and it is designed around a simple premise:
+![Pecie icon](apps/desktop/src/renderer/src/asset/Icon.png)
 
-**Pecie stores projects, not just files.**
+Pecie is a local-first editorial studio for writers, researchers, students, academics, and teams who work on long documents.
 
-## Product Scope
+It brings writing, structure, research material, citations, project history, and export tools into one desktop workspace. Pecie is designed for serious writing projects that need more than a folder of loose files.
 
-Pecie is for people who work on substantial writing projects and need structure, continuity, and calm:
+## Why Pecie
 
-- theses and dissertations
-- papers and articles
-- books and essays
-- manuals and technical documentation
-- custom editorial projects built from a blank template
+Large writing projects are rarely just text. They include outlines, drafts, references, notes, source documents, images, versions, export settings, and decisions made over time.
 
-It is intentionally:
+Pecie keeps that work together in a portable `.pe` project:
 
-- local-first
-- file-based and portable
-- accessible by design
-- structured around projects, not isolated documents
-- easy to use
+- documents and binder structure
+- local notes and research material
+- attachments and imported sources
+- images copied into the project
+- citation data and bibliography support
+- export profiles and preview settings
+- project history, checkpoints, and milestones
 
-## What Is Included
+Everything is local-first. Pecie does not require a cloud account to create, edit, search, export, or share your work.
 
-The current version includes the following product surface.
+## Best For
 
-### Project Creation and Launch Flow
+- Theses and dissertations
+- Academic papers
+- Books and essays
+- Manuals and technical documentation
+- Article collections and journal-style projects
+- Research-heavy writing with local source material
+- Writers who want structure, privacy, and portability
 
-- first-run setup with local workspace selection
-- persistent local author profile
-- create-first launcher
-- recent projects
-- project archive, restore, and delete flow
-- settings for workspace, author profile, UI language, and theme
-- product info and integrated guidance
+## Writing Workspace
 
-### Editorial Templates
+Pecie gives each project a structured writing environment instead of a single flat document.
 
-Pecie currently ships with these starter templates:
+- Binder navigation for chapters, sections, notes, and support material
+- Markdown editor with source, rendered, split, and output-oriented views
+- Focus mode and typewriter mode
+- Formatting toolbar for common writing actions
+- Word count and session feedback
+- Project search
+- Outliner and corkboard-style views
+- Scrivenings-style aggregation for reading multiple sections together
+- Integrated guides and tutorials
+
+## Templates
+
+Start from templates built for different editorial contexts:
 
 - Blank project
 - Thesis
 - Paper
 - Book / Essay
 - Manual
+- Journal
+- Article
 
-Each template includes a coherent starting structure plus a writing hub for local support material.
+Templates include an initial binder, writing hub material, export profiles, and local project structure suited to the type of work.
 
-### Workspace
+## Research and Attachments
 
-- binder-based project navigation
-- Markdown editor for long-form writing
-- write, preview, and split view modes
-- focus mode and typewriter mode
-- assisted formatting toolbar
-- document word count and session feedback
-- integrated workspace guide center
-- global project search
+Pecie treats research material as part of the writing project.
 
-### Writing Hub and Local Support Material
+- Keep local notes, scratchpads, and source containers beside the manuscript
+- Import local attachments
+- Preview supported PDF and DOCX material inside the project
+- Link research notes to writing targets
+- Insert images with alt text and portable project-relative paths
+- Keep project-managed media available during preview and export
 
-- project notes
-- scratchpad documents
-- source/reference containers
-- local attachments
-- support notes that can be absorbed into writing documents
+## History and Recovery
 
-### Local Image Insertion
+Pecie includes local project history so you can understand how the work changed over time.
 
-- image insertion from the toolbar
-- local image picker with lightweight validation
-- alt text input
-- image copy into the project package
-- portable relative Markdown references
-- internal asset registry for project-managed images
-- preview/export path resolution for internal project images
+- Create checkpoints and milestones
+- Review the project timeline
+- Compare historical versions
+- Restore selected historical text into the current document
+- Keep history local to the project
 
-### Export
+## Citations and Bibliography
 
-The exact availability of formats depends on the local export toolchain, but the implemented workflow is built around a Pandoc-based export pipeline.
+Academic writing workflows are built into the project model.
 
-### Localization
+- Local citation library support
+- Citation diagnostics
+- Citekey suggestions
+- Citation profiles
+- Bibliography materialization during export
+- Academic export profiles
 
-The UI is localized in:
+## Export and Preview
 
-- Italian
-- English
-- German
-- Spanish
-- French
-- Portuguese
+Pecie helps you review before producing final output.
 
-### Packaging and Release
+- Export preview before final write
+- Page boundary markers
+- Preview modes for different performance needs
+- Core exports through bundled Pandoc
+- Markdown, Plain Text, HTML, DOCX, ODT, RTF, EPUB, JATS, and TEI output paths
+- PDF profiles with explicit engine availability checks
+- Markdown-style PDF when WeasyPrint is available
+- LaTeX-oriented PDF workflows as optional advanced capabilities
 
-The repository is prepared for desktop packaging on:
+Pecie bundles the core Pandoc runtime for supported desktop packages, so common export workflows do not require manually installing Pandoc.
 
-- Linux
-- Windows
-- macOS
+## Sharing and Privacy
 
-GitHub Actions release packaging is also configured.
+Pecie is built around local ownership of the project.
 
-## Not Included Yet
+- Create local share packages
+- Import shared packages as derived projects
+- Review privacy impact before sharing packages with history
+- Keep work local by default
+- Avoid implicit uploads and background addon downloads
+- Use isolated desktop boundaries for renderer and IPC access
 
-The following areas are not part of the current product:
+## Accessibility and Languages
 
-- project timeline and checkpoint/milestone history UI
-- citation and bibliography workflows
-- advanced academic research workspace beyond the current local support model
-- share packages with history exchange
-- plugin system
+Pecie is designed for sustained writing sessions.
 
-## Core Principles
+- Keyboard-oriented workflows
+- Visible focus states
+- Accessible font preference
+- UI zoom
+- Guided onboarding and recoverable tutorials
+- Localized interface in Italian, English, German, Spanish, French, and Portuguese
 
-Pecie follows a few non-negotiable design and engineering principles:
+## For Developers
 
-- **Local-first**: core work happens on the user’s machine.
-- **Portable output**: the project should remain inspectable and movable.
-- **Structured writing**: the binder and project model matter as much as the editor.
-- **Recoverability over cleverness**: simple files, explicit contracts, safe data handling.
-- **Accessibility by design**: keyboard navigation, visible focus, and readable UI are part of the product.
-- **Security by default**: typed IPC, isolated renderer, restricted desktop surface.
-
-## Project Format
-
-Pecie uses a native `.pe` project format.
-
-The project model is schema-driven and built around canonical project files plus local content and assets.
-
-At a high level, a Pecie project contains:
-
-- manifest metadata
-- project metadata
-- binder structure
-- Markdown content documents
-- local support notes
-- local attachments
-- internal media assets for inline images
-
-This format is designed to keep the project portable across machines as long as the `.pe` package is moved as a whole.
-
-## Repository Layout
+Pecie is an Electron, React, TypeScript, and Vite application organized as an npm workspace monorepo.
 
 ```text
 apps/
   desktop/          Electron desktop application
 packages/
-  application/      application services and contracts
-  domain/           project templates and domain logic
-  infrastructure/   IPC, filesystem, export, shell integration
-  schemas/          JSON schemas and generated shared types
-  ui/               shared UI components
-scripts/            project tooling such as type generation
+  application/      application contracts and IPC typing
+  domain/           templates, export profiles, runtime capability policy
+  infrastructure/   filesystem, IPC handlers, history, export, preview, privacy, sharing
+  schemas/          JSON schemas and generated shared TypeScript types
+  ui/               shared UI primitives and views
+scripts/            build, type generation, runtime preparation, packaging helpers
 ```
 
-## Tech Stack
-
-- Electron
-- React
-- TypeScript
-- Vite
-- SQLite for derived/local indexing concerns
-- JSON schemas with generated TypeScript types
-- local desktop packaging with Electron Forge and Electron Builder
-
-## Requirements
+Requirements:
 
 - Node.js 20
 - npm 10+
 
-## Install
-
 ```bash
 npm ci
-```
-
-The repository uses npm workspaces and a shallow install strategy so runtime dependencies remain compatible with Electron Forge packaging in the desktop workspace.
-
-## Development
-
-Run the desktop app in development mode:
-
-```bash
 npm run dev
 ```
 
-## Validation
-
-Run the standard validation flow:
+Validation:
 
 ```bash
 npm run generate:types
@@ -198,81 +163,3 @@ npm run lint
 npm run typecheck
 npm run test:unit
 ```
-
-## Local Packaging
-
-Unified Linux release flow:
-
-```bash
-npm run make:desktop:linux:release
-```
-
-Linux `.deb` and `.snap`:
-
-```bash
-npm run make:linux -w @pecie/desktop
-```
-
-Linux `.AppImage`:
-
-```bash
-npm run make:linux:appimage -w @pecie/desktop
-```
-
-Windows installer:
-
-```bash
-npm run make:win -w @pecie/desktop
-```
-
-macOS packages:
-
-```bash
-npm run make:mac -w @pecie/desktop
-```
-
-Generated artifacts are written to:
-
-- `apps/desktop/out/make/`
-- `apps/desktop/out/appimage/`
-
-### Packaging Notes
-
-- Final desktop packages are self-contained from the end-user perspective.
-- `AppImage` is the closest Linux format to a standalone portable build.
-- `.deb` is a system package format and should not be treated as a single-file portable artifact.
-- Local packaging uses a runtime-link preparation step so Electron Forge can resolve workspace dependencies reliably in a monorepo.
-- A first packaging run may still require network access if Electron packaging artifacts are not already present in the local cache.
-
-## GitHub Actions Release
-
-The release workflow is defined in [`.github/workflows/build.yml`](./.github/workflows/build.yml).
-
-It:
-
-- validates the repository on Ubuntu
-- builds release artifacts on Linux, Windows, and macOS
-- uploads packaged artifacts
-- publishes a GitHub Release when a tag matching `v*` is pushed
-
-Typical release flow:
-
-```bash
-git tag v0.1.0
-git push origin v0.1.0
-```
-
-## Development Notes
-
-- The source of truth for shared generated types is `scripts/generate-types.mjs`.
-- The desktop application lives in `apps/desktop`.
-- The repository is structured as a monorepo with workspaces.
-- Product and planning documents may describe broader goals than the functionality currently implemented in code.
-
-## License
-
-Pecie is released under **AGPL-3.0-only**.
-
-## Copyright
-
-© Lorenzo De Marco (Lorenzo DM) - 2026

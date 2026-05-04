@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schemas/export-runtime-manifest.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "runtimeVersion", "platform", "arch", "bundledCapabilities"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "runtimeVersion": { "type": "string" },
+    "platform": { "type": "string" },
+    "arch": { "type": "string" },
+    "bundledCapabilities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["capabilityId", "relativeExecutablePath", "version", "checksumSha256", "verification", "byteSize"],
+        "properties": {
+          "capabilityId": { "type": "string" },
+          "relativeExecutablePath": { "type": "string" },
+          "version": { "type": "string" },
+          "checksumSha256": { "type": "string" },
+          "byteSize": { "type": "number" },
+          "verification": {
+            "type": "string",
+            "enum": ["packaged", "signed", "checksummed"]
+          }
+        }
+      }
+    }
+  }
+}

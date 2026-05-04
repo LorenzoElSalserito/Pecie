@@ -1,0 +1,48 @@
+{
+  "id": "timeline-basics",
+  "schemaVersion": 1,
+  "icon": "bi-clock-history",
+  "titleKey": "tutorialTimelineTitle",
+  "steps": [
+    {
+      "id": "open-timeline",
+      "bodyKey": "tutorialTimelineStep1",
+      "targetLabelKey": "tutorialTargetTimelineView",
+      "action": "switch-workspace-view",
+      "target": {
+        "kind": "workspace-view",
+        "value": "timeline"
+      }
+    },
+    {
+      "id": "compare-previous",
+      "bodyKey": "tutorialTimelineStep2",
+      "targetLabelKey": "tutorialTargetTimelineComparePrevious",
+      "action": "focus",
+      "target": {
+        "kind": "tutorial-id",
+        "value": "timeline-compare-previous"
+      }
+    },
+    {
+      "id": "milestone-label",
+      "bodyKey": "tutorialTimelineStep3",
+      "targetLabelKey": "tutorialTargetTimelineMilestoneLabel",
+      "action": "focus",
+      "target": {
+        "kind": "tutorial-id",
+        "value": "timeline-milestone-label"
+      }
+    },
+    {
+      "id": "repair-timeline",
+      "bodyKey": "tutorialTimelineStep4",
+      "targetLabelKey": "tutorialTargetTimelineRepair",
+      "action": "focus",
+      "target": {
+        "kind": "tutorial-id",
+        "value": "timeline-repair"
+      }
+    }
+  ]
+}

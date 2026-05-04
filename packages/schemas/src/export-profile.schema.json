@@ -1,0 +1,5 @@
+{
+  "$id": "export-profile.schema.json",
+  "type": "object",
+  "required": ["id", "schemaVersion", "label", "format", "include", "output"]
+}

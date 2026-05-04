@@ -5,7 +5,10 @@ import type {
   DiffDocumentResponse,
   DocumentRecord,
   ImportAttachmentsResponse,
+  PdfLibraryItem,
   ListTimelineResponse,
+  ResearchLinkMap,
+  ResearchNoteRecord,
   RestoreDocumentResponse
 } from '@pecie/schemas'
 
@@ -18,10 +21,11 @@ import { EditorSurface } from './EditorSurface'
 import { GlobalSearchDialog } from './GlobalSearchDialog'
 import { HistoryDiffDialog } from './HistoryDiffDialog'
 import { OutlinerView } from './OutlinerView'
+import { ResearchView } from './ResearchView'
 import { ResizeHandle } from './ResizeHandle'
 import { ScriveningsView } from './ScriveningsView'
 import { TimelineView } from './TimelineView'
-import type { WorkspaceProps } from './types'
+import type { WorkspaceProps, WorkspaceViewMode } from './types'
 import { WorkspaceHeader } from './WorkspaceHeader'
 
 const DEFAULT_BINDER_WIDTH = 280
@@ -39,8 +43,10 @@ export function Workspace({
   locale,
   project,
   authorProfile,
+  appSettings,
   onSelectionChange,
   onProjectChange,
+  onUpdateAppSettings,
   onManualDocumentSaved,
   onNotify,
   onPreviewAttachment,
@@ -50,6 +56,7 @@ export function Workspace({
   onNewProject,
   onOpenProject,
   onOpenExport,
+  onOpenShare,
   onOpenSettings
 }: WorkspaceProps): React.JSX.Element {
   const { selectedId, selectedNode, setSelectedId, toggleFolder, visibleNodes } = useBinderSelection(project)
@@ -71,6 +78,11 @@ export function Workspace({
   const [contextWidth, setContextWidth] = useState(DEFAULT_CONTEXT_WIDTH)
   const [timeline, setTimeline] = useState<ListTimelineResponse | null>(null)
   const [timelineLoading, setTimelineLoading] = useState(false)
+  const [researchNotes, setResearchNotes] = useState<ResearchNoteRecord[]>([])
+  const [researchPdfLibrary, setResearchPdfLibrary] = useState<PdfLibraryItem[]>([])
+  const [researchGraph, setResearchGraph] = useState<ResearchLinkMap | null>(null)
+  const [selectedResearchNoteId, setSelectedResearchNoteId] = useState<string | null>(null)
+  const [selectedResearchPdfId, setSelectedResearchPdfId] = useState<string | null>(null)
   const [editorReloadToken, setEditorReloadToken] = useState(0)
   const [historyDialogState, setHistoryDialogState] = useState<{
     mode: 'diff' | 'restore'
@@ -80,7 +92,7 @@ export function Workspace({
     diff: DiffDocumentResponse | RestoreDocumentResponse['preview']
   } | null>(null)
   const [historyDialogBusy, setHistoryDialogBusy] = useState(false)
-  const [workspaceView, setWorkspaceView] = useState<'editor' | 'timeline' | 'outliner' | 'corkboard' | 'scrivenings'>('editor')
+  const [workspaceView, setWorkspaceView] = useState<WorkspaceViewMode>('editor')
   const [documentSummaries, setDocumentSummaries] = useState<
     Array<{
       nodeId: string
@@ -107,6 +119,11 @@ export function Workspace({
     setCurrentWordCount(0)
     setIngestedDocumentId(null)
     setTimeline(null)
+    setResearchNotes([])
+    setResearchPdfLibrary([])
+    setResearchGraph(null)
+    setSelectedResearchNoteId(null)
+    setSelectedResearchPdfId(null)
     setWorkspaceView('editor')
     setDocumentSummaries([])
     setEditorSelectionRange(null)
@@ -222,6 +239,35 @@ export function Workspace({
   useEffect(() => {
     void refreshTimeline()
   }, [refreshTimeline])
+
+  const refreshResearchNotes = useCallback(async () => {
+    const response = await window.pecie.invokeSafe('research:listNotes', {
+      projectPath: project.projectPath
+    })
+    setResearchNotes(response.notes)
+    setSelectedResearchNoteId((current) => current ?? response.notes[0]?.id ?? null)
+  }, [project.projectPath])
+
+  const refreshResearchPdfLibrary = useCallback(async () => {
+    const response = await window.pecie.invokeSafe('research:listPdfLibrary', {
+      projectPath: project.projectPath
+    })
+    setResearchPdfLibrary(response.library.items)
+    setSelectedResearchPdfId((current) => current ?? response.library.items[0]?.id ?? null)
+  }, [project.projectPath])
+
+  const refreshResearchGraph = useCallback(async () => {
+    const response = await window.pecie.invokeSafe('research:getGraph', {
+      projectPath: project.projectPath
+    })
+    setResearchGraph(response.graph)
+  }, [project.projectPath])
+
+  useEffect(() => {
+    void refreshResearchNotes()
+    void refreshResearchPdfLibrary()
+    void refreshResearchGraph()
+  }, [refreshResearchGraph, refreshResearchNotes, refreshResearchPdfLibrary])
 
   const refreshDocumentSummaries = useCallback(async () => {
     const documentNodes = project.binder.nodes.filter(
@@ -413,6 +459,19 @@ export function Workspace({
     onNotify(t(locale, 'timelineRepaired'), 'info')
   }, [locale, onNotify, project.projectPath, refreshDocumentSummaries, refreshTimeline])
 
+  const handleDefaultCitationProfileChange = useCallback(
+    (profileId: string) => {
+      onProjectChange({
+        ...project,
+        project: {
+          ...project.project,
+          defaultCitationProfileId: profileId
+        }
+      })
+    },
+    [onProjectChange, project]
+  )
+
   const importAttachments = useCallback(
     async (paths?: string[]) => {
       const pickedPaths =
@@ -550,6 +609,7 @@ export function Workspace({
         onOpenExport={onOpenExport}
         onOpenGuide={onOpenGuide}
         onOpenProject={onOpenProject}
+        onOpenShare={onOpenShare}
         onOpenSettings={onOpenSettings}
         onChangeWorkspaceView={setWorkspaceView}
         onSelectNode={setSelectedId}
@@ -613,6 +673,7 @@ export function Workspace({
         ) : null}
         {workspaceView === 'editor' ? (
           <EditorSurface
+            appSettings={appSettings}
             authorProfile={authorProfile}
             ingestedDocumentId={ingestedDocumentId}
             locale={locale}
@@ -649,6 +710,7 @@ export function Workspace({
               void refreshDocumentSummaries()
             }}
             onPreferencesChange={setPreferences}
+            onUpdateAppSettings={onUpdateAppSettings}
             reloadToken={editorReloadToken}
             onSaveStateChange={(saveState, documentId) => setDirtyDocumentId(saveState === 'dirty' ? documentId : null)}
             onSelectionRangeChange={setEditorSelectionRange}
@@ -668,6 +730,62 @@ export function Workspace({
             selectedNode={selectedNode}
             timeline={timeline}
             timelineLoading={timelineLoading}
+          />
+        ) : workspaceView === 'research' ? (
+          <ResearchView
+            binderDocuments={documentSummaries}
+            graph={researchGraph}
+            locale={locale}
+            notes={researchNotes}
+            onCreateLink={async (payload) => {
+              const response = await window.pecie.invokeSafe('research:createLink', {
+                projectPath: project.projectPath,
+                ...payload
+              })
+              setResearchGraph(response.graph)
+              onNotify(t(locale, 'researchLinkCreated'), 'success')
+            }}
+            onCreateNote={async (payload) => {
+              const response = await window.pecie.invokeSafe('research:createNote', {
+                projectPath: project.projectPath,
+                ...payload
+              })
+              setResearchNotes((current) => [response.note, ...current])
+              setSelectedResearchNoteId(response.note.id)
+              onNotify(t(locale, 'researchNoteCreated'), 'success')
+            }}
+            onImportPdf={async (sourcePaths) => {
+              const pickedPaths = sourcePaths && sourcePaths.length > 0
+                ? sourcePaths
+                : (
+                    await window.pecie.invokeSafe('path:pickFiles', {
+                      defaultPath: project.projectPath,
+                      allowMultiple: true
+                    })
+                  ).paths
+              if (pickedPaths.length === 0) {
+                return
+              }
+              const response = await window.pecie.invokeSafe('research:importPdf', {
+                projectPath: project.projectPath,
+                sourcePaths: pickedPaths
+              })
+              setResearchPdfLibrary(response.library.items)
+              setSelectedResearchPdfId(response.imported[0]?.id ?? null)
+              onNotify(
+                response.imported.length > 0
+                  ? t(locale, 'researchPdfImported', { count: String(response.imported.length) })
+                  : t(locale, 'researchPdfImportSkipped', { count: String(response.skipped.length) }),
+                response.imported.length > 0 ? 'success' : 'info'
+              )
+            }}
+            onSelectNote={setSelectedResearchNoteId}
+            onSelectPdf={setSelectedResearchPdfId}
+            pdfItems={researchPdfLibrary}
+            projectPath={project.projectPath}
+            selectedBinderDocumentId={selectedNode?.documentId ?? null}
+            selectedNoteId={selectedResearchNoteId}
+            selectedPdfId={selectedResearchPdfId}
           />
         ) : workspaceView === 'outliner' ? (
           <OutlinerView
@@ -717,6 +835,7 @@ export function Workspace({
             manifest={project.manifest}
             maxAttachmentSizeBytes={maxAttachmentSizeBytes}
             onImportAttachments={() => importAttachments()}
+            onDefaultCitationProfileChange={handleDefaultCitationProfileChange}
             onOpenTimelineWorkspace={() => setWorkspaceView('timeline')}
             onOpenAttachment={(absolutePath) => {
               const attachment = attachments.find((entry) => entry.absolutePath === absolutePath) ?? null

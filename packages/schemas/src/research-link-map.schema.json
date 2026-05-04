@@ -1,0 +1,9 @@
+{
+  "$id": "research-link-map.schema.json",
+  "type": "object",
+  "required": [
+    "version",
+    "generatedAt",
+    "links"
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schemas/runtime-capability-report.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["capabilityId", "distribution", "status", "source", "messageKey"],
+  "properties": {
+    "capabilityId": { "type": "string" },
+    "distribution": {
+      "type": "string",
+      "enum": ["bundled-core", "bundled-sidecar", "system-addon", "manual-addon"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["available", "missing", "unsupported-platform", "blocked"]
+    },
+    "source": {
+      "type": "string",
+      "enum": ["bundled", "system", "none"]
+    },
+    "version": {
+      "type": "string"
+    },
+    "messageKey": { "type": "string" }
+  }
+}
