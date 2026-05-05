@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { spawnSync } from 'node:child_process'
-import { access, chmod, cp, mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises'
+import { access, chmod, cp, mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
@@ -76,6 +76,84 @@ async function ensureVendorBinaryExecutable(binaryPath) {
   }
 }
 
+async function findFileByBasename(directoryPath, basename) {
+  const entries = await readdir(directoryPath, { withFileTypes: true })
+  for (const entry of entries) {
+    const entryPath = path.join(directoryPath, entry.name)
+    if (entry.isDirectory()) {
+      const nestedMatch = await findFileByBasename(entryPath, basename)
+      if (nestedMatch) {
+        return nestedMatch
+      }
+      continue
+    }
+
+    if (entry.isFile() && entry.name === basename) {
+      return entryPath
+    }
+  }
+
+  return undefined
+}
+
+async function findPackageFiles(directoryPath) {
+  const packagePaths = []
+  const entries = await readdir(directoryPath, { withFileTypes: true })
+  for (const entry of entries) {
+    const entryPath = path.join(directoryPath, entry.name)
+    if (entry.isDirectory()) {
+      packagePaths.push(...(await findPackageFiles(entryPath)))
+      continue
+    }
+
+    if (entry.isFile() && entry.name.endsWith('.pkg')) {
+      packagePaths.push(entryPath)
+    }
+  }
+
+  return packagePaths
+}
+
+async function resolveExtractedBinaryPath(extractionDirectory, targetConfig) {
+  const configuredBinaryPath = path.join(
+    extractionDirectory,
+    targetConfig.archiveRootDirectoryName,
+    targetConfig.archiveBinaryRelativePath
+  )
+
+  if (await pathExists(configuredBinaryPath)) {
+    return configuredBinaryPath
+  }
+
+  const binaryBasename = path.basename(targetConfig.archiveBinaryRelativePath)
+  const directMatch = await findFileByBasename(extractionDirectory, binaryBasename)
+  if (directMatch) {
+    return directMatch
+  }
+
+  if (process.platform !== 'darwin') {
+    return undefined
+  }
+
+  const packagePaths = await findPackageFiles(extractionDirectory)
+  for (const packagePath of packagePaths) {
+    const packageExtractionDirectory = path.join(
+      path.dirname(packagePath),
+      `${path.basename(packagePath, '.pkg')}-expanded`
+    )
+
+    await rm(packageExtractionDirectory, { recursive: true, force: true })
+    runOrThrow('pkgutil', ['--expand-full', packagePath, packageExtractionDirectory], { cwd: repoRoot })
+
+    const packageMatch = await findFileByBasename(packageExtractionDirectory, binaryBasename)
+    if (packageMatch) {
+      return packageMatch
+    }
+  }
+
+  return undefined
+}
+
 async function main() {
   const config = JSON.parse(await readFile(configPath, 'utf8'))
   const targetConfig = config?.pandoc?.targets?.[targetKey]
@@ -121,14 +199,15 @@ async function main() {
     await mkdir(extractionDirectory, { recursive: true })
     await extractArchive(archivePath, targetConfig.archiveType, extractionDirectory)
 
-    const extractedBinaryPath = path.join(
-      extractionDirectory,
-      targetConfig.archiveRootDirectoryName,
-      targetConfig.archiveBinaryRelativePath
-    )
+    const extractedBinaryPath = await resolveExtractedBinaryPath(extractionDirectory, targetConfig)
 
-    if (!(await pathExists(extractedBinaryPath))) {
-      throw new Error(`Pandoc binary not found after extraction: ${extractedBinaryPath}`)
+    if (!extractedBinaryPath) {
+      throw new Error(
+        `Pandoc binary not found after extraction: expected ${path.join(
+          targetConfig.archiveRootDirectoryName,
+          targetConfig.archiveBinaryRelativePath
+        )} or a ${path.basename(targetConfig.archiveBinaryRelativePath)} file inside ${targetConfig.assetName}`
+      )
     }
 
     await mkdir(path.dirname(vendorBinaryPath), { recursive: true })
