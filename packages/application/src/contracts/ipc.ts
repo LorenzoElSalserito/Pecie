@@ -37,6 +37,10 @@ export const ipcContracts = {
     request: 'ListInstalledPluginsRequest',
     response: 'ListInstalledPluginsResponse'
   },
+  'plugins:setEnabled': {
+    request: 'SetPluginEnabledRequest',
+    response: 'SetPluginEnabledResponse'
+  },
   'project:create': {
     request: 'CreateProjectRequest',
     response: 'CreateProjectResponse'

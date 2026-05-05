@@ -54,9 +54,10 @@ async function launchDesktop(): Promise<{
   const homeDirectory = await mkdtemp(path.join(tmpdir(), 'pecie-e2e-page-markers-'))
   const workspaceDirectory = await seedSettings(homeDirectory)
   const electronApp = await electron.launch({
-    args: [appEntryPath],
+    args: ['--no-sandbox', appEntryPath],
     env: {
       ...process.env,
+      ELECTRON_DISABLE_SANDBOX: '1',
       HOME: homeDirectory
     }
   })

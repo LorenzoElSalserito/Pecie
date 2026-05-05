@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { Button, Dialog } from '@pecie/ui'
 import type {
   GetRuntimeCapabilitiesResponse,
+  ListInstalledPluginsResponse,
   PrivacyInventoryResponse,
   PrivacyMaintenanceActionId,
   RuntimeCapabilityReport
@@ -69,6 +70,10 @@ export function SettingsDialog({
   const [runtimeVersion, setRuntimeVersion] = useState<string | undefined>(undefined)
   const [runtimeLoading, setRuntimeLoading] = useState(false)
   const [runtimeError, setRuntimeError] = useState<string | null>(null)
+  const [pluginInventory, setPluginInventory] = useState<ListInstalledPluginsResponse | null>(null)
+  const [pluginLoading, setPluginLoading] = useState(false)
+  const [pluginError, setPluginError] = useState<string | null>(null)
+  const [pluginBusyId, setPluginBusyId] = useState<string | null>(null)
 
   useEffect(() => {
     if (open) {
@@ -104,11 +109,16 @@ export function SettingsDialog({
       setRuntimeVersion(undefined)
       setRuntimeLoading(false)
       setRuntimeError(null)
+      setPluginInventory(null)
+      setPluginLoading(false)
+      setPluginError(null)
+      setPluginBusyId(null)
       return
     }
 
     setPrivacyLoading(true)
     setRuntimeLoading(true)
+    setPluginLoading(true)
     void window.pecie
       .invokeSafe('privacy:getInventory', {
         workspaceDirectory: draft.workspaceDirectory,
@@ -129,6 +139,17 @@ export function SettingsDialog({
         setRuntimeError(error instanceof Error ? error.message : 'Unable to load export runtime capabilities.')
       })
       .finally(() => setRuntimeLoading(false))
+    void window.pecie
+      .invokeSafe('plugins:listInstalled', {})
+      .then((response) => {
+        setPluginInventory(response)
+        setPluginError(null)
+      })
+      .catch((error: unknown) => {
+        setPluginInventory(null)
+        setPluginError(error instanceof Error ? error.message : 'Unable to load installed plugins.')
+      })
+      .finally(() => setPluginLoading(false))
   }, [currentProjectPath, draft.workspaceDirectory, open])
 
   if (!open) {
@@ -152,6 +173,10 @@ export function SettingsDialog({
   )
   const runtimeGuidanceKey =
     missingAddonCapabilities.length > 0 ? 'exportRuntimeSettingsAddonBody' : 'exportRuntimeSettingsReadyBody'
+  const installedPlugins = pluginInventory?.plugins ?? []
+  const pluginDiagnostics = pluginInventory?.diagnostics ?? []
+  const enabledPluginCount = installedPlugins.filter((plugin) => plugin.enabled).length
+  const showTechnicalDetails = draft.expertModeEnabled
   const expertCapabilityEntries = Object.entries(expertCapabilities) as Array<
     [keyof typeof expertCapabilities, (typeof expertCapabilities)[keyof typeof expertCapabilities]]
   >
@@ -180,24 +205,25 @@ export function SettingsDialog({
             />
             <span>{t(locale, 'expertModeToggle')}</span>
           </label>
-          <p className="meta-list__mono">{t(locale, draft.expertModeEnabled ? 'expertModeEnabled' : 'expertModeDisabled')}</p>
-          <div className="privacy-inventory">
-            {expertCapabilityEntries.map(([capabilityId, capability]) => (
-              <article className="privacy-item-card" key={capabilityId}>
-                <div className="privacy-item-card__header">
-                  <div>
-                    <h4>{getExpertCapabilityLabel(locale, capabilityId)}</h4>
-                    <p className="meta-list__mono">{capabilityId}</p>
+          <p>{t(locale, draft.expertModeEnabled ? 'expertModeEnabled' : 'expertModeDisabled')}</p>
+          {showTechnicalDetails ? (
+            <div className="privacy-inventory">
+              {expertCapabilityEntries.map(([capabilityId, capability]) => (
+                <article className="privacy-item-card" key={capabilityId}>
+                  <div className="privacy-item-card__header">
+                    <div>
+                      <h4>{getExpertCapabilityLabel(locale, capabilityId)}</h4>
+                    </div>
+                    <strong>{t(locale, `expertRisk_${capability.risk}`)}</strong>
                   </div>
-                  <strong>{t(locale, `expertRisk_${capability.risk}`)}</strong>
-                </div>
-                <div className="privacy-item-card__meta">
-                  <span>{t(locale, 'expertCapabilityRisk')}</span>
-                  <span>{capability.requiresProject ? t(locale, 'expertCapabilityRequiresProject') : t(locale, 'expertCapabilityAppWide')}</span>
-                </div>
-              </article>
-            ))}
-          </div>
+                  <div className="privacy-item-card__meta">
+                    <span>{t(locale, 'expertCapabilityRisk')}</span>
+                    <span>{capability.requiresProject ? t(locale, 'expertCapabilityRequiresProject') : t(locale, 'expertCapabilityAppWide')}</span>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : null}
         </section>
         <section className="context-card">
           <h3>{t(locale, 'previewSettingsTitle')}</h3>
@@ -313,18 +339,172 @@ export function SettingsDialog({
                 <div className="privacy-item-card__header">
                   <div>
                     <h4>{getRuntimeCapabilityLabel(locale, capability.capabilityId)}</h4>
-                    <p className="meta-list__mono">{capability.capabilityId}</p>
                   </div>
                   <strong>{t(locale, `exportRuntimeCapabilityStatus_${capability.status}`)}</strong>
                 </div>
-                <div className="privacy-item-card__meta">
-                  <span>{t(locale, `exportRuntimeCapabilitySource_${capability.source}`)}</span>
-                  <span>{t(locale, `exportRuntimeDistribution_${capability.distribution}`)}</span>
-                  <span>{capability.version ?? t(locale, 'exportRuntimeCapabilityVersionMissing')}</span>
-                </div>
+                {showTechnicalDetails ? (
+                  <div className="privacy-item-card__meta">
+                    <span>{t(locale, `exportRuntimeCapabilitySource_${capability.source}`)}</span>
+                    <span>{t(locale, `exportRuntimeDistribution_${capability.distribution}`)}</span>
+                    <span>{capability.version ?? t(locale, 'exportRuntimeCapabilityVersionMissing')}</span>
+                  </div>
+                ) : null}
                 <p>{t(locale, `exportRuntimeCapabilityHelp_${capability.capabilityId}`)}</p>
               </article>
             ))}
+          </div>
+        </section>
+        <section className="context-card">
+          <div className="context-card__heading">
+            <div>
+              <h3>{t(locale, 'pluginManagerTitle')}</h3>
+              <p>{t(locale, 'pluginManagerBody')}</p>
+            </div>
+            <Button
+              disabled={pluginLoading}
+              onClick={async () => {
+                setPluginLoading(true)
+                try {
+                  const response = await window.pecie.invokeSafe('plugins:listInstalled', {})
+                  setPluginInventory(response)
+                  setPluginError(null)
+                } catch (error: unknown) {
+                  setPluginInventory(null)
+                  setPluginError(error instanceof Error ? error.message : 'Unable to load installed plugins.')
+                } finally {
+                  setPluginLoading(false)
+                }
+              }}
+              size="sm"
+              type="button"
+              variant="secondary"
+            >
+              {t(locale, 'pluginManagerRefresh')}
+            </Button>
+          </div>
+          <p className="message-box" role="status">
+            {t(locale, showTechnicalDetails ? 'pluginManagerDisclosure' : 'pluginManagerStandardDisclosure')}
+          </p>
+          {pluginInventory ? (
+            <dl className="meta-list">
+              <div>
+                <dt>{t(locale, 'pluginManagerInstalledCount')}</dt>
+                <dd>{installedPlugins.length}</dd>
+              </div>
+              <div>
+                <dt>{t(locale, 'pluginManagerEnabledCount')}</dt>
+                <dd>{enabledPluginCount}</dd>
+              </div>
+              {showTechnicalDetails ? (
+                <div>
+                  <dt>{t(locale, 'pluginManagerDiagnosticCount')}</dt>
+                  <dd>{pluginDiagnostics.length}</dd>
+                </div>
+              ) : null}
+            </dl>
+          ) : null}
+          {pluginLoading ? <p className="message-box">{t(locale, 'pluginManagerLoading')}</p> : null}
+          {pluginError ? <p className="message-box" role="alert">{pluginError}</p> : null}
+          {!pluginLoading && installedPlugins.length === 0 && pluginDiagnostics.length === 0 ? (
+            <p>{t(locale, 'pluginManagerEmpty')}</p>
+          ) : null}
+          <div className="privacy-inventory">
+            {installedPlugins.map((plugin) => (
+              <article className="privacy-item-card" key={plugin.manifest.id}>
+                <div className="privacy-item-card__header">
+                  <div>
+                    <h4>{plugin.manifest.label}</h4>
+                  </div>
+                  <div className="dialog-actions dialog-actions--inline">
+                    <strong>{t(locale, plugin.enabled ? 'pluginManagerEnabled' : 'pluginManagerDisabled')}</strong>
+                    <Button
+                      disabled={pluginBusyId === plugin.manifest.id}
+                      onClick={async () => {
+                        const nextEnabled = !plugin.enabled
+                        setPluginBusyId(plugin.manifest.id)
+                        try {
+                          const response = await window.pecie.invokeSafe('plugins:setEnabled', {
+                            pluginId: plugin.manifest.id,
+                            enabled: nextEnabled
+                          })
+                          setPluginInventory((current) => {
+                            if (!current) {
+                              return {
+                                plugins: [response.plugin],
+                                diagnostics: response.diagnostics
+                              }
+                            }
+
+                            return {
+                              plugins: current.plugins.map((entry) =>
+                                entry.manifest.id === response.plugin.manifest.id ? response.plugin : entry
+                              ),
+                              diagnostics: response.diagnostics
+                            }
+                          })
+                          setPluginError(null)
+                        } catch (error: unknown) {
+                          setPluginError(error instanceof Error ? error.message : 'Unable to update plugin state.')
+                        } finally {
+                          setPluginBusyId(null)
+                        }
+                      }}
+                      size="sm"
+                      type="button"
+                      variant="secondary"
+                    >
+                      {t(locale, plugin.enabled ? 'pluginManagerDisable' : 'pluginManagerEnable')}
+                    </Button>
+                  </div>
+                </div>
+                <div className="privacy-item-card__meta">
+                  <span>{plugin.manifest.version}</span>
+                  {showTechnicalDetails ? (
+                    <>
+                      <span>{plugin.manifest.permissions.length} {t(locale, 'pluginManagerPermissions')}</span>
+                      <span>{plugin.manifest.hooks.length} {t(locale, 'pluginManagerHooks')}</span>
+                    </>
+                  ) : null}
+                </div>
+                {plugin.manifest.description ? <p>{plugin.manifest.description}</p> : null}
+                {showTechnicalDetails ? (
+                  <dl className="meta-list">
+                    <div>
+                      <dt>{t(locale, 'pluginManagerPluginId')}</dt>
+                      <dd className="meta-list__mono">{plugin.manifest.id}</dd>
+                    </div>
+                    <div>
+                      <dt>{t(locale, 'pluginManagerEntryPoint')}</dt>
+                      <dd className="meta-list__mono">{plugin.manifest.entryPoint}</dd>
+                    </div>
+                    <div>
+                      <dt>{t(locale, 'pluginManagerSourcePath')}</dt>
+                      <dd className="meta-list__mono">{plugin.sourcePath}</dd>
+                    </div>
+                    <div>
+                      <dt>{t(locale, 'pluginManagerPermissions')}</dt>
+                      <dd className="meta-list__mono">{plugin.manifest.permissions.join(', ')}</dd>
+                    </div>
+                    <div>
+                      <dt>{t(locale, 'pluginManagerHooks')}</dt>
+                      <dd className="meta-list__mono">{plugin.manifest.hooks.join(', ')}</dd>
+                    </div>
+                  </dl>
+                ) : null}
+              </article>
+            ))}
+            {showTechnicalDetails ? pluginDiagnostics.map((diagnostic) => (
+              <article className="privacy-item-card" key={diagnostic.sourcePath}>
+                <div className="privacy-item-card__header">
+                  <div>
+                    <h4>{t(locale, 'pluginManagerDiagnosticTitle')}</h4>
+                    <p className="meta-list__mono">{diagnostic.sourcePath}</p>
+                  </div>
+                  <strong>{diagnostic.severity}</strong>
+                </div>
+                <p>{diagnostic.message}</p>
+              </article>
+            )) : null}
           </div>
         </section>
         <section className="context-card">
@@ -400,7 +580,7 @@ export function SettingsDialog({
                   <div className="privacy-item-card__header">
                     <div>
                       <h4>{item.label}</h4>
-                      <p className="meta-list__mono">{item.relativePath}</p>
+                      {showTechnicalDetails ? <p className="meta-list__mono">{item.relativePath}</p> : null}
                     </div>
                     <strong>{formatFileSize(item.sizeBytes, locale)}</strong>
                   </div>
@@ -464,7 +644,7 @@ export function SettingsDialog({
           <h3>{t(locale, 'localDataFolder')}</h3>
           <p>{t(locale, 'localDataFolderBody')}</p>
           <div className="dialog-actions dialog-actions--inline">
-            <span className="meta-list__mono">{appDataDirectory}</span>
+            <span>{t(locale, 'localDataFolderHidden')}</span>
             <Button
               onClick={async () => {
                 const response = await window.pecie.invokeSafe('path:openInFileManager', {
@@ -484,7 +664,7 @@ export function SettingsDialog({
           <h3>{t(locale, 'prepareUninstall')}</h3>
           <p>{t(locale, 'prepareUninstallBody')}</p>
           <div className="dialog-actions dialog-actions--inline">
-            <span className="meta-list__mono">{appDataDirectory}</span>
+            <span>{t(locale, 'prepareUninstallLocalDataHint')}</span>
             <Button
               onClick={async () => {
                 if (!window.confirm(t(locale, 'prepareUninstallConfirm'))) {

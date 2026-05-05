@@ -102,10 +102,10 @@ Pecie helps you review before producing final output.
 - Core exports through bundled Pandoc
 - Markdown, Plain Text, HTML, DOCX, ODT, RTF, EPUB, JATS, and TEI output paths
 - PDF profiles with explicit engine availability checks
-- Markdown-style PDF when WeasyPrint is available
+- Markdown-style PDF through bundled WeasyPrint on supported desktop packages
 - LaTeX-oriented PDF workflows as optional advanced capabilities
 
-Pecie bundles the core Pandoc runtime for supported desktop packages, so common export workflows do not require manually installing Pandoc.
+Pecie bundles the Pandoc runtime and the WeasyPrint sidecar for supported desktop packages, so common document exports and Markdown-style PDF do not require manual runtime installs.
 
 ## Sharing and Privacy
 
@@ -117,6 +117,20 @@ Pecie is built around local ownership of the project.
 - Keep work local by default
 - Avoid implicit uploads and background addon downloads
 - Use isolated desktop boundaries for renderer and IPC access
+
+## Advanced Controls and Extensions
+
+Pecie includes advanced controls for users who want deeper visibility into the local workspace.
+
+- Expert mode with explicit disclosure before advanced capabilities are shown
+- Export runtime status for bundled and optional capabilities
+- Local plugin manager for plugins stored in the Pecie data folder
+- Manifest validation before a plugin is listed as usable
+- Plugin enable and disable controls
+- Declared plugin permissions and hook subscriptions shown before use
+- Sandboxed plugin execution with timeout, serializable results, and isolated failures
+
+Plugin support is local-first: Pecie does not install remote plugins automatically, and plugins do not receive unrestricted filesystem access.
 
 ## Accessibility and Languages
 

@@ -59,9 +59,9 @@ pack/
 # Log locali e audit diagnostic
 logs/
 local-audit/
-# Cache e indici derivati (SQLite, FTS, Thumbnails)
-cache/
-derived/
+# Cache e indici derivati locali (SQLite, FTS, Thumbnails)
+/cache/
+/derived/
 *.sqlite
 *.sqlite3
 *.db

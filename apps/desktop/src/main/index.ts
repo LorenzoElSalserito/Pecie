@@ -12,6 +12,7 @@ import {
   HistoryService,
   PreviewService,
   PrivacyService,
+  PluginService,
   ProjectFileSystem,
   ProjectService,
   ResearchService,
@@ -23,6 +24,13 @@ import {
 } from '@pecie/infrastructure'
 import appIconPath from '../renderer/src/asset/Icon.png'
 import splashLogoSvg from '../renderer/src/asset/Icon.svg?raw'
+
+const shouldDisableElectronSandbox = process.env.ELECTRON_DISABLE_SANDBOX === '1'
+
+if (shouldDisableElectronSandbox) {
+  app.commandLine.appendSwitch('no-sandbox')
+  app.commandLine.appendSwitch('disable-setuid-sandbox')
+}
 
 function uniquePaths(paths: string[]): string[] {
   return Array.from(new Set(paths))
@@ -140,7 +148,7 @@ function createWindow(splashWindow: BrowserWindow | null): void {
     icon: getAppIconPath(),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: true,
+      sandbox: !shouldDisableElectronSandbox,
       contextIsolation: true,
       nodeIntegration: false
     }
@@ -224,6 +232,7 @@ app.whenReady().then(async () => {
   const historyService = new HistoryService(projectFileSystem, new GitAdapter(), logger)
   const projectService = new ProjectService(projectFileSystem, undefined, logger, historyService)
   const privacyService = new PrivacyService(appDataDirectory, projectFileSystem, projectService, logger)
+  const pluginService = new PluginService(appDataDirectory)
   registerSettingsHandlers(appSettingsService, privacyService, logger)
   registerProjectHandlers(
     projectService,
@@ -232,12 +241,14 @@ app.whenReady().then(async () => {
     shareService,
     historyService,
     appSettingsService,
+    pluginService,
     logger
   )
   registerShellHandlers(
     new ExportService(projectFileSystem, undefined, exportRuntimeResolver),
     new PreviewService(projectFileSystem),
     appSettingsService,
+    pluginService,
     logger,
     appDataDirectory
   )

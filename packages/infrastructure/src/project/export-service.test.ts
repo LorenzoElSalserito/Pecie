@@ -29,9 +29,12 @@ function createRuntimeResolverStub(
     resolveBinary: async (request: { capabilityId: string; allowSystemFallback: boolean }) => {
       onResolve?.(request)
       return {
-        capabilityId: 'pandoc',
+        capabilityId: request.capabilityId,
         source: 'bundled',
-        executablePath: binaryPath
+        executablePath:
+          request.capabilityId === 'weasyprint'
+            ? '/bundled/runtime/weasyprint/bin/weasyprint'
+            : binaryPath
       }
     }
   } as unknown as ExportRuntimeResolver
@@ -312,10 +315,47 @@ describe('ExportService', () => {
     })
 
     expect(response.success).toBe(true)
-    expect(capturedArgs).toContain('--pdf-engine=weasyprint')
+    expect(capturedArgs).toContain('--pdf-engine=/bundled/runtime/weasyprint/bin/weasyprint')
     expect(capturedArgs).toContain('--standalone')
     expect(capturedArgs).toContain('--css')
     expect(capturedArgs[capturedArgs.indexOf('--css') + 1]).toContain('exports/themes/github-markdown.css')
+  })
+
+  it('requires a bundled weasyprint sidecar for markdown-style pdf exports', async () => {
+    const project = await createProject('blank')
+    const outputPath = path.join(project.projectPath, 'exports/out/blank-markdown.pdf')
+    const exportService = new ExportService(
+      new ProjectFileSystem(),
+      async () => {
+        await writeFile(outputPath, '%PDF-1.7\n', 'utf8')
+        return {}
+      },
+      {
+        getRuntimeCapabilities: async () => ({ capabilities: [] }),
+        resolveBinary: async (request: { capabilityId: string }) => {
+          if (request.capabilityId === 'weasyprint') {
+            throw new Error('Runtime export capability non disponibile: weasyprint.')
+          }
+
+          return {
+            capabilityId: request.capabilityId,
+            source: 'bundled',
+            executablePath: '/bundled/runtime/pandoc'
+          }
+        }
+      } as unknown as ExportRuntimeResolver
+    )
+
+    const response = await exportService.exportDocument({
+      projectPath: project.projectPath,
+      profileId: 'blank-markdown-pdf',
+      format: 'pdf',
+      outputPath,
+      scope: 'whole-project'
+    })
+
+    expect(response.success).toBe(false)
+    expect(response.log[0]).toContain('weasyprint')
   })
 
   it('uses the runtime resolver to select the pandoc executable', async () => {

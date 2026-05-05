@@ -83,10 +83,11 @@ export interface BuildPandocArgsInput {
   outputPath: string
   profile: ExportProfile
   citationProfileOverride?: string
+  pdfEngineExecutablePath?: string
 }
 
 export async function buildPandocArgs(input: BuildPandocArgsInput): Promise<string[]> {
-  const { fileSystem, projectPath, inputPath, outputPath, profile, citationProfileOverride } = input
+  const { fileSystem, projectPath, inputPath, outputPath, profile, citationProfileOverride, pdfEngineExecutablePath } = input
   const formatConfig = exportFormats[profile.format]
   const args = [inputPath, '-f', 'markdown+citations', '-o', outputPath]
 
@@ -95,7 +96,7 @@ export async function buildPandocArgs(input: BuildPandocArgsInput): Promise<stri
   }
 
   if (profile.engine) {
-    args.push(`--pdf-engine=${profile.engine}`)
+    args.push(`--pdf-engine=${pdfEngineExecutablePath ?? profile.engine}`)
   }
 
   if (profile.engine === 'weasyprint') {

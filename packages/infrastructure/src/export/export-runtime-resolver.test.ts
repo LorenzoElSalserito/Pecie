@@ -61,12 +61,12 @@ describe('ExportRuntimeResolver', () => {
     })
   })
 
-  it('resolves an explicit system binary only when binary resolution allows it', async () => {
+  it('resolves an explicit manual addon binary only when binary resolution allows it', async () => {
     const systemRoot = await mkdtemp(path.join(tmpdir(), 'pecie-runtime-system-'))
     cleanupPaths.push(systemRoot)
-    const systemPandoc = path.join(systemRoot, 'pandoc')
-    await writeFile(systemPandoc, '', 'utf8')
-    await chmod(systemPandoc, 0o755)
+    const systemXeLaTeX = path.join(systemRoot, 'xelatex')
+    await writeFile(systemXeLaTeX, '', 'utf8')
+    await chmod(systemXeLaTeX, 0o755)
 
     const resolver = new ExportRuntimeResolver({
       resourcesRoot: path.join(tmpdir(), 'pecie-runtime-missing'),
@@ -76,12 +76,42 @@ describe('ExportRuntimeResolver', () => {
     })
 
     const resolved = await resolver.resolveBinary({
-      capabilityId: 'pandoc',
+      capabilityId: 'xelatex',
       allowSystemFallback: true
     })
 
     expect(resolved.source).toBe('system')
-    expect(resolved.executablePath).toBe(systemPandoc)
+    expect(resolved.executablePath).toBe(systemXeLaTeX)
+  })
+
+  it('does not report weasyprint from PATH because official packages require the bundled sidecar', async () => {
+    const systemRoot = await mkdtemp(path.join(tmpdir(), 'pecie-runtime-weasy-system-'))
+    cleanupPaths.push(systemRoot)
+    const systemWeasyprint = path.join(systemRoot, 'weasyprint')
+    await writeFile(systemWeasyprint, '', 'utf8')
+    await chmod(systemWeasyprint, 0o755)
+
+    const resolver = new ExportRuntimeResolver({
+      resourcesRoot: path.join(tmpdir(), 'pecie-runtime-missing'),
+      pathValue: systemRoot,
+      platform: 'linux',
+      arch: 'x64'
+    })
+
+    const response = await resolver.getRuntimeCapabilities()
+
+    expect(response.capabilities.find((entry) => entry.capabilityId === 'weasyprint')).toMatchObject({
+      capabilityId: 'weasyprint',
+      distribution: 'bundled-sidecar',
+      status: 'missing',
+      source: 'none'
+    })
+    await expect(
+      resolver.resolveBinary({
+        capabilityId: 'weasyprint',
+        allowSystemFallback: true
+      })
+    ).rejects.toThrow(/capability non disponibile/)
   })
 
   it('fails instead of returning an unchecked command name when system fallback is unavailable', async () => {

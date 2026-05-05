@@ -136,7 +136,10 @@ export function makeSyntheticSearchCorpus(documentCount: number, averageWords: n
   const wordCount = Math.max(8, averageWords)
 
   return Array.from({ length: documentCount }, (_, documentIndex) => {
-    const words = Array.from({ length: wordCount }, (_, wordIndex) => vocabulary[(documentIndex + wordIndex) % vocabulary.length])
+    const words: string[] = Array.from(
+      { length: wordCount },
+      (_, wordIndex) => vocabulary[(documentIndex + wordIndex) % vocabulary.length]
+    )
     if (documentIndex % 137 === 0) {
       words.splice(Math.floor(words.length / 2), 0, 'needle-performance-token')
     }

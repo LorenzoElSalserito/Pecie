@@ -10,6 +10,7 @@ import {
   type ExportDocumentResponse,
   type ExportFormat,
   type ExportProfile,
+  type ExportRuntimeCapabilityId,
   type ListExportProfilesRequest,
   type ListExportProfilesResponse,
   type PreviewMode,
@@ -379,6 +380,12 @@ export class ExportService {
       capabilityId: 'pandoc',
       allowSystemFallback: false
     })
+    const pdfEngineBinary = profile.engine
+      ? await this.runtimeResolver.resolveBinary({
+          capabilityId: profile.engine as ExportRuntimeCapabilityId,
+          allowSystemFallback: profile.engine !== 'weasyprint'
+        })
+      : null
 
     await this.execRunner(
       pandocBinary.executablePath,
@@ -388,7 +395,8 @@ export class ExportService {
         inputPath,
         outputPath,
         profile,
-        citationProfileOverride
+        citationProfileOverride,
+        pdfEngineExecutablePath: pdfEngineBinary?.executablePath
       })
     )
   }

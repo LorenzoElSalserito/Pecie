@@ -81,7 +81,7 @@ async function launchDesktop(options?: { onboardingCompleted?: boolean; tutorial
   const homeDirectory = await mkdtemp(path.join(tmpdir(), 'pecie-e2e-tutorials-'))
   const seeded = await seedSettings(homeDirectory, options)
   const electronApp = await electron.launch({
-    args: [appEntryPath, '--no-sandbox'],
+    args: ['--no-sandbox', appEntryPath],
     env: {
       ...process.env,
       ELECTRON_DISABLE_SANDBOX: '1',

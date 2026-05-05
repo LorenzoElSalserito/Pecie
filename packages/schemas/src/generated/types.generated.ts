@@ -582,6 +582,16 @@ export interface ListInstalledPluginsResponse {
   diagnostics: PluginDiagnostic[]
 }
 
+export interface SetPluginEnabledRequest {
+  pluginId: string
+  enabled: boolean
+}
+
+export interface SetPluginEnabledResponse {
+  plugin: PluginListItem
+  diagnostics: PluginDiagnostic[]
+}
+
 export interface ListResearchNotesRequest {
   projectPath: string
 }
@@ -1406,6 +1416,10 @@ export type IpcContractMap = {
   'plugins:listInstalled': {
     request: ListInstalledPluginsRequest
     response: ListInstalledPluginsResponse
+  }
+  'plugins:setEnabled': {
+    request: SetPluginEnabledRequest
+    response: SetPluginEnabledResponse
   }
   'project:create': {
     request: CreateProjectRequest

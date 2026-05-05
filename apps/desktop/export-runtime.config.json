@@ -46,11 +46,30 @@
     }
   },
   "weasyprint": {
-    "strategy": "system-or-sidecar",
+    "strategy": "bundled-sidecar",
+    "requiredForOfficialRelease": true,
+    "requiredForProfiles": ["pdf-markdown-pure"],
+    "targets": {
+      "linux-x64": {
+        "vendorBinaryRelativePath": "linux-x64/weasyprint/bin/weasyprint"
+      },
+      "linux-arm64": {
+        "vendorBinaryRelativePath": "linux-arm64/weasyprint/bin/weasyprint"
+      },
+      "win32-x64": {
+        "vendorBinaryRelativePath": "win32-x64/weasyprint/weasyprint.exe"
+      },
+      "darwin-x64": {
+        "vendorBinaryRelativePath": "darwin-x64/weasyprint/bin/weasyprint"
+      },
+      "darwin-arm64": {
+        "vendorBinaryRelativePath": "darwin-arm64/weasyprint/bin/weasyprint"
+      }
+    },
     "notes": {
-      "linux": "Prefer system package or managed local environment with native libraries.",
-      "darwin": "Prefer Homebrew-based installation.",
-      "win32": "Prefer official executable or Python environment with MSYS2/Pango."
+      "linux": "Official packages must ship a self-contained sidecar with native rendering libraries.",
+      "darwin": "Official packages must ship a signed sidecar inside the app resources.",
+      "win32": "Official packages must ship a sidecar executable and required native DLLs."
     }
   }
 }

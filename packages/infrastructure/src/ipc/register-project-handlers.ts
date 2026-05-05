@@ -6,6 +6,7 @@ import { AppSettingsService } from '../app/app-settings-service'
 import { CitationService } from '../citations/citation-service'
 import { HistoryService } from '../history/history-service'
 import { AppLoggerService } from '../logging/app-logger-service'
+import { PluginService } from '../plugins/plugin-service'
 import { ProjectService } from '../project/project-service'
 import { ResearchService } from '../research/research-service'
 import { ShareService } from '../share/share-service'
@@ -17,6 +18,7 @@ export function registerProjectHandlers(
   shareService: ShareService,
   historyService: HistoryService,
   appSettingsService: AppSettingsService,
+  pluginService: PluginService,
   logger: AppLoggerService
 ): void {
   ipcMain.handle(
@@ -43,13 +45,30 @@ export function registerProjectHandlers(
       const response = await projectService.openProject(payload)
       await historyService.initialize(response.projectPath)
       await appSettingsService.rememberProject(response.projectPath)
+      const pluginResponse = await pluginService.runHookPipeline({
+        hook: 'onProjectOpen',
+        payload: {
+          projectPath: response.projectPath,
+          manifest: {
+            projectId: response.manifest.projectId,
+            title: response.manifest.title
+          },
+          project: {
+            title: response.project.title,
+            documentKind: response.project.documentKind,
+            defaultLanguage: response.project.defaultLanguage
+          }
+        }
+      })
       await logger.log({
-        level: 'info',
+        level: pluginResponse.diagnostics.length > 0 ? 'warn' : 'info',
         category: 'project',
         event: 'project-open-ipc',
         message: 'Renderer requested project open.',
         context: {
-          projectPath: response.projectPath
+          projectPath: response.projectPath,
+          pluginResultCount: pluginResponse.results.length,
+          pluginDiagnosticCount: pluginResponse.diagnostics.length
         }
       })
       return response
@@ -66,14 +85,29 @@ export function registerProjectHandlers(
     async (_event, payload: IpcContractMap['document:save']['request']) => {
       const response = await projectService.saveDocument(payload)
       await appSettingsService.rememberProject(payload.projectPath)
+      const pluginResponse = await pluginService.runHookPipeline({
+        hook: 'onDocumentSave',
+        payload: {
+          projectPath: payload.projectPath,
+          document: {
+            documentId: response.document.documentId,
+            title: response.document.title,
+            path: response.document.path
+          },
+          saveMode: payload.saveMode ?? 'manual',
+          savedAt: response.savedAt
+        }
+      })
       await logger.log({
-        level: 'info',
+        level: pluginResponse.diagnostics.length > 0 ? 'warn' : 'info',
         category: 'project',
         event: 'project-touched',
         message: 'Project recency updated after document save.',
         context: {
           projectPath: payload.projectPath,
-          documentId: payload.documentId
+          documentId: payload.documentId,
+          pluginResultCount: pluginResponse.results.length,
+          pluginDiagnosticCount: pluginResponse.diagnostics.length
         }
       })
       return response

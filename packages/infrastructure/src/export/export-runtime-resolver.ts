@@ -68,15 +68,17 @@ export class ExportRuntimeResolver {
           }
         }
 
-        const systemPath = await this.findSystemExecutable(registryEntry.executableBasename)
-        if (systemPath) {
-          return this.toRuntimeCapabilityReport({
-            capabilityId,
-            distribution: registryEntry.distribution,
-            status: 'available',
-            source: 'system',
-            messageKey: 'export.runtime.status.availableSystem'
-          })
+        if (this.allowsSystemFallback(registryEntry.distribution)) {
+          const systemPath = await this.findSystemExecutable(registryEntry.executableBasename)
+          if (systemPath) {
+            return this.toRuntimeCapabilityReport({
+              capabilityId,
+              distribution: registryEntry.distribution,
+              status: 'available',
+              source: 'system',
+              messageKey: 'export.runtime.status.availableSystem'
+            })
+          }
         }
 
         return this.toRuntimeCapabilityReport({
@@ -112,7 +114,7 @@ export class ExportRuntimeResolver {
       }
     }
 
-    if (request.allowSystemFallback) {
+    if (request.allowSystemFallback && this.allowsSystemFallback(registryEntry.distribution)) {
       const systemPath = await this.findSystemExecutable(registryEntry.executableBasename)
       if (!systemPath) {
         throw new Error(`Runtime export capability non disponibile: ${request.capabilityId}.`)
@@ -126,6 +128,10 @@ export class ExportRuntimeResolver {
     }
 
     throw new Error(`Runtime export capability non disponibile: ${request.capabilityId}.`)
+  }
+
+  private allowsSystemFallback(distribution: RuntimeCapabilityReport['distribution']): boolean {
+    return distribution === 'manual-addon' || distribution === 'system-addon'
   }
 
   private async readBundledManifest(): Promise<ExportRuntimeManifest | null> {

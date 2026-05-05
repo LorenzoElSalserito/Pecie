@@ -19,11 +19,11 @@ export function registerShellHandlers(
   exportService: ExportService,
   previewService: PreviewService,
   appSettingsService: AppSettingsService,
+  pluginService: PluginService,
   logger: AppLoggerService,
   appDataDirectory: string
 ): void {
   const legacyHomeDataDirectory = join(dirname(appDataDirectory), 'pecie')
-  const pluginService = new PluginService(appDataDirectory)
 
   ipcMain.handle('path:pickDirectory', async (_event, payload: IpcContractMap['path:pickDirectory']['request']) => {
     const result = await dialog.showOpenDialog({
@@ -130,9 +130,18 @@ export function registerShellHandlers(
   )
 
   ipcMain.handle('export:document', async (_event, payload: IpcContractMap['export:document']['request']) => {
+    const pluginResponse = await pluginService.runHookPipeline({
+      hook: 'onExportBeforeWrite',
+      payload: {
+        projectPath: payload.projectPath,
+        outputPath: payload.outputPath,
+        format: payload.format,
+        scope: payload.scope
+      }
+    })
     const response = await exportService.exportDocument(payload)
     await logger.log({
-      level: response.success ? 'info' : 'warn',
+      level: response.success && pluginResponse.diagnostics.length === 0 ? 'info' : 'warn',
       category: 'export',
       event: 'export-document',
       message: 'Document export completed.',
@@ -141,7 +150,9 @@ export function registerShellHandlers(
         outputPath: payload.outputPath,
         format: payload.format,
         scope: payload.scope,
-        success: response.success
+        success: response.success,
+        pluginResultCount: pluginResponse.results.length,
+        pluginDiagnosticCount: pluginResponse.diagnostics.length
       }
     })
     return response
@@ -149,15 +160,28 @@ export function registerShellHandlers(
 
   ipcMain.handle('export:listProfiles', async (_event, payload: IpcContractMap['export:listProfiles']['request']) => {
     const response = await exportService.listProfiles(payload)
+    const pluginResponse = await pluginService.runHookPipeline({
+      hook: 'onExportProfileLoaded',
+      payload: {
+        projectPath: payload.projectPath,
+        profiles: response.profiles.map((profile) => ({
+          id: profile.id,
+          label: profile.label,
+          format: profile.format
+        }))
+      }
+    })
     await logger.log({
-      level: 'info',
+      level: pluginResponse.diagnostics.length > 0 ? 'warn' : 'info',
       category: 'export',
       event: 'export-list-profiles',
       message: 'Export profiles listed.',
       context: {
         projectPath: payload.projectPath,
         profileCount: response.profiles.length,
-        diagnosticCount: response.diagnostics.length
+        diagnosticCount: response.diagnostics.length,
+        pluginResultCount: pluginResponse.results.length,
+        pluginDiagnosticCount: pluginResponse.diagnostics.length
       }
     })
     return response
@@ -270,6 +294,22 @@ export function registerShellHandlers(
       message: 'Installed plugins listed.',
       context: {
         pluginCount: response.plugins.length,
+        diagnosticCount: response.diagnostics.length
+      }
+    })
+    return response
+  })
+
+  ipcMain.handle('plugins:setEnabled', async (_event, payload: IpcContractMap['plugins:setEnabled']['request']) => {
+    const response = await pluginService.setPluginEnabled(payload.pluginId, payload.enabled)
+    await logger.log({
+      level: 'info',
+      category: 'settings',
+      event: 'plugins-set-enabled',
+      message: 'Plugin enabled state updated.',
+      context: {
+        pluginId: payload.pluginId,
+        enabled: payload.enabled,
         diagnosticCount: response.diagnostics.length
       }
     })

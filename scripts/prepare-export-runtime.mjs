@@ -1,4 +1,4 @@
-import { access, chmod, cp, mkdir, readFile, stat, writeFile } from 'node:fs/promises'
+import { access, chmod, copyFile, cp, lstat, mkdir, readFile, readdir, readlink, rm, stat, symlink, writeFile } from 'node:fs/promises'
 import crypto from 'node:crypto'
 import path from 'node:path'
 import process from 'node:process'
@@ -52,6 +52,27 @@ async function readCapabilityMetadata(sourceDirectory) {
   return JSON.parse(await readFile(metadataPath, 'utf8'))
 }
 
+async function copyDirectoryPreservingSymlinks(sourceDirectory, targetDirectory) {
+  await rm(targetDirectory, { recursive: true, force: true })
+  await mkdir(targetDirectory, { recursive: true })
+  const entries = await readdir(sourceDirectory, { withFileTypes: true })
+
+  for (const entry of entries) {
+    const sourcePath = path.join(sourceDirectory, entry.name)
+    const targetPath = path.join(targetDirectory, entry.name)
+    const sourceStats = await lstat(sourcePath)
+
+    if (sourceStats.isSymbolicLink()) {
+      await symlink(await readlink(sourcePath), targetPath)
+    } else if (sourceStats.isDirectory()) {
+      await copyDirectoryPreservingSymlinks(sourcePath, targetPath)
+    } else {
+      await copyFile(sourcePath, targetPath)
+      await chmod(targetPath, sourceStats.mode)
+    }
+  }
+}
+
 async function main() {
   await mkdir(exportRuntimeRoot, { recursive: true })
   await mkdir(path.join(exportRuntimeRoot, runtimeTarget), { recursive: true })
@@ -64,7 +85,11 @@ async function main() {
 
     if (await pathExists(vendorAbsolutePath)) {
       await mkdir(path.dirname(bundledAbsolutePath), { recursive: true })
-      await cp(vendorAbsolutePath, bundledAbsolutePath, { force: true })
+      if (entry.capabilityId === 'weasyprint') {
+        await copyDirectoryPreservingSymlinks(path.dirname(vendorAbsolutePath), path.dirname(bundledAbsolutePath))
+      } else {
+        await cp(vendorAbsolutePath, bundledAbsolutePath, { force: true })
+      }
       if (process.platform !== 'win32') {
         await chmod(bundledAbsolutePath, 0o755)
       }

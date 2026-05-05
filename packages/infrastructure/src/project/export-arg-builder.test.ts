@@ -172,6 +172,24 @@ describe('buildPandocArgs', () => {
     expect(args[args.indexOf('--css') + 1]).toBe('/abs/exports/themes/github-markdown.css')
   })
 
+  it('uses an absolute bundled pdf engine path when provided', async () => {
+    const fileSystem = new FakeFileSystem()
+    const args = await buildPandocArgs({
+      fileSystem,
+      projectPath,
+      inputPath: '/tmp/in.md',
+      outputPath: '/tmp/out.pdf',
+      profile: makeProfile({
+        format: 'pdf',
+        engine: 'weasyprint'
+      }),
+      pdfEngineExecutablePath: '/opt/pecie/export-runtime/linux-x64/weasyprint/bin/weasyprint'
+    })
+
+    expect(args).toContain('--pdf-engine=/opt/pecie/export-runtime/linux-x64/weasyprint/bin/weasyprint')
+    expect(args).not.toContain('--pdf-engine=weasyprint')
+  })
+
   it('does not append citation flags when no citation profile is set', async () => {
     const fileSystem = new FakeFileSystem()
     const args = await buildPandocArgs({
