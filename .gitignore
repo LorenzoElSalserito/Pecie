@@ -177,6 +177,8 @@ UI.md
 docs/prd/
 docs/adr/
 docs/a11y/
+!docs/a11y/
+!docs/a11y/audit-matrix.md
 docs/*closure-report.md
 docs/phase-*.md
 
