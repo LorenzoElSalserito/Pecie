@@ -11,6 +11,7 @@ import type {
   PaginatedPreview,
   PrivacyInventoryResponse,
   PluginManifest,
+  ChartBlock,
   MilestonesSnapshot,
   ProjectManifest,
   ProjectMetadata,
@@ -188,6 +189,12 @@ export const pluginManifestSchema = {
   required: ['id', 'schemaVersion', 'label', 'version', 'entryPoint', 'permissions', 'hooks']
 } as const satisfies Record<string, unknown>
 
+export const visualBlockSchema = {
+  $id: 'visual-block.schema.json',
+  type: 'object',
+  required: ['kind', 'chartType', 'xKey', 'yKeys', 'data']
+} as const satisfies Record<string, unknown>
+
 export type SchemaDocument = {
   manifest: ProjectManifest
   project: ProjectMetadata
@@ -211,4 +218,5 @@ export type SchemaDocument = {
   privacyInventory: PrivacyInventoryResponse
   tutorialScript: TutorialScript
   pluginManifest: PluginManifest
+  visualBlock: ChartBlock
 }

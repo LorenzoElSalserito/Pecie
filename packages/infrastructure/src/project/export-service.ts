@@ -20,11 +20,18 @@ import {
   type PreviewExportRequest,
   type PreviewExportResponse,
   type RuntimeCapabilityReport,
+  type VisualBlockViewModel,
   validateExportProfile,
   validateManifest,
   validateProjectMetadata
 } from '@pecie/schemas'
-import { defaultExportProfileAssets, getDefaultExportProfiles, projectTemplates, type ProjectTemplateId } from '@pecie/domain'
+import {
+  defaultExportProfileAssets,
+  getDefaultExportProfiles,
+  projectTemplates,
+  replaceVisualBlocksWithImages,
+  type ProjectTemplateId
+} from '@pecie/domain'
 import { ProjectFileSystem } from '../fs/project-file-system'
 import {
   buildPandocArgs,
@@ -70,6 +77,12 @@ type PreparedExportContext = {
   format: ExportFormat
   markdownBody: string
   exportPayload: string
+}
+
+type VisualExportAsset = {
+  relativePath: string
+  absolutePath: string
+  svg: string
 }
 
 type ExecFileResult = {
@@ -570,15 +583,29 @@ export class ExportService {
         }))
       }))
     }
+    const visualAssets: VisualExportAsset[] = []
     const markdownBody = exportedDocuments
       .map((document) => {
+        const visualReadyMarkdown = this.materializeVisualBlocksForExport(
+          document.markdown,
+          request.projectPath,
+          document.node.path ?? document.documentId,
+          visualAssets
+        )
+
         if (format === 'md' || format === 'txt' || !document.node.path) {
-          return document.markdown
+          return visualReadyMarkdown
         }
 
-        return this.rewriteImagePathsForExport(document.markdown, request.projectPath, document.node.path)
+        return this.rewriteImagePathsForExport(visualReadyMarkdown, request.projectPath, document.node.path)
       })
       .join('\n\n')
+
+    for (const asset of visualAssets) {
+      assertWriteTarget(asset.relativePath, 'visual-export-asset')
+      await this.fileSystem.ensureDir(request.projectPath, path.dirname(asset.relativePath))
+      await this.fileSystem.writeText(request.projectPath, asset.relativePath, asset.svg)
+    }
 
     return {
       manifest,
@@ -1032,6 +1059,32 @@ export class ExportService {
       const resolvedRelativePath = path.posix.normalize(path.posix.join(documentDirectory, target))
       const absolutePath = this.fileSystem.resolveProjectPath(projectPath, resolvedRelativePath)
       return `![${altText}](${absolutePath})`
+    })
+  }
+
+  private materializeVisualBlocksForExport(
+    markdownBody: string,
+    projectPath: string,
+    documentRelativePath: string,
+    assets: VisualExportAsset[]
+  ): string {
+    const slugBase = path
+      .posix
+      .basename(documentRelativePath, path.posix.extname(documentRelativePath))
+      .replace(/[^A-Za-z0-9_-]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'document'
+
+    return replaceVisualBlocksWithImages(markdownBody, (block: VisualBlockViewModel, index, svg) => {
+      const filename = `${slugBase}-${index}-${block.kind}.svg`
+      const relativePath = path.posix.join('exports/visual-assets', filename)
+      const absolutePath = this.fileSystem.resolveProjectPath(projectPath, relativePath)
+      assets.push({
+        relativePath,
+        absolutePath,
+        svg
+      })
+
+      return absolutePath
     })
   }
 

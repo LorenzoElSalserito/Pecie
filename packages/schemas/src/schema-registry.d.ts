@@ -19,5 +19,6 @@ export declare const schemaRegistry: {
     readonly privacyInventory: "schemas/privacy-inventory.schema.json";
     readonly tutorialScript: "schemas/tutorial-script.schema.json";
     readonly pluginManifest: "schemas/plugin-manifest.schema.json";
+    readonly visualBlock: "schemas/visual-block.schema.json";
 };
 export type SchemaName = keyof typeof schemaRegistry;

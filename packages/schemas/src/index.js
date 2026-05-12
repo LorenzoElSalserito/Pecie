@@ -8,3 +8,4 @@ export * from './schema-registry';
 export * from './schemas';
 export * from './validation/assertions';
 export * from './validation/validators';
+export * from './visual';

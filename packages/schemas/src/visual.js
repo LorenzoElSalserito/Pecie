@@ -1,0 +1,53 @@
+export const visualBlockCapabilities = {
+    mermaidDiagram: {
+        blockKind: 'mermaid',
+        library: 'mermaid',
+        renderer: 'MermaidRenderer',
+        insertCommand: 'editor.visual.insertMermaid',
+        exportStrategy: 'svg-first',
+        i18nLabel: 'visualBlocks.mermaid.label'
+    },
+    markmapMindmap: {
+        blockKind: 'markmap',
+        library: 'markmap-lib',
+        renderer: 'MarkmapRenderer',
+        insertCommand: 'editor.visual.insertMarkmap',
+        exportStrategy: 'svg-first',
+        i18nLabel: 'visualBlocks.markmap.label'
+    },
+    rechartsStats: {
+        blockKind: 'chart',
+        library: 'recharts',
+        renderer: 'ChartRenderer',
+        insertCommand: 'editor.visual.insertChart',
+        exportStrategy: 'svg-or-png-snapshot',
+        i18nLabel: 'visualBlocks.chart.label'
+    }
+};
+export const visualBlockInsertCommands = {
+    mermaidDiagram: {
+        capability: 'mermaidDiagram',
+        markdownFence: 'mermaid',
+        templateFactory: () => ['flowchart TD', '  A[Idea] --> B[Bozza]', '  B --> C[Revisione]'].join('\n')
+    },
+    markmapMindmap: {
+        capability: 'markmapMindmap',
+        markdownFence: 'markmap',
+        templateFactory: () => ['# Mappa mentale', '## Nodo principale', '### Dettaglio'].join('\n')
+    },
+    rechartsStats: {
+        capability: 'rechartsStats',
+        markdownFence: 'chart',
+        templateFactory: () => JSON.stringify({
+            kind: 'chart',
+            chartType: 'bar',
+            title: 'Esempio statistiche',
+            xKey: 'label',
+            yKeys: ['value'],
+            data: [
+                { label: 'A', value: 10 },
+                { label: 'B', value: 20 }
+            ]
+        }, null, 2)
+    }
+};

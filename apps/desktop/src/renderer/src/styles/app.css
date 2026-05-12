@@ -2907,6 +2907,26 @@ a:focus-visible,
   margin-bottom: 0;
 }
 
+.markdown-render .visual-block {
+  margin: 1.25rem 0;
+  overflow-x: auto;
+}
+
+.markdown-render .visual-block svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.markdown-render .visual-block figcaption {
+  margin-top: 0.4rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
 .markdown-render p,
 .markdown-render ul,
 .markdown-render ol {

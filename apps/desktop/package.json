@@ -40,7 +40,11 @@
     "test:unit": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "better-sqlite3": "^9.0.0"
+    "better-sqlite3": "^9.0.0",
+    "markmap-lib": "0.18.12",
+    "markmap-view": "0.18.12",
+    "mermaid": "11.15.0",
+    "recharts": "3.8.1"
   },
   "devDependencies": {
     "electron": "^29.0.0"

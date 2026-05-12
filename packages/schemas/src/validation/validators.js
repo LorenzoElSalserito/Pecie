@@ -628,3 +628,50 @@ export function validatePluginManifest(value) {
     }
     return value;
 }
+export function validateChartBlock(value) {
+    const schemaName = 'visualBlock';
+    assertRecord(value, schemaName);
+    if (value.kind !== 'chart') {
+        throw new SchemaValidationError(schemaName, 'Field "kind" must be "chart"');
+    }
+    assertString(value.chartType, 'chartType', schemaName);
+    if (value.chartType !== 'bar' && value.chartType !== 'line' && value.chartType !== 'area' && value.chartType !== 'pie') {
+        throw new SchemaValidationError(schemaName, 'Field "chartType" has an unsupported chart type');
+    }
+    if (value.title !== undefined) {
+        assertString(value.title, 'title', schemaName);
+        if (value.title.length === 0) {
+            throw new SchemaValidationError(schemaName, 'Field "title" must not be empty');
+        }
+    }
+    assertString(value.xKey, 'xKey', schemaName);
+    if (value.xKey.length === 0) {
+        throw new SchemaValidationError(schemaName, 'Field "xKey" must not be empty');
+    }
+    assertArray(value.yKeys, 'yKeys', schemaName);
+    if (value.yKeys.length === 0) {
+        throw new SchemaValidationError(schemaName, 'Field "yKeys" must contain at least one key');
+    }
+    value.yKeys.forEach((key, index) => {
+        assertString(key, `yKeys[${index}]`, schemaName);
+        if (key.length === 0) {
+            throw new SchemaValidationError(schemaName, `Field "yKeys[${index}]" must not be empty`);
+        }
+    });
+    assertArray(value.data, 'data', schemaName);
+    if (value.data.length === 0) {
+        throw new SchemaValidationError(schemaName, 'Field "data" must contain at least one row');
+    }
+    value.data.forEach((row, rowIndex) => {
+        assertRecord(row, schemaName);
+        for (const [key, fieldValue] of Object.entries(row)) {
+            if (typeof fieldValue !== 'string' &&
+                typeof fieldValue !== 'number' &&
+                typeof fieldValue !== 'boolean' &&
+                fieldValue !== null) {
+                throw new SchemaValidationError(schemaName, `Field "data[${rowIndex}].${key}" must be JSON scalar data`);
+            }
+        }
+    });
+    return value;
+}

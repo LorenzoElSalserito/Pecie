@@ -23,6 +23,12 @@ export type PluginPermission = 'project.read' | 'project.write' | 'export.read' 
 
 export type PluginHook = 'onProjectOpen' | 'onDocumentSave' | 'onExportProfileLoaded' | 'onExportBeforeWrite'
 
+export type VisualBlockCapabilityId = 'mermaidDiagram' | 'markmapMindmap' | 'rechartsStats'
+
+export type VisualBlockKind = 'mermaid' | 'markmap' | 'chart'
+
+export type ChartType = 'bar' | 'line' | 'area' | 'pie'
+
 export interface AuthorProfile {
   name: string
   role: AuthorRole
@@ -87,6 +93,7 @@ export interface ProjectManifest {
     sharePackageManifest: string
     privacyInventory: string
     pluginManifest: string
+    visualBlock: string
   }
 }
 
@@ -567,6 +574,38 @@ export interface PluginManifest {
   hooks: PluginHook[]
   enabledByDefault?: boolean
 }
+
+export interface ChartBlock {
+  kind: 'chart'
+  chartType: ChartType
+  title?: string
+  xKey: string
+  yKeys: string[]
+  data: Array<Record<string, string | number | boolean | null>>
+}
+
+export interface VisualBlockDiagnostic {
+  severity: 'warning' | 'error'
+  message: string
+}
+
+export type VisualBlockViewModel =
+  | {
+      kind: 'mermaid'
+      source: string
+      diagnostics: VisualBlockDiagnostic[]
+    }
+  | {
+      kind: 'markmap'
+      source: string
+      diagnostics: VisualBlockDiagnostic[]
+    }
+  | {
+      kind: 'chart'
+      source: string
+      chart?: ChartBlock
+      diagnostics: VisualBlockDiagnostic[]
+    }
 
 export interface PluginDiagnostic {
   pluginId?: string

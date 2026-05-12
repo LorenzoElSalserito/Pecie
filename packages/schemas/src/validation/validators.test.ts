@@ -4,6 +4,7 @@ import { invalidManifestFixture, validBinderFixture, validManifestFixture, valid
 import { SchemaValidationError } from './assertions'
 import {
   validateBinderDocument,
+  validateChartBlock,
   validateManifest,
   validatePluginManifest,
   validatePrivacyInventory,
@@ -129,6 +130,37 @@ describe('schema validators', () => {
         entryPoint: '../escape.js',
         permissions: ['project.read'],
         hooks: ['onProjectOpen']
+      })
+    ).toThrow(SchemaValidationError)
+  })
+
+  it('accepts chart visual blocks with scalar data', () => {
+    expect(
+      validateChartBlock({
+        kind: 'chart',
+        chartType: 'bar',
+        title: 'Parole per capitolo',
+        xKey: 'capitolo',
+        yKeys: ['parole'],
+        data: [
+          { capitolo: 'Intro', parole: 1200 },
+          { capitolo: 'Metodo', parole: 3100 }
+        ]
+      })
+    ).toMatchObject({
+      kind: 'chart',
+      chartType: 'bar'
+    })
+  })
+
+  it('rejects chart visual blocks with nested executable-shaped data', () => {
+    expect(() =>
+      validateChartBlock({
+        kind: 'chart',
+        chartType: 'line',
+        xKey: 'giorno',
+        yKeys: ['parole'],
+        data: [{ giorno: 'Lun', parole: { value: 800 } }]
       })
     ).toThrow(SchemaValidationError)
   })

@@ -68,7 +68,8 @@ import {
   type LogEventRequest,
   validateBinderDocument,
   validateManifest,
-  validateProjectMetadata
+  validateProjectMetadata,
+  visualBlockSchema
 } from '@pecie/schemas'
 import {
   addBinderNode,
@@ -242,6 +243,7 @@ export class ProjectService {
     await this.fileSystem.writeJson(projectPath, schemaRegistry.researchLinkMap, researchLinkMapSchema)
     await this.fileSystem.writeJson(projectPath, schemaRegistry.pdfLibrary, pdfLibrarySchema)
     await this.fileSystem.writeJson(projectPath, schemaRegistry.sharePackageManifest, sharePackageManifestSchema)
+    await this.fileSystem.writeJson(projectPath, schemaRegistry.visualBlock, visualBlockSchema)
     await this.fileSystem.writeJson(projectPath, 'workspace.json', {
       theme: 'system',
       editor: {

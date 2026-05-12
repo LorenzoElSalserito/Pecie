@@ -2,7 +2,7 @@ import { access, mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 
-import { _electron as electron, expect, test, type ElectronApplication, type Page } from '@playwright/test'
+import { _electron as electron, expect, test, type ElectronApplication, type Locator, type Page } from '@playwright/test'
 
 const appEntryPath = path.resolve(__dirname, '../../../apps/desktop/out/main/index.js')
 
@@ -96,6 +96,17 @@ async function openExportDialog(page: Page) {
   return dialog
 }
 
+async function enableExportPreview(dialog: Locator): Promise<void> {
+  const toggle = dialog.locator('[data-tutorial-id="export-preview-toggle"]')
+  await expect(toggle).toBeEnabled()
+  await expect(async () => {
+    if (!(await toggle.isChecked())) {
+      await toggle.click()
+    }
+    await expect(toggle).toBeChecked({ timeout: 1_000 })
+  }).toPass({ timeout: 5_000 })
+}
+
 test.describe('FASE 3 Export Preview', () => {
   test('shows the full export format matrix for custom blank projects', async () => {
     const { electronApp, page, homeDirectory } = await launchDesktop()
@@ -127,7 +138,7 @@ test.describe('FASE 3 Export Preview', () => {
       let exportDialog = await openExportDialog(page)
       await exportDialog.locator('select').first().selectOption('md')
       await exportDialog.getByLabel('Output path').fill(outputPath)
-      await exportDialog.getByLabel('Show preview before saving').check()
+      await enableExportPreview(exportDialog)
       await exportDialog.getByRole('button', { name: 'Start export' }).click()
 
       await expect(exportDialog.getByRole('heading', { name: 'Export preview' })).toBeVisible()
@@ -174,7 +185,7 @@ test.describe('FASE 3 Export Preview', () => {
       const exportDialog = await openExportDialog(page)
       await exportDialog.locator('select').first().selectOption('docx')
       await exportDialog.getByLabel('Output path').fill(outputPath)
-      await exportDialog.getByLabel('Show preview before saving').check()
+      await enableExportPreview(exportDialog)
       await exportDialog.getByRole('button', { name: 'Start export' }).click()
 
       await expect(exportDialog.getByRole('heading', { name: 'Export preview' })).toBeVisible()

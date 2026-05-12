@@ -10,6 +10,7 @@ import type {
     PdfLibrarySnapshot,
     PluginManifest,
     PrivacyInventoryResponse,
+    ChartBlock,
     ProjectManifest,
     ProjectMetadata,
     PreviewProfileBinding,
@@ -38,6 +39,7 @@ export declare const sharePackageManifestSchema: Record<string, unknown>;
 export declare const privacyInventorySchema: Record<string, unknown>;
 export declare const tutorialScriptSchema: Record<string, unknown>;
 export declare const pluginManifestSchema: Record<string, unknown>;
+export declare const visualBlockSchema: Record<string, unknown>;
 export type SchemaDocument = {
     manifest: ProjectManifest;
     project: ProjectMetadata;
@@ -58,4 +60,5 @@ export type SchemaDocument = {
     privacyInventory: PrivacyInventoryResponse;
     tutorialScript: TutorialScript;
     pluginManifest: PluginManifest;
+    visualBlock: ChartBlock;
 };

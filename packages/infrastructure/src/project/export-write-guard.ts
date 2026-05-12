@@ -1,10 +1,16 @@
 const ALLOWED_FINAL_EXPORT_DIR = 'exports/out/'
 const ALLOWED_PREVIEW_DIR = 'cache/preview/export-step/'
+const ALLOWED_VISUAL_ASSET_DIR = 'exports/visual-assets/'
 
-export type ExportWriteKind = 'final-export' | 'export-preview'
+export type ExportWriteKind = 'final-export' | 'export-preview' | 'visual-export-asset'
 
 export function assertWriteTarget(relPath: string, kind: ExportWriteKind): void {
-  const expected = kind === 'final-export' ? ALLOWED_FINAL_EXPORT_DIR : ALLOWED_PREVIEW_DIR
+  const expected =
+    kind === 'final-export'
+      ? ALLOWED_FINAL_EXPORT_DIR
+      : kind === 'visual-export-asset'
+        ? ALLOWED_VISUAL_ASSET_DIR
+        : ALLOWED_PREVIEW_DIR
   const normalized = normalizeRelativePath(relPath)
 
   if (!normalized.startsWith(expected)) {

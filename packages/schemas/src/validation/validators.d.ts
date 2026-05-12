@@ -7,6 +7,7 @@ import type {
     PdfLibrarySnapshot,
     PluginManifest,
     PrivacyInventoryResponse,
+    ChartBlock,
     ProjectManifest,
     ProjectMetadata,
     ResearchLinkMap,
@@ -30,3 +31,4 @@ export declare function validateSharePackageManifest(value: unknown): SharePacka
 export declare function validatePrivacyInventory(value: unknown): PrivacyInventoryResponse;
 export declare function validateTutorialScript(value: unknown): TutorialScript;
 export declare function validatePluginManifest(value: unknown): PluginManifest;
+export declare function validateChartBlock(value: unknown): ChartBlock;

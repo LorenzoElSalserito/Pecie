@@ -1,0 +1,38 @@
+{
+  "$id": "visual-block.schema.json",
+  "type": "object",
+  "required": ["kind", "chartType", "xKey", "yKeys", "data"],
+  "properties": {
+    "kind": { "const": "chart" },
+    "chartType": {
+      "enum": ["bar", "line", "area", "pie"]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "xKey": {
+      "type": "string",
+      "minLength": 1
+    },
+    "yKeys": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "data": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": {
+          "type": ["string", "number", "boolean", "null"]
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

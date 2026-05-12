@@ -126,3 +126,8 @@ export const pluginManifestSchema = {
     type: 'object',
     required: ['id', 'schemaVersion', 'label', 'version', 'entryPoint', 'permissions', 'hooks']
 };
+export const visualBlockSchema = {
+    $id: 'visual-block.schema.json',
+    type: 'object',
+    required: ['kind', 'chartType', 'xKey', 'yKeys', 'data']
+};

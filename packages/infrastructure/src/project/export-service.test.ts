@@ -292,6 +292,77 @@ describe('ExportService', () => {
     expect(await readFile(outputPath, 'utf8')).toContain('Alpha Source')
   })
 
+  it('materializes visual blocks as local svg image assets before every export pipeline', async () => {
+    const project = await createProject('blank')
+    const fileSystem = new ProjectFileSystem()
+    const outputPath = path.join(project.projectPath, 'exports/out/visual-export.md')
+    const documentNode = project.binder.nodes.find((node) => node.type === 'document' && node.path)
+    let capturedPayload = ''
+    const exportService = new ExportService(
+      fileSystem,
+      async (_file, args) => {
+        const inputPath = args[0]
+        const outputIndex = args.findIndex((arg) => arg === '-o')
+        capturedPayload = await readFile(inputPath, 'utf8')
+        await writeFile(args[outputIndex + 1], capturedPayload, 'utf8')
+        return {}
+      },
+      createRuntimeResolverStub()
+    )
+
+    await fileSystem.writeText(
+      project.projectPath,
+      documentNode!.path!,
+      [
+        '---',
+        'title: Visuali',
+        '---',
+        '',
+        '```mermaid',
+        'flowchart TD',
+        '  A[Idea] --> B[Bozza]',
+        '```',
+        '',
+        '```markmap',
+        '# Tesi',
+        '## Metodo',
+        '```',
+        '',
+        '```chart',
+        '{',
+        '  "kind": "chart",',
+        '  "chartType": "bar",',
+        '  "xKey": "capitolo",',
+        '  "yKeys": ["parole"],',
+        '  "data": [{ "capitolo": "Intro", "parole": 1200 }]',
+        '}',
+        '```'
+      ].join('\n')
+    )
+
+    const response = await exportService.exportDocument({
+      projectPath: project.projectPath,
+      profileId: 'blank-md',
+      format: 'md',
+      outputPath,
+      scope: 'whole-project'
+    })
+
+    expect(response.success).toBe(true)
+    expect(capturedPayload).toContain('![Diagramma 1](')
+    expect(capturedPayload).toContain('/exports/visual-assets/')
+    expect(capturedPayload).toContain('![Mappa mentale 2](')
+    expect(capturedPayload).toContain('![Grafico 3](')
+    const visualAssetEntries = await fileSystem.listEntries(project.projectPath, 'exports/visual-assets')
+    const visualAssetNames = visualAssetEntries.map((entry) => entry.name).sort()
+    expect(visualAssetNames.some((name) => name.endsWith('-1-mermaid.svg'))).toBe(true)
+    expect(visualAssetNames.some((name) => name.endsWith('-2-markmap.svg'))).toBe(true)
+    expect(visualAssetNames.some((name) => name.endsWith('-3-chart.svg'))).toBe(true)
+    await expect(
+      readFile(path.join(project.projectPath, 'exports/visual-assets', visualAssetNames.find((name) => name.endsWith('-3-chart.svg'))!), 'utf8')
+    ).resolves.toContain('<svg')
+  })
+
   it('builds markdown-style pdf exports with weasyprint and css theme assets', async () => {
     const project = await createProject('blank')
     let capturedArgs: string[] = []

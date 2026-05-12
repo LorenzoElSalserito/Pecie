@@ -5,6 +5,8 @@ import Editor from '@monaco-editor/react'
 import { marked } from 'marked'
 import type * as Monaco from 'monaco-editor'
 import { Button } from '@pecie/ui'
+import { renderVisualBlocksInMarkdown } from '@pecie/domain'
+import { visualBlockInsertCommands } from '@pecie/schemas'
 import typeH2Icon from 'bootstrap-icons/icons/type-h2.svg'
 import typeBoldIcon from 'bootstrap-icons/icons/type-bold.svg'
 import typeItalicIcon from 'bootstrap-icons/icons/type-italic.svg'
@@ -24,6 +26,9 @@ import highlightIcon from 'bootstrap-icons/icons/highlighter.svg'
 import superscriptIcon from 'bootstrap-icons/icons/superscript.svg'
 import subscriptIcon from 'bootstrap-icons/icons/subscript.svg'
 import tableIcon from 'bootstrap-icons/icons/table.svg'
+import diagramIcon from 'bootstrap-icons/icons/diagram-3.svg'
+import mindmapIcon from 'bootstrap-icons/icons/diagram-2.svg'
+import chartIcon from 'bootstrap-icons/icons/bar-chart-line.svg'
 
 import { t } from '../i18n'
 import { useDocumentEditor } from '../hooks/useDocumentEditor'
@@ -36,7 +41,7 @@ const WORD_GOAL_STORAGE_KEY = 'pecie.documentWordGoals'
 const CITEKEY_PATTERN = /(?:^|[\s([{\u201c\u2018])@([A-Za-z0-9:_-]*)$/
 
 type FormattingActionDefinition = {
-  action: EditorFormatAction
+  action: EditorFormatAction | 'visualMermaid' | 'visualMarkmap' | 'visualChart'
   label: string
   icon: string
   group: 'core' | 'insert'
@@ -219,7 +224,10 @@ export function EditorSurface({
       { action: 'footnote', label: t(locale, 'markdownFootnote'), icon: footnoteIcon, group: 'insert' },
       { action: 'superscript', label: t(locale, 'markdownSuperscript'), icon: superscriptIcon, group: 'insert' },
       { action: 'subscript', label: t(locale, 'markdownSubscript'), icon: subscriptIcon, group: 'insert' },
-      { action: 'table', label: t(locale, 'markdownTable'), icon: tableIcon, group: 'insert' }
+      { action: 'table', label: t(locale, 'markdownTable'), icon: tableIcon, group: 'insert' },
+      { action: 'visualMermaid', label: t(locale, 'visualBlocksMermaid'), icon: diagramIcon, group: 'insert' },
+      { action: 'visualMarkmap', label: t(locale, 'visualBlocksMarkmap'), icon: mindmapIcon, group: 'insert' },
+      { action: 'visualChart', label: t(locale, 'visualBlocksChart'), icon: chartIcon, group: 'insert' }
     ],
     [locale]
   )
@@ -246,7 +254,7 @@ export function EditorSurface({
     () =>
       sanitizeRenderedMarkdown(
         resolvePreviewImageSources(
-          marked.parse(draftBody || `# ${t(locale, 'markdownPreviewEmpty')}`, {
+          marked.parse(renderVisualBlocksInMarkdown(draftBody || `# ${t(locale, 'markdownPreviewEmpty')}`), {
             breaks: true,
             gfm: true
           }) as string,
@@ -411,7 +419,7 @@ export function EditorSurface({
   )
 
   function formatToolbarTooltip(entry: FormattingActionDefinition): string {
-    const shortcut = formattingShortcuts[entry.action]
+    const shortcut = entry.action in formattingShortcuts ? formattingShortcuts[entry.action as EditorFormatAction] : undefined
     return shortcut ? `${entry.label} - ${shortcut}` : entry.label
   }
 
@@ -850,6 +858,18 @@ export function EditorSurface({
                           if (entry.action === 'citation') {
                             replaceEditorSelection(editorRef.current, '@', 1, 1)
                             editorRef.current.trigger('pecie-citation', 'editor.action.triggerSuggest', {})
+                            return
+                          }
+                          if (entry.action === 'visualMermaid' || entry.action === 'visualMarkmap' || entry.action === 'visualChart') {
+                            const command =
+                              entry.action === 'visualMermaid'
+                                ? visualBlockInsertCommands.mermaidDiagram
+                                : entry.action === 'visualMarkmap'
+                                  ? visualBlockInsertCommands.markmapMindmap
+                                  : visualBlockInsertCommands.rechartsStats
+                            const template = command.templateFactory()
+                            const snippet = `\`\`\`${command.markdownFence}\n${template}\n\`\`\`\n`
+                            replaceEditorSelection(editorRef.current, snippet, snippet.length, snippet.length)
                             return
                           }
                           applyMarkdownFormat(editorRef.current, entry.action, formatPlaceholders)

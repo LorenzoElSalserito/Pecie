@@ -18,5 +18,6 @@ export const schemaRegistry = {
     sharePackageManifest: 'schemas/share-package-manifest.schema.json',
     privacyInventory: 'schemas/privacy-inventory.schema.json',
     tutorialScript: 'schemas/tutorial-script.schema.json',
-    pluginManifest: 'schemas/plugin-manifest.schema.json'
+    pluginManifest: 'schemas/plugin-manifest.schema.json',
+    visualBlock: 'schemas/visual-block.schema.json'
 };
