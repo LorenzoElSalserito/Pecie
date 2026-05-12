@@ -160,11 +160,14 @@ function AppShell(): React.JSX.Element {
   }
 
   const onboardingTutorialId = 'launcher-basics'
+  const onboardingTutorialDismissed =
+    settings.tutorialProgress.completedTutorialIds.includes(onboardingTutorialId) ||
+    settings.tutorialProgress.skippedTutorialIds.includes(onboardingTutorialId)
   const onboardingOpen =
     !settings.onboardingCompleted &&
     !bootstrap.firstRun &&
     !project &&
-    !settings.tutorialProgress.completedTutorialIds.includes(onboardingTutorialId)
+    !onboardingTutorialDismissed
   const tutorialOverlayOpen = onboardingOpen || activeTutorialId !== null
   const tutorialId = activeTutorialId ?? onboardingTutorialId
   const tutorialSession = settings.tutorialProgress.activeSession
@@ -386,8 +389,7 @@ function AppShell(): React.JSX.Element {
           }
           onDismiss={(result) =>
             void (async () => {
-              setActiveTutorialId(null)
-              await saveSettings({
+              const nextSettings: AppSettings = {
                 ...settings,
                 tutorialProgress: {
                   completedTutorialIds:
@@ -402,7 +404,15 @@ function AppShell(): React.JSX.Element {
                   activeSession: undefined
                 },
                 onboardingCompleted: tutorialId === onboardingTutorialId ? true : settings.onboardingCompleted
-              })
+              }
+
+              setActiveTutorialId(null)
+              setBootstrap((currentBootstrap) =>
+                currentBootstrap
+                  ? { ...currentBootstrap, settings: nextSettings, firstRun: !nextSettings.authorProfile.name.trim() }
+                  : null
+              )
+              await saveSettings(nextSettings)
             })()
           }
           open={tutorialOverlayOpen}

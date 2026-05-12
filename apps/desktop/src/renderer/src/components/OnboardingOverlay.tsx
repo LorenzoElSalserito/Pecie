@@ -44,18 +44,6 @@ export function OnboardingOverlay({
   }, [initialStepIndex, open, tutorial, tutorialStepCount])
 
   useEffect(() => {
-    if (!open || !tutorial) {
-      return
-    }
-
-    onProgress({
-      tutorialId: session.tutorialId,
-      stepIndex: session.stepIndex,
-      status: 'running'
-    })
-  }, [onProgress, open, session.stepIndex, session.tutorialId, tutorial])
-
-  useEffect(() => {
     if (!open || !currentStep) {
       return
     }
@@ -146,14 +134,11 @@ export function OnboardingOverlay({
         <Button
           onClick={() => {
             if (isLastStep) {
-              void executeTutorialStep(currentStep).finally(() => {
-                window.requestAnimationFrame(() => {
-                  completeTutorialSession(session)
-                  onDismiss('completed')
-                })
-              })
+              completeTutorialSession(session)
+              onDismiss('completed')
               return
             }
+
             void executeTutorialStep(currentStep).finally(() => {
               const nextStepIndex = resolveNextTutorialStepIndex(stepIndex, tutorial.steps.length)
               setStepIndex(nextStepIndex)

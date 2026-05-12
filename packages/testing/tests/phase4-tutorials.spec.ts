@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 
@@ -107,7 +107,7 @@ async function createProjectFromLauncher(page: Page, title: string) {
 
 test.describe('FASE 4 Tutorials', () => {
   test('restores the launcher tutorial from persisted progress at the final step', async () => {
-    const { electronApp, page, homeDirectory } = await launchDesktop({
+    const { electronApp, page, homeDirectory, settingsPath } = await launchDesktop({
       onboardingCompleted: false,
       tutorialProgress: {
         completedTutorialIds: [],
@@ -127,6 +127,46 @@ test.describe('FASE 4 Tutorials', () => {
       const completeAction = tutorialDialog.getByRole('button', { name: 'Understood' })
       await expect(completeAction).toBeVisible()
       await expect(tutorialDialog.getByRole('button', { name: 'Skip tutorial' })).toBeVisible()
+      await completeAction.click()
+      await expect(tutorialDialog).toBeHidden()
+      await expect(page.getByRole('dialog', { name: 'Settings' })).toHaveCount(0)
+
+      const persistedSettings = JSON.parse(await readFile(settingsPath, 'utf8')) as {
+        onboardingCompleted?: boolean
+        tutorialProgress?: { completedTutorialIds?: string[]; activeSession?: unknown }
+      }
+      expect(persistedSettings.onboardingCompleted).toBe(true)
+      expect(persistedSettings.tutorialProgress?.completedTutorialIds).toContain('launcher-basics')
+      expect(persistedSettings.tutorialProgress?.activeSession).toBeUndefined()
+    } finally {
+      await electronApp.close()
+      await rm(homeDirectory, { recursive: true, force: true })
+    }
+  })
+
+  test('skips the launcher tutorial without reopening it', async () => {
+    const { electronApp, page, homeDirectory, settingsPath } = await launchDesktop({
+      onboardingCompleted: false,
+      tutorialProgress: {
+        completedTutorialIds: [],
+        skippedTutorialIds: []
+      }
+    })
+
+    try {
+      const tutorialDialog = page.getByRole('dialog', { name: 'Getting started' })
+      await expect(tutorialDialog).toBeVisible()
+      await tutorialDialog.getByRole('button', { name: 'Skip tutorial' }).click()
+      await expect(tutorialDialog).toBeHidden()
+      await expect(page.getByRole('dialog', { name: 'Getting started' })).toHaveCount(0)
+
+      const persistedSettings = JSON.parse(await readFile(settingsPath, 'utf8')) as {
+        onboardingCompleted?: boolean
+        tutorialProgress?: { skippedTutorialIds?: string[]; activeSession?: unknown }
+      }
+      expect(persistedSettings.onboardingCompleted).toBe(true)
+      expect(persistedSettings.tutorialProgress?.skippedTutorialIds).toContain('launcher-basics')
+      expect(persistedSettings.tutorialProgress?.activeSession).toBeUndefined()
     } finally {
       await electronApp.close()
       await rm(homeDirectory, { recursive: true, force: true })
