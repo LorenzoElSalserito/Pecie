@@ -34,7 +34,39 @@ async function readJsonFile(targetPath) {
 
 function resolveDependencyPackagePath(dependencyName, requesterPackageJsonPath) {
   const requesterRequire = createRequire(requesterPackageJsonPath)
-  return requesterRequire.resolve(`${dependencyName}/package.json`)
+
+  try {
+    return requesterRequire.resolve(`${dependencyName}/package.json`)
+  } catch (error) {
+    if (error?.code !== 'ERR_PACKAGE_PATH_NOT_EXPORTED') {
+      throw error
+    }
+  }
+
+  const dependencyEntryPath = requesterRequire.resolve(dependencyName)
+  const dependencyNameSegments = dependencyName.split('/')
+  const dependencyEntryPathSegments = dependencyEntryPath.split(path.sep)
+  const dependencyEntryPathRoot = path.parse(dependencyEntryPath).root
+  const rootSegmentOffset = dependencyEntryPathRoot ? 1 : 0
+
+  for (let index = dependencyEntryPathSegments.length - 1; index >= 0; index -= 1) {
+    if (dependencyEntryPathSegments[index] !== 'node_modules') {
+      continue
+    }
+
+    const packageDirectoryPath = path.join(
+      dependencyEntryPathRoot,
+      ...dependencyEntryPathSegments.slice(rootSegmentOffset, index + 1),
+      ...dependencyNameSegments
+    )
+    const relativeEntryPath = path.relative(packageDirectoryPath, dependencyEntryPath)
+
+    if (!relativeEntryPath.startsWith('..') && !path.isAbsolute(relativeEntryPath)) {
+      return path.join(packageDirectoryPath, 'package.json')
+    }
+  }
+
+  throw new Error(`Unable to locate package.json for dependency "${dependencyName}".`)
 }
 
 async function ensureLinkedDependency(dependencyName, seenDependencies, requesterPackageJsonPath) {
@@ -53,17 +85,24 @@ async function ensureLinkedDependency(dependencyName, seenDependencies, requeste
     dependencyPackageJsonPath = resolveDependencyPackagePath(dependencyName, requesterPackageJsonPath)
     sourceDependencyPath = path.dirname(dependencyPackageJsonPath)
   } catch {
-    const hoistedDependencyPath = path.join(rootNodeModulesPath, dependencyName)
-    if (!(await pathExists(hoistedDependencyPath))) {
-      throw new Error(
-        `Missing runtime dependency "${dependencyName}". ` +
-          `Expected it in "${workspaceDependencyPath}" or resolvable from "${requesterPackageJsonPath}". ` +
-          `Run a clean install before packaging.`
-      )
-    }
+    const workspaceDependencyPackageJsonPath = path.join(workspaceDependencyPath, 'package.json')
 
-    sourceDependencyPath = hoistedDependencyPath
-    dependencyPackageJsonPath = path.join(sourceDependencyPath, 'package.json')
+    if (workspaceDependencyExists && (await pathExists(workspaceDependencyPackageJsonPath))) {
+      sourceDependencyPath = workspaceDependencyPath
+      dependencyPackageJsonPath = workspaceDependencyPackageJsonPath
+    } else {
+      const hoistedDependencyPath = path.join(rootNodeModulesPath, dependencyName)
+      if (!(await pathExists(hoistedDependencyPath))) {
+        throw new Error(
+          `Missing runtime dependency "${dependencyName}". ` +
+            `Expected it in "${workspaceDependencyPath}" or resolvable from "${requesterPackageJsonPath}". ` +
+            `Run a clean install before packaging.`
+        )
+      }
+
+      sourceDependencyPath = hoistedDependencyPath
+      dependencyPackageJsonPath = path.join(sourceDependencyPath, 'package.json')
+    }
   }
 
   if (!workspaceDependencyExists) {
