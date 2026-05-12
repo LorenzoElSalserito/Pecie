@@ -163,6 +163,7 @@ $RECYCLE.BIN/
 # =========================
 tmp/
 temp/
+docs/
 *.log
 *.bak
 *.tmp
