@@ -163,7 +163,6 @@ $RECYCLE.BIN/
 # =========================
 tmp/
 temp/
-docs/
 *.log
 *.bak
 *.tmp
@@ -175,11 +174,12 @@ docs/
 PLAN.md
 UI.md
 *PRD*.md
-docs/prd/
-docs/adr/
-docs/a11y/
+docs/*
 !docs/a11y/
-!docs/a11y/audit-matrix.md
+docs/a11y/*
+!docs/a11y/audit/
+docs/a11y/audit/*
+!docs/a11y/audit/audit-matrix.md
 docs/*closure-report.md
 docs/phase-*.md
 

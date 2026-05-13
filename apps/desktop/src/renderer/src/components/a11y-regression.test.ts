@@ -11,7 +11,7 @@ async function readRepoFile(relativePath: string): Promise<string> {
 
 describe('desktop accessibility regressions', () => {
   it('keeps the versioned accessibility audit matrix in the repository', async () => {
-    const auditMatrix = await readRepoFile('docs/a11y/audit-matrix.md')
+    const auditMatrix = await readRepoFile('docs/a11y/audit/audit-matrix.md')
 
     expect(auditMatrix).toContain('Pecie Accessibility Audit Matrix')
     expect(auditMatrix).toContain('Dialog')
