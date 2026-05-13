@@ -25,7 +25,7 @@ import { ResearchView } from './ResearchView'
 import { ResizeHandle } from './ResizeHandle'
 import { ScriveningsView } from './ScriveningsView'
 import { TimelineView } from './TimelineView'
-import type { WorkspaceProps, WorkspaceViewMode } from './types'
+import type { PageMarkersSummary, WorkspaceProps, WorkspaceViewMode } from './types'
 import { WorkspaceHeader } from './WorkspaceHeader'
 
 const DEFAULT_BINDER_WIDTH = 280
@@ -71,6 +71,7 @@ export function Workspace({
   const [preferences, setPreferences] = useState({ focusMode: false, typewriterMode: false })
   const [dirtyDocumentId, setDirtyDocumentId] = useState<string | null>(null)
   const [currentWordCount, setCurrentWordCount] = useState(0)
+  const [pageMarkersSummary, setPageMarkersSummary] = useState<PageMarkersSummary | null>(null)
   const [celebratedMilestones, setCelebratedMilestones] = useState<string[]>([])
   const [isGlobalSearchOpen, setIsGlobalSearchOpen] = useState(false)
   const [ingestedDocumentId, setIngestedDocumentId] = useState<string | null>(null)
@@ -117,6 +118,7 @@ export function Workspace({
     setPreferences({ focusMode: false, typewriterMode: false })
     setDirtyDocumentId(null)
     setCurrentWordCount(0)
+    setPageMarkersSummary(null)
     setIngestedDocumentId(null)
     setTimeline(null)
     setResearchNotes([])
@@ -710,6 +712,7 @@ export function Workspace({
               void refreshDocumentSummaries()
             }}
             onPreferencesChange={setPreferences}
+            onPageMarkersSummaryChange={setPageMarkersSummary}
             onUpdateAppSettings={onUpdateAppSettings}
             reloadToken={editorReloadToken}
             onSaveStateChange={(saveState, documentId) => setDirtyDocumentId(saveState === 'dirty' ? documentId : null)}
@@ -852,6 +855,7 @@ export function Workspace({
             onToggleCollapsed={() => setContextCollapsed((current) => !current)}
             project={project}
             selectedNode={selectedNode}
+            pageMarkersSummary={pageMarkersSummary}
             timeline={timeline}
             timelineLoading={timelineLoading}
             writingHubNodes={writingHubNodes}

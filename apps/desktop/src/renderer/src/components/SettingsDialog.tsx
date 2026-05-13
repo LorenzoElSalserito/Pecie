@@ -136,7 +136,7 @@ export function SettingsDialog({
       .catch((error: unknown) => {
         setRuntimeCapabilities([])
         setRuntimeVersion(undefined)
-        setRuntimeError(error instanceof Error ? error.message : 'Unable to load export runtime capabilities.')
+        setRuntimeError(error instanceof Error ? error.message : 'Unable to load export components.')
       })
       .finally(() => setRuntimeLoading(false))
     void window.pecie
@@ -297,7 +297,7 @@ export function SettingsDialog({
                 } catch (error: unknown) {
                   setRuntimeCapabilities([])
                   setRuntimeVersion(undefined)
-                  setRuntimeError(error instanceof Error ? error.message : 'Unable to load export runtime capabilities.')
+                  setRuntimeError(error instanceof Error ? error.message : 'Unable to load export components.')
                 } finally {
                   setRuntimeLoading(false)
                 }

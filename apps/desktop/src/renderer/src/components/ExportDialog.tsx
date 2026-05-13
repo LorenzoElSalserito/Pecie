@@ -48,6 +48,27 @@ function renderPreviewParagraphs(value: string): React.JSX.Element[] {
     .map((paragraph) => <p key={paragraph}>{paragraph}</p>)
 }
 
+function getRuntimeCapabilityLabel(locale: ExportDialogProps['locale'], capabilityId: RuntimeCapabilityReport['capabilityId']): string {
+  switch (capabilityId) {
+    case 'pandoc':
+      return t(locale, 'exportRuntimeCapability_pandoc')
+    case 'weasyprint':
+      return t(locale, 'exportRuntimeCapability_weasyprint')
+    case 'xelatex':
+      return t(locale, 'exportRuntimeCapability_xelatex')
+    case 'pdflatex':
+      return t(locale, 'exportRuntimeCapability_pdflatex')
+    case 'lualatex':
+      return t(locale, 'exportRuntimeCapability_lualatex')
+    default:
+      return capabilityId
+  }
+}
+
+function formatRuntimeCapabilityList(locale: ExportDialogProps['locale'], capabilityIds: RuntimeCapabilityReport['capabilityId'][]): string {
+  return capabilityIds.map((capabilityId) => getRuntimeCapabilityLabel(locale, capabilityId)).join(', ')
+}
+
 function getProfileSupportDecision(
   profile: ListExportProfilesResponse['profiles'][number] | undefined,
   capabilities: RuntimeCapabilityReport[]
@@ -235,7 +256,7 @@ export function ExportDialog({
 
         setRuntimeCapabilities([])
         setRuntimeVersion(undefined)
-        setRuntimeError(error instanceof Error ? error.message : 'Unable to load export runtime capabilities.')
+        setRuntimeError(error instanceof Error ? error.message : 'Unable to load export components.')
       })
       .finally(() => {
         if (!ignore) {
@@ -631,14 +652,14 @@ export function ExportDialog({
                 {selectedProfileSupport?.requiredCapabilities.length ? (
                   <li>
                     <span>
-                      {`${t(locale, 'exportRuntimeRequiredCapabilities')}: ${selectedProfileSupport.requiredCapabilities.join(', ')}`}
+                      {`${t(locale, 'exportRuntimeRequiredCapabilities')}: ${formatRuntimeCapabilityList(locale, selectedProfileSupport.requiredCapabilities)}`}
                     </span>
                   </li>
                 ) : null}
                 {selectedProfileSupport?.missingCapabilities.length ? (
                   <li>
                     <span>
-                      {`${t(locale, 'exportRuntimeMissingCapabilities')}: ${selectedProfileSupport.missingCapabilities.join(', ')}`}
+                      {`${t(locale, 'exportRuntimeMissingCapabilities')}: ${formatRuntimeCapabilityList(locale, selectedProfileSupport.missingCapabilities)}`}
                     </span>
                   </li>
                 ) : null}

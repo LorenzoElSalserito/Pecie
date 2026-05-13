@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { Button } from '@pecie/ui'
 
@@ -30,6 +30,21 @@ export function WorkspaceHeader({
   const [overflowOpen, setOverflowOpen] = useState(false)
   const binderToggleLabel = t(locale, binderCollapsed ? 'showStructure' : 'hideStructure')
   const contextToggleLabel = t(locale, contextCollapsed ? 'showContextPanel' : 'hideContextPanel')
+
+  useEffect(() => {
+    if (!overflowOpen) {
+      return
+    }
+
+    function handleKeyDown(event: KeyboardEvent): void {
+      if (event.key === 'Escape') {
+        setOverflowOpen(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [overflowOpen])
   const breadcrumbParents = useMemo(() => {
     if (!selectedNode) {
       return []
@@ -203,11 +218,10 @@ export function WorkspaceHeader({
           </Button>
           {overflowOpen ? (
             <>
-              <button
-                aria-label={t(locale, 'closeMenu')}
+              <div
+                aria-hidden="true"
                 className="overflow-menu-backdrop"
-                onClick={() => setOverflowOpen(false)}
-                type="button"
+                onMouseDown={() => setOverflowOpen(false)}
               />
               <div className="overflow-menu" role="menu">
                 {renderOverflowItem({

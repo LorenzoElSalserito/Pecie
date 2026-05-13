@@ -115,25 +115,52 @@ export function Launcher({
             </div>
           </div>
           <div className="launcher-main__actions">
-            <div className="launcher-main__action-group">
-              <Button onClick={onOpenProjectLibrary} size="sm" variant="secondary">
-                {t(locale, 'manageProjects')}
-              </Button>
-              <Button data-tutorial-id="launcher-open-project" onClick={onOpenProjectDialog} size="sm" variant="secondary">
-                {t(locale, 'openExisting')}
-              </Button>
+            <div className="launcher-action-toolbar" aria-label={t(locale, 'workflowHighlights')}>
+              <div className="launcher-main__action-group">
+                <Button aria-label={t(locale, 'manageProjects')} className="launcher-action-button" onClick={onOpenProjectLibrary} size="sm" title={t(locale, 'manageProjects')} variant="secondary">
+                  <i aria-hidden="true" className="bi bi-archive"></i>
+                </Button>
+                <Button aria-label={t(locale, 'openExisting')} className="launcher-action-button" data-tutorial-id="launcher-open-project" onClick={onOpenProjectDialog} size="sm" title={t(locale, 'openExisting')} variant="secondary">
+                  <i aria-hidden="true" className="bi bi-folder2-open"></i>
+                </Button>
+              </div>
+              <div className="launcher-main__action-group launcher-main__action-group--minor">
+                <Button aria-label={t(locale, 'quickGuideTitle')} className="launcher-action-button" onClick={onOpenGuide} size="sm" title={t(locale, 'quickGuideTitle')} variant="ghost">
+                  <i aria-hidden="true" className="bi bi-book"></i>
+                </Button>
+                <Button aria-label={t(locale, 'info')} className="launcher-action-button" onClick={onOpenInfo} size="sm" title={t(locale, 'info')} variant="ghost">
+                  <i aria-hidden="true" className="bi bi-info-circle"></i>
+                </Button>
+                <Button aria-label={t(locale, 'settings')} className="launcher-action-button" data-tutorial-id="launcher-open-settings" onClick={onOpenSettings} size="sm" title={t(locale, 'settings')} variant="ghost">
+                  <i aria-hidden="true" className="bi bi-gear"></i>
+                </Button>
+              </div>
             </div>
-            <div className="launcher-main__action-group launcher-main__action-group--minor">
-              <Button onClick={onOpenGuide} size="sm" variant="ghost">
-                {t(locale, 'quickGuideTitle')}
-              </Button>
-              <Button onClick={onOpenInfo} size="sm" variant="ghost">
-                {t(locale, 'info')}
-              </Button>
-              <Button data-tutorial-id="launcher-open-settings" onClick={onOpenSettings} size="sm" variant="ghost">
-                {t(locale, 'settings')}
-              </Button>
-            </div>
+            <section className="context-card context-card--soft launcher-author-card">
+              <div className="section-heading section-heading--compact launcher-author-card__header">
+                <div>
+                  <p className="eyebrow">{t(locale, 'authorProfileReady')}</p>
+                </div>
+              </div>
+              <dl className="meta-list">
+                <div>
+                  <dt>{t(locale, 'authorName')}</dt>
+                  <dd>{settings.authorProfile.name}</dd>
+                </div>
+                <div>
+                  <dt>{t(locale, 'authorRole')}</dt>
+                  <dd>{t(locale, `role${settings.authorProfile.role[0].toUpperCase()}${settings.authorProfile.role.slice(1)}`)}</dd>
+                </div>
+                <div>
+                  <dt>{t(locale, 'institution')}</dt>
+                  <dd>{settings.authorProfile.institutionName || '—'}</dd>
+                </div>
+                <div>
+                  <dt>{t(locale, 'department')}</dt>
+                  <dd>{settings.authorProfile.department || '—'}</dd>
+                </div>
+              </dl>
+            </section>
           </div>
         </div>
 
@@ -231,30 +258,6 @@ export function Launcher({
                   </div>
                 </div>
 
-                <section className="context-card context-card--soft template-guidance-card" aria-live="polite">
-                  <div className="section-heading section-heading--compact">
-                    <div>
-                      <p className="eyebrow">{t(locale, 'templateGuidanceEyebrow')}</p>
-                      <h3>{selectedTemplateGuidance.label}</h3>
-                    </div>
-                    <span className="status-pill">{t(locale, 'template')}</span>
-                  </div>
-                  <dl className="meta-list">
-                    <div>
-                      <dt>{t(locale, 'templateGuidanceBestFor')}</dt>
-                      <dd>{selectedTemplateGuidance.bestFor}</dd>
-                    </div>
-                    <div>
-                      <dt>{t(locale, 'templateGuidanceStructure')}</dt>
-                      <dd>{selectedTemplateGuidance.structure}</dd>
-                    </div>
-                    <div>
-                      <dt>{t(locale, 'templateGuidanceOutcome')}</dt>
-                      <dd>{selectedTemplateGuidance.outcome}</dd>
-                    </div>
-                  </dl>
-                </section>
-
                 <div className="field-grid">
                   <label className="field">
                     <span>{t(locale, 'projectLanguage')}</span>
@@ -300,47 +303,6 @@ export function Launcher({
                 </div>
               </div>
             </section>
-
-            <div className="launcher-meta-grid">
-              <section className="context-card">
-                <h3>{t(locale, 'projectSummary')}</h3>
-                <dl className="meta-list">
-                  <div>
-                    <dt>{t(locale, 'template')}</dt>
-                    <dd>{formatTemplateLabel(locale, draft.template)}</dd>
-                  </div>
-                  <div>
-                    <dt>{t(locale, 'projectLanguage')}</dt>
-                    <dd>{localeLabel(draft.language)}</dd>
-                  </div>
-                  <div>
-                    <dt>{t(locale, 'projectFolderName')}</dt>
-                    <dd className="meta-list__mono">{`${draft.projectName || 'project'}.pe`}</dd>
-                  </div>
-                </dl>
-              </section>
-
-              <section className="context-card">
-                <div className="section-heading section-heading--compact launcher-author-card__header">
-                  <div>
-                    <h3>{t(locale, 'authorProfileReady')}</h3>
-                  </div>
-                  <Button onClick={onOpenSettings} size="sm" type="button" variant="ghost">
-                    {t(locale, 'editAuthorProfile')}
-                  </Button>
-                </div>
-                <dl className="meta-list">
-                  <div>
-                    <dt>{t(locale, 'authorName')}</dt>
-                    <dd>{settings.authorProfile.name}</dd>
-                  </div>
-                  <div>
-                    <dt>{t(locale, 'authorRole')}</dt>
-                    <dd>{t(locale, `role${settings.authorProfile.role[0].toUpperCase()}${settings.authorProfile.role.slice(1)}`)}</dd>
-                  </div>
-                </dl>
-              </section>
-            </div>
           </div>
         </div>
 
@@ -401,8 +363,36 @@ export function Launcher({
           </div>
         </section>
 
-        <section className="context-card">
-          <h3>{t(locale, 'recentProjects')}</h3>
+        <section className="context-card context-card--soft template-guidance-card" aria-live="polite">
+          <div className="section-heading section-heading--compact">
+            <div>
+              <p className="eyebrow">{t(locale, 'templateGuidanceEyebrow')}</p>
+              <h2>{selectedTemplateGuidance.label}</h2>
+            </div>
+            <span className="status-pill">{t(locale, 'template')}</span>
+          </div>
+          <dl className="meta-list">
+            <div>
+              <dt>{t(locale, 'templateGuidanceBestFor')}</dt>
+              <dd>{selectedTemplateGuidance.bestFor}</dd>
+            </div>
+            <div>
+              <dt>{t(locale, 'templateGuidanceStructure')}</dt>
+              <dd>{selectedTemplateGuidance.structure}</dd>
+            </div>
+            <div>
+              <dt>{t(locale, 'templateGuidanceOutcome')}</dt>
+              <dd>{selectedTemplateGuidance.outcome}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section className="context-card context-card--soft">
+          <div className="section-heading section-heading--compact">
+            <div>
+              <p className="eyebrow">{t(locale, 'recentProjects')}</p>
+            </div>
+          </div>
           {settings.recentProjectPaths.length > 0 ? (
             <div className="recent-list">
               {settings.recentProjectPaths.map((recentProjectPath) => (

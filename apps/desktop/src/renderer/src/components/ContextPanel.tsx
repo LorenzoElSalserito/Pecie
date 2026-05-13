@@ -63,6 +63,7 @@ export function ContextPanel({
   attachmentsBusy,
   timeline,
   timelineLoading,
+  pageMarkersSummary,
   onOpenTimelineWorkspace,
   onDefaultCitationProfileChange,
   onOpenWritingHubNode,
@@ -229,6 +230,14 @@ export function ContextPanel({
               <span className="status-pill">{manifest.defaultExportProfile}</span>
               <span className="status-pill">{project.project.defaultCitationProfileId || 'default'}</span>
             </div>
+
+            {pageMarkersSummary ? (
+              <div className="context-page-markers-meta" aria-live="polite">
+                <strong>{t(locale, 'pageMarkersEstimated')}</strong>
+                <span>{pageMarkersSummary.body}</span>
+                {pageMarkersSummary.announcement ? <span className="sr-only">{pageMarkersSummary.announcement}</span> : null}
+              </div>
+            ) : null}
 
             {authorshipStats.length > 0 ? (
               <div className="context-card context-card--flush">

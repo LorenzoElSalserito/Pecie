@@ -79,6 +79,11 @@ export type WorkspacePreferences = {
   typewriterMode: boolean
 }
 
+export type PageMarkersSummary = {
+  body: string
+  announcement?: string
+}
+
 export type WorkspaceFieldsProps = {
   locale: SupportedLocale
   settings: AppSettings
@@ -232,6 +237,7 @@ export type EditorSurfaceProps = {
   onSaveStateChange?: (saveState: SaveState, documentId: string | null) => void
   onWordCountChange?: (wordCount: number, documentId: string | null) => void
   onSelectionRangeChange?: (range: { startOffset: number; endOffset: number } | null) => void
+  onPageMarkersSummaryChange?: (summary: PageMarkersSummary | null) => void
 }
 
 export type WorkspaceDocumentSummary = {
@@ -285,6 +291,7 @@ export type ContextPanelProps = {
   attachmentsBusy: boolean
   timeline: ListTimelineResponse | null
   timelineLoading: boolean
+  pageMarkersSummary?: PageMarkersSummary | null
   onOpenTimelineWorkspace: () => void
   onOpenPreviousVersionDiff: () => Promise<void>
   onDefaultCitationProfileChange: (profileId: string) => void

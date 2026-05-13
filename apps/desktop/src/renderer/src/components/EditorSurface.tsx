@@ -162,7 +162,8 @@ export function EditorSurface({
   onBodySnapshot,
   onSaveStateChange,
   onWordCountChange,
-  onSelectionRangeChange
+  onSelectionRangeChange,
+  onPageMarkersSummaryChange
 }: EditorSurfaceProps): React.JSX.Element {
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null)
   const citationCompletionDisposableRef = useRef<Monaco.IDisposable | null>(null)
@@ -170,6 +171,7 @@ export function EditorSurface({
   const [viewMode, setViewMode] = useState<EditorViewMode>('write')
   const [isTableDialogOpen, setIsTableDialogOpen] = useState(false)
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false)
+  const [isMarkdownToolsOpen, setIsMarkdownToolsOpen] = useState(false)
   const [isWordGoalEditorOpen, setIsWordGoalEditorOpen] = useState(false)
   const [tableRows, setTableRows] = useState(3)
   const [tableColumns, setTableColumns] = useState(3)
@@ -634,6 +636,22 @@ export function EditorSurface({
     }
   }, [editorSelectionRangeState, locale, pageBreakState, showPageMarkers])
 
+  useEffect(() => {
+    if (!selectedNode?.documentId) {
+      onPageMarkersSummaryChange?.(null)
+      return
+    }
+
+    onPageMarkersSummaryChange?.({
+      body: !showPageMarkers
+        ? t(locale, 'pageMarkersUnavailable')
+        : pageBreakState && !pageBreakState.binding.supportsPageMarkers
+          ? t(locale, 'pageMarkersUnsupported')
+          : t(locale, 'pageMarkersEstimateBody'),
+      announcement: pageMarkerAnnouncement || undefined
+    })
+  }, [locale, onPageMarkersSummaryChange, pageBreakState, pageMarkerAnnouncement, selectedNode?.documentId, showPageMarkers])
+
   return (
     <section
       aria-labelledby="editor-surface-title"
@@ -672,63 +690,180 @@ export function EditorSurface({
               </div>
               <div className="editor-statusbar__right">
                 <button
+                  aria-label={currentWordGoal ? t(locale, 'editWordGoal') : t(locale, 'setWordGoal')}
                   aria-expanded={isWordGoalEditorOpen}
-                  className={`toggle-chip${currentWordGoal ? ' toggle-chip--accent' : ''}`}
+                  className={`toggle-chip toggle-chip--icon${currentWordGoal ? ' toggle-chip--accent' : ''}`}
                   onClick={() => setIsWordGoalEditorOpen((current) => !current)}
+                  title={currentWordGoal ? t(locale, 'editWordGoal') : t(locale, 'setWordGoal')}
                   type="button"
                 >
-                  {currentWordGoal ? t(locale, 'editWordGoal') : t(locale, 'setWordGoal')}
+                  <i aria-hidden="true" className="bi bi-flag"></i>
                 </button>
                 <button
+                  aria-label={t(locale, 'showPageMarkers')}
                   aria-pressed={showPageMarkers}
-                  className={`toggle-chip${showPageMarkers ? ' toggle-chip--accent' : ''}`}
+                  className={`toggle-chip toggle-chip--icon${showPageMarkers ? ' toggle-chip--accent' : ''}`}
                   onClick={() => {
                     void persistPageMarkersPreference(!showPageMarkers)
                   }}
+                  title={t(locale, 'showPageMarkers')}
                   type="button"
                 >
-                  {t(locale, 'showPageMarkers')}
+                  <i aria-hidden="true" className="bi bi-file-earmark-break"></i>
                 </button>
                 <div aria-label={t(locale, 'editorViewMode')} className="segmented-control" role="tablist">
                   {([
-                    ['write', t(locale, 'editorViewWrite')],
-                    ['preview', t(locale, 'editorViewPreview')],
-                    ['split', t(locale, 'editorViewSplit')]
-                  ] as Array<[EditorViewMode, string]>).map(([mode, label]) => (
+                    ['write', t(locale, 'editorViewWrite'), 'bi-pencil-square'],
+                    ['preview', t(locale, 'editorViewPreview'), 'bi-eye'],
+                    ['split', t(locale, 'editorViewSplit'), 'bi-layout-split']
+                  ] as Array<[EditorViewMode, string, string]>).map(([mode, label, icon]) => (
                     <button
+                      aria-label={label}
                       aria-selected={viewMode === mode}
                       className={`segmented-control__item${viewMode === mode ? ' segmented-control__item--active' : ''}`}
                       key={mode}
                       onClick={() => setViewMode(mode)}
                       role="tab"
                       tabIndex={viewMode === mode ? 0 : -1}
+                      title={label}
                       type="button"
                     >
-                      {label}
+                      <i aria-hidden="true" className={`bi ${icon}`}></i>
                     </button>
                   ))}
                 </div>
                 <button
+                  aria-label={t(locale, 'focusMode')}
                   aria-pressed={preferences.focusMode}
-                  className="toggle-chip"
+                  className="toggle-chip toggle-chip--icon"
                   onClick={() => onPreferencesChange({ ...preferences, focusMode: !preferences.focusMode })}
+                  title={t(locale, 'focusMode')}
                   type="button"
                 >
-                  {t(locale, 'focusMode')}
+                  <i aria-hidden="true" className="bi bi-bullseye"></i>
                 </button>
                 <button
+                  aria-label={t(locale, 'typewriterMode')}
                   aria-pressed={preferences.typewriterMode}
-                  className="toggle-chip"
+                  className="toggle-chip toggle-chip--icon"
                   onClick={() => onPreferencesChange({ ...preferences, typewriterMode: !preferences.typewriterMode })}
+                  title={t(locale, 'typewriterMode')}
                   type="button"
                 >
-                  {t(locale, 'typewriterMode')}
+                  <i aria-hidden="true" className="bi bi-keyboard"></i>
                 </button>
-                <Button onClick={() => void saveNow('manual')} size="sm" variant="secondary">
-                  {t(locale, 'saveNow')}
-                </Button>
+                <button
+                  aria-controls="editor-markdown-tools"
+                  aria-expanded={isMarkdownToolsOpen}
+                  aria-label={t(locale, 'markdownAssist')}
+                  aria-pressed={isMarkdownToolsOpen}
+                  className={`toggle-chip toggle-chip--icon${isMarkdownToolsOpen ? ' toggle-chip--accent' : ''}`}
+                  onClick={() => {
+                    setIsMarkdownToolsOpen((current) => {
+                      if (current) {
+                        setIsTableDialogOpen(false)
+                      }
+                      return !current
+                    })
+                  }}
+                  title={t(locale, 'markdownAssist')}
+                  type="button"
+                >
+                  <i aria-hidden="true" className="bi bi-markdown"></i>
+                </button>
               </div>
             </div>
+            {isMarkdownToolsOpen ? (
+              <>
+                <div className="editor-formatting-bar" id="editor-markdown-tools">
+                  {(['core', 'insert'] as const).map((groupKey) => (
+                    <div className="editor-formatting-bar__group" key={groupKey}>
+                      <span className="editor-formatting-bar__label">{t(locale, groupKey === 'core' ? 'formattingGroupCore' : 'formattingGroupInsert')}</span>
+                      <div className="editor-formatting-bar__chips" aria-label={t(locale, 'markdownAssist')} role="toolbar">
+                        {toolbarGroups[groupKey].map((entry) => (
+                          <button
+                            aria-label={formatToolbarTooltip(entry)}
+                            className="format-chip"
+                            key={entry.action}
+                            onClick={() => {
+                              if (!editorRef.current) return
+                              if (entry.action === 'table') {
+                                setIsTableDialogOpen(true)
+                                return
+                              }
+                              if (entry.action === 'image') {
+                                setIsImageDialogOpen(true)
+                                return
+                              }
+                              if (entry.action === 'citation') {
+                                replaceEditorSelection(editorRef.current, '@', 1, 1)
+                                editorRef.current.trigger('pecie-citation', 'editor.action.triggerSuggest', {})
+                                return
+                              }
+                              if (entry.action === 'visualMermaid' || entry.action === 'visualMarkmap' || entry.action === 'visualChart') {
+                                const command =
+                                  entry.action === 'visualMermaid'
+                                    ? visualBlockInsertCommands.mermaidDiagram
+                                    : entry.action === 'visualMarkmap'
+                                      ? visualBlockInsertCommands.markmapMindmap
+                                      : visualBlockInsertCommands.rechartsStats
+                                const template = command.templateFactory()
+                                const snippet = `\`\`\`${command.markdownFence}\n${template}\n\`\`\`\n`
+                                replaceEditorSelection(editorRef.current, snippet, snippet.length, snippet.length)
+                                return
+                              }
+                              applyMarkdownFormat(editorRef.current, entry.action, formatPlaceholders)
+                            }}
+                            title={formatToolbarTooltip(entry)}
+                            type="button"
+                          >
+                            <span
+                              aria-hidden="true"
+                              className="format-chip__icon"
+                              style={{ '--format-icon': `url(${entry.icon})` } as React.CSSProperties}
+                            ></span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {isTableDialogOpen ? (
+                  <section className="context-card context-card--soft">
+                    <div className="section-heading section-heading--compact">
+                      <h3>{t(locale, 'markdownTableDialogTitle')}</h3>
+                    </div>
+                    <div className="field-grid">
+                      <label className="field">
+                        <span>{t(locale, 'markdownTableRows')}</span>
+                        <input max={20} min={1} onChange={(event) => setTableRows(Number(event.target.value) || 1)} type="number" value={tableRows} />
+                      </label>
+                      <label className="field">
+                        <span>{t(locale, 'markdownTableColumns')}</span>
+                        <input max={10} min={1} onChange={(event) => setTableColumns(Number(event.target.value) || 1)} type="number" value={tableColumns} />
+                      </label>
+                    </div>
+                    <div className="dialog-actions dialog-actions--inline">
+                      <Button onClick={() => setIsTableDialogOpen(false)} size="sm" type="button" variant="ghost">
+                        {t(locale, 'cancel')}
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          if (!editorRef.current) return
+                          insertMarkdownTable(editorRef.current, tableRows, tableColumns, t(locale, 'markdownTableCell'), t(locale, 'markdownTableHeader'))
+                          setIsTableDialogOpen(false)
+                        }}
+                        size="sm"
+                        type="button"
+                      >
+                        {t(locale, 'insertTable')}
+                      </Button>
+                    </div>
+                  </section>
+                ) : null}
+              </>
+            ) : null}
             {selectedNode?.type === 'document' && (currentWordGoal || isWordGoalEditorOpen) ? (
               <div className="editor-goal-card">
                 <div className="editor-goal-card__header">
@@ -775,18 +910,6 @@ export function EditorSurface({
               </div>
             ) : null}
 
-            <div className="editor-page-markers-meta" aria-live="polite">
-              <strong>{t(locale, 'pageMarkersEstimated')}</strong>
-              <span>
-                {!showPageMarkers
-                  ? t(locale, 'pageMarkersUnavailable')
-                  : pageBreakState && !pageBreakState.binding.supportsPageMarkers
-                    ? t(locale, 'pageMarkersUnsupported')
-                    : t(locale, 'pageMarkersEstimateBody')}
-              </span>
-              {pageMarkerAnnouncement ? <span className="sr-only">{pageMarkerAnnouncement}</span> : null}
-            </div>
-
             {/* ── Title (inline editable) ── */}
             <div className="editor-title-field">
               <input
@@ -797,96 +920,6 @@ export function EditorSurface({
                 value={draftTitle}
                 onChange={(event) => setDraftTitle(event.target.value)}
               />
-            </div>
-
-            {/* ── Table dialog (inline) ── */}
-            {isTableDialogOpen ? (
-              <section className="context-card context-card--soft">
-                <div className="section-heading section-heading--compact">
-                  <h3>{t(locale, 'markdownTableDialogTitle')}</h3>
-                </div>
-                <div className="field-grid">
-                  <label className="field">
-                    <span>{t(locale, 'markdownTableRows')}</span>
-                    <input max={20} min={1} onChange={(event) => setTableRows(Number(event.target.value) || 1)} type="number" value={tableRows} />
-                  </label>
-                  <label className="field">
-                    <span>{t(locale, 'markdownTableColumns')}</span>
-                    <input max={10} min={1} onChange={(event) => setTableColumns(Number(event.target.value) || 1)} type="number" value={tableColumns} />
-                  </label>
-                </div>
-                <div className="dialog-actions dialog-actions--inline">
-                  <Button onClick={() => setIsTableDialogOpen(false)} size="sm" type="button" variant="ghost">
-                    {t(locale, 'cancel')}
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      if (!editorRef.current) return
-                      insertMarkdownTable(editorRef.current, tableRows, tableColumns, t(locale, 'markdownTableCell'), t(locale, 'markdownTableHeader'))
-                      setIsTableDialogOpen(false)
-                    }}
-                    size="sm"
-                    type="button"
-                  >
-                    {t(locale, 'insertTable')}
-                  </Button>
-                </div>
-              </section>
-            ) : null}
-
-            {/* ── Row 2: Formatting toolbar ── */}
-            <div className="editor-formatting-bar">
-              {(['core', 'insert'] as const).map((groupKey) => (
-                <div className="editor-formatting-bar__group" key={groupKey}>
-                  <span className="editor-formatting-bar__label">{t(locale, groupKey === 'core' ? 'formattingGroupCore' : 'formattingGroupInsert')}</span>
-                  <div className="editor-formatting-bar__chips" aria-label={t(locale, 'markdownAssist')} role="toolbar">
-                    {toolbarGroups[groupKey].map((entry) => (
-                      <button
-                        aria-label={formatToolbarTooltip(entry)}
-                        className="format-chip"
-                        key={entry.action}
-                        onClick={() => {
-                          if (!editorRef.current) return
-                          if (entry.action === 'table') {
-                            setIsTableDialogOpen(true)
-                            return
-                          }
-                          if (entry.action === 'image') {
-                            setIsImageDialogOpen(true)
-                            return
-                          }
-                          if (entry.action === 'citation') {
-                            replaceEditorSelection(editorRef.current, '@', 1, 1)
-                            editorRef.current.trigger('pecie-citation', 'editor.action.triggerSuggest', {})
-                            return
-                          }
-                          if (entry.action === 'visualMermaid' || entry.action === 'visualMarkmap' || entry.action === 'visualChart') {
-                            const command =
-                              entry.action === 'visualMermaid'
-                                ? visualBlockInsertCommands.mermaidDiagram
-                                : entry.action === 'visualMarkmap'
-                                  ? visualBlockInsertCommands.markmapMindmap
-                                  : visualBlockInsertCommands.rechartsStats
-                            const template = command.templateFactory()
-                            const snippet = `\`\`\`${command.markdownFence}\n${template}\n\`\`\`\n`
-                            replaceEditorSelection(editorRef.current, snippet, snippet.length, snippet.length)
-                            return
-                          }
-                          applyMarkdownFormat(editorRef.current, entry.action, formatPlaceholders)
-                        }}
-                        title={formatToolbarTooltip(entry)}
-                        type="button"
-                      >
-                        <span
-                          aria-hidden="true"
-                          className="format-chip__icon"
-                          style={{ '--format-icon': `url(${entry.icon})` } as React.CSSProperties}
-                        ></span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
             </div>
 
             {/* ── Editor area ── */}
