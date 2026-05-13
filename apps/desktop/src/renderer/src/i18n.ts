@@ -91,6 +91,7 @@ const dictionaries: Record<SupportedLocale, Dictionary> = {
     infoTitle: 'Informazioni app',
     appInfoLine:
       'Pecie - © Lorenzo DM 2026 - v{version} - Considera di supportare il progetto e quello che faccio - www.lorenzodm.it',
+    supportByDonating: 'Sostieni Donando',
     homeGuideTitle: 'Come funziona Pecie',
     homeGuideIntro:
       'Pecie ti accompagna in un flusso semplice: prepari il progetto, entri subito nel workspace editoriale e mantieni tutto ordinato tra binder, editor, contesto ed export.',
@@ -961,6 +962,7 @@ const dictionaries: Record<SupportedLocale, Dictionary> = {
     infoTitle: 'App info',
     appInfoLine:
       'Pecie - © Lorenzo DM 2026 - v{version} - Consider supporting the project and my work - www.lorenzodm.it',
+    supportByDonating: 'Support by Donating',
     homeGuideTitle: 'How Pecie works',
     homeGuideIntro:
       'Pecie is built around a simple flow: prepare the project, enter the editorial workspace immediately and keep everything organized across binder, editor, context and export.',
@@ -2966,6 +2968,7 @@ const dictionarySupplements: Record<Exclude<SupportedLocale, 'it-IT' | 'en-US'>,
     infoTitle: 'App-Informationen',
     appInfoLine:
       'Pecie - © Lorenzo DM 2026 - v{version} - Bitte unterstütze das Projekt und meine Arbeit - www.lorenzodm.it',
+    supportByDonating: 'Mit Spende unterstützen',
     homeGuideTitle: 'So funktioniert Pecie',
     homeGuideIntro:
       'Pecie begleitet dich durch einen klaren Ablauf: Projekt vorbereiten, sofort in den redaktionellen Workspace wechseln und alles zwischen Binder, Editor, Kontext und Export geordnet halten.',
@@ -3209,6 +3212,7 @@ const dictionarySupplements: Record<Exclude<SupportedLocale, 'it-IT' | 'en-US'>,
     infoTitle: 'Información de la app',
     appInfoLine:
       'Pecie - © Lorenzo DM 2026 - v{version} - Considera apoyar el proyecto y mi trabajo - www.lorenzodm.it',
+    supportByDonating: 'Apoyar donando',
     homeGuideTitle: 'Cómo funciona Pecie',
     homeGuideIntro:
       'Pecie te acompaña en un flujo claro: preparas el proyecto, entras enseguida en el espacio editorial y mantienes todo ordenado entre binder, editor, contexto y exportación.',
@@ -3452,6 +3456,7 @@ const dictionarySupplements: Record<Exclude<SupportedLocale, 'it-IT' | 'en-US'>,
     infoTitle: 'Informations app',
     appInfoLine:
       'Pecie - © Lorenzo DM 2026 - v{version} - Pensez à soutenir le projet et mon travail - www.lorenzodm.it',
+    supportByDonating: 'Soutenir par un don',
     homeGuideTitle: 'Comment fonctionne Pecie',
     homeGuideIntro:
       'Pecie t’accompagne dans un flux clair : tu prépares le projet, tu entres immédiatement dans l’espace éditorial et tu gardes tout ordonné entre binder, éditeur, contexte et export.',
@@ -3695,6 +3700,7 @@ const dictionarySupplements: Record<Exclude<SupportedLocale, 'it-IT' | 'en-US'>,
     infoTitle: 'Informação da app',
     appInfoLine:
       'Pecie - © Lorenzo DM 2026 - v{version} - Considere apoiar o projeto e o meu trabalho - www.lorenzodm.it',
+    supportByDonating: 'Apoiar com donativo',
     homeGuideTitle: 'Como funciona o Pecie',
     homeGuideIntro:
       'O Pecie acompanha-o num fluxo claro: prepara o projeto, entra de imediato no workspace editorial e mantém tudo organizado entre binder, editor, contexto e exportação.',

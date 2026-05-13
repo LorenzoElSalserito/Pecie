@@ -43,8 +43,7 @@ jobs:
           - os: ubuntu-latest
             artifact_name: linux
             make_script: make:linux:deb
-            extra_scripts: |
-              npm run make:linux:appimage -w @pecie/desktop
+            extra_scripts: ''
           - os: windows-latest
             artifact_name: windows
             make_script: make:win

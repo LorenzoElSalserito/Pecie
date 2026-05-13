@@ -1,0 +1,45 @@
+{
+  "appId": "com.pecie.desktop",
+  "productName": "Pecie",
+  "directories": {
+    "output": "../../build/desktop/windows",
+    "buildResources": "src/renderer/src/asset"
+  },
+  "files": [
+    "out/**/*",
+    "package.json"
+  ],
+  "extraResources": [
+    {
+      "from": "resources/export-runtime",
+      "to": "export-runtime"
+    }
+  ],
+  "extraMetadata": {
+    "main": "out/main/index.js"
+  },
+  "win": {
+    "artifactName": "Pecie-${version}-Setup.${ext}",
+    "icon": "Icon.ico",
+    "target": [
+      {
+        "target": "nsis",
+        "arch": [
+          "x64"
+        ]
+      }
+    ],
+    "signAndEditExecutable": false,
+    "signDlls": false
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "allowElevation": true,
+    "perMachine": false,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "Pecie",
+    "deleteAppDataOnUninstall": false
+  }
+}

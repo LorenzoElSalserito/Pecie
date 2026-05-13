@@ -25,36 +25,6 @@ const makers = [
     }
   },
   {
-    name: '@electron-forge/maker-snap',
-    platforms: ['linux'],
-    config: {
-      name: 'pecie',
-      productName: 'Pecie',
-      genericName: 'Pecie',
-      executableName: 'pecie',
-      icon: assetPngIconPath,
-      summary: 'Pecie desktop writing workspace',
-      description: 'Accessible local-first writing environment for long-form projects.',
-      category: 'Office'
-    }
-  },
-    {
-      name: '@electron-forge/maker-squirrel',
-      platforms: ['win32'],
-      config: {
-        name: 'pecie',
-        authors: 'Lorenzo DM',
-        description: 'Accessible local-first writing environment for long-form projects.',
-        exe: 'pecie.exe',
-        setupExe: 'Pecie-Setup.exe',
-        setupIcon: assetIcoIconPath,
-        shortcutName: 'Pecie',
-        shortcutFolderName: 'Pecie',
-      iconUrl:
-        'https://raw.githubusercontent.com/lorenzodm/pecie/main/apps/desktop/src/renderer/src/asset/Icon.ico'
-    }
-  },
-  {
     name: '@electron-forge/maker-dmg',
     platforms: ['darwin'],
     config: {
