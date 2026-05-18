@@ -5,6 +5,7 @@ import { Button } from '@pecie/ui'
 
 import appIcon from '../asset/Icon.svg'
 import { SUPPORTED_LOCALES, localeLabel, t } from '../i18n'
+import { donationUrl } from '../support-links'
 import type { LauncherProps, TemplateId } from './types'
 import { templateIds } from './types'
 import {
@@ -416,6 +417,12 @@ export function Launcher({
           ) : (
             <p>{t(locale, 'noRecentProjects')}</p>
           )}
+          <div className="context-card__actions">
+            <a className="pecie-btn pecie-btn--ghost pecie-btn--sm" href={donationUrl} rel="noreferrer" target="_blank">
+              <i aria-hidden="true" className="bi bi-heart-fill"></i>
+              {t(locale, 'supportByDonating')}
+            </a>
+          </div>
         </section>
 
       </aside>

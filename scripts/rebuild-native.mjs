@@ -18,7 +18,7 @@ const requireFromDesktop = createRequire(resolve(desktopDirectory, 'package.json
 const electronVersion = requireFromDesktop('electron/package.json').version
 const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm'
 
-const workspaces = ['@pecie/infrastructure', '@pecie/desktop']
+const workspaces = process.argv.includes('--desktop-only') ? ['@pecie/desktop'] : ['@pecie/infrastructure', '@pecie/desktop']
 
 for (const workspace of workspaces) {
   const result = spawnSync(
