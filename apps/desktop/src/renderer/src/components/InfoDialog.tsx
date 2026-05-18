@@ -1,9 +1,8 @@
 import { Button, Dialog } from '@pecie/ui'
 
 import { t } from '../i18n'
+import { donationUrl } from '../support-links'
 import type { InfoDialogProps } from './types'
-
-const donationUrl = 'https://www.paypal.com/paypalme/lorenzodemarco92'
 
 export function InfoDialog({ open, locale, version, onClose }: InfoDialogProps): React.JSX.Element | null {
   if (!open) {

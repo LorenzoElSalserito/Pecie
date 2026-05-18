@@ -5,6 +5,7 @@ import { Button } from '@pecie/ui'
 import type { CitationLibraryDiagnostic, ListCitationProfilesResponse } from '@pecie/schemas'
 
 import { localeLabel, t } from '../i18n'
+import { donationUrl } from '../support-links'
 import type { ContextPanelProps, TemplateId } from './types'
 import { formatFileSize, formatNodeType, formatPercentage, formatSessionDuration, formatTemplateLabel, getWordCount, stringAccentColor } from './utils'
 
@@ -436,6 +437,10 @@ export function ContextPanel({
             <div className="context-card__actions">
               <Button disabled={attachmentsBusy} onClick={onImportAttachments} size="sm" type="button" variant="secondary">{t(locale, 'importAttachment')}</Button>
               <Button onClick={onOpenAttachmentsDirectory} size="sm" type="button" variant="ghost">{t(locale, 'openAttachmentsFolder')}</Button>
+              <a className="pecie-btn pecie-btn--ghost pecie-btn--sm" href={donationUrl} rel="noreferrer" target="_blank">
+                <i aria-hidden="true" className="bi bi-heart-fill"></i>
+                {t(locale, 'supportByDonating')}
+              </a>
             </div>
             <div className="writing-hub-meta">
               <span>{t(locale, 'writingHubLimit', { size: formatFileSize(maxAttachmentSizeBytes, locale) })}</span>

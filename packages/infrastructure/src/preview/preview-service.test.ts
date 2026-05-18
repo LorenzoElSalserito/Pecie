@@ -22,7 +22,7 @@ describe('PreviewService', () => {
   const cleanupPaths: string[] = []
 
   afterEach(async () => {
-    await Promise.all(cleanupPaths.splice(0).map((target) => rm(target, { force: true, recursive: true })))
+    await Promise.all(cleanupPaths.splice(0).map((target) => rm(target, { force: true, maxRetries: 5, recursive: true, retryDelay: 100 })))
   })
 
   async function createProject(template: Parameters<ProjectService['createProject']>[0]['template']) {
