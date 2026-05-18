@@ -233,7 +233,7 @@ export function EditorSurface({
     ],
     [locale]
   )
-  const { draftBody, draftTitle, documentId, saveNow, saveState, setDraftBody, setDraftTitle, statusMessage } = useDocumentEditor(
+  const { draftBody, draftTitle, documentId, saveState, setDraftBody, setDraftTitle, statusMessage } = useDocumentEditor(
     locale,
     project,
     selectedNode,
