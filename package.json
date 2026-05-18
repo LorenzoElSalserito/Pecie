@@ -15,7 +15,7 @@
     "rebuild:native:desktop": "node ./scripts/rebuild-native.mjs --desktop-only",
     "postinstall": "npm run rebuild:native",
     "prebuild": "npm run generate:types",
-    "predev": "npm run rebuild:native:desktop",
+    "fix:dev-native": "npm run rebuild:native:desktop",
     "start": "npm run start -w @pecie/desktop",
     "dev": "npm run dev -w @pecie/desktop",
     "dist:desktop": "npm run make:desktop",
