@@ -1,4 +1,7 @@
 const path = require('node:path')
+const { pathToFileURL } = require('node:url')
+
+const finalizeDebScript = path.resolve(__dirname, '../../scripts/finalize-deb.mjs')
 
 const assetIconBasePath = path.resolve(__dirname, 'src/renderer/src/asset/Icon')
 const assetPngIconPath = `${assetIconBasePath}.png`
@@ -15,8 +18,8 @@ const makers = [
       options: {
         name: 'pecie',
         bin: 'pecie',
-        productName: 'Pecie',
-        genericName: 'Pecie',
+        productName: 'pecie',
+        genericName: 'pecie',
         icon: assetPngIconPath,
         maintainer: 'Lorenzo DM',
         homepage: 'https://github.com/lorenzodm/pecie',
@@ -28,7 +31,7 @@ const makers = [
     name: '@electron-forge/maker-dmg',
     platforms: ['darwin'],
     config: {
-      name: 'Pecie',
+      name: 'pecie',
       icon: assetIcnsIconPath
     }
   },
@@ -43,7 +46,7 @@ if (macPkgIdentity) {
     name: '@electron-forge/maker-pkg',
     platforms: ['darwin'],
     config: {
-      name: 'Pecie',
+      name: 'pecie',
       overwrite: true,
       icon: assetIcnsIconPath,
       identity: macPkgIdentity,
@@ -55,7 +58,7 @@ if (macPkgIdentity) {
 module.exports = {
   outDir: '../../build/desktop/forge',
   packagerConfig: {
-    name: 'Pecie',
+    name: 'pecie',
     executableName: 'pecie',
     appBundleId: 'com.pecie.desktop',
     appCategoryType: 'public.app-category.productivity',
@@ -66,14 +69,30 @@ module.exports = {
     icon: assetIconBasePath,
     win32metadata: {
       CompanyName: 'Lorenzo DM',
-      FileDescription: 'Pecie desktop writing workspace',
-      InternalName: 'Pecie',
+      FileDescription: 'pecie desktop writing workspace',
+      InternalName: 'pecie',
       OriginalFilename: 'pecie.exe',
-      ProductName: 'Pecie'
+      ProductName: 'pecie'
     }
   },
   rebuildConfig: {
     ignoreModules: ['better-sqlite3']
   },
-  makers
+  makers,
+  hooks: {
+    // After the .deb is built, inject the project copyright and README into the
+    // correct Debian doc section (/usr/share/doc/pecie/) and repack in place.
+    // The filename keeps the maker-deb pattern: pecie_<version>_<arch>.deb.
+    async postMake(_forgeConfig, makeResults) {
+      const { finalizeDeb } = await import(pathToFileURL(finalizeDebScript).href)
+      for (const result of makeResults) {
+        for (const artifact of result.artifacts) {
+          if (artifact.endsWith('.deb')) {
+            finalizeDeb(artifact)
+          }
+        }
+      }
+      return makeResults
+    }
+  }
 }
