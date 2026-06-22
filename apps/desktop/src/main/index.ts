@@ -140,8 +140,8 @@ function createWindow(splashWindow: BrowserWindow | null): void {
   const mainWindow = new BrowserWindow({
     width: 1440,
     height: 920,
-    minWidth: 1120,
-    minHeight: 720,
+    minWidth: 800,
+    minHeight: 600,
     show: false,
     autoHideMenuBar: true,
     backgroundColor: '#161410',

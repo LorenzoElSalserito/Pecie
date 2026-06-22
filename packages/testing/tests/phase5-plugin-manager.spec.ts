@@ -160,7 +160,7 @@ test.describe('FASE 5 Plugin Manager', () => {
       await expect(disabledCard.locator('strong').filter({ hasText: 'enabled' })).toBeVisible()
       await expect(disabledCard.getByRole('button', { name: 'Disable plugin' })).toBeVisible()
 
-      await expect(settingsDialog.getByRole('heading', { name: 'Invalid plugin manifest' })).toBeVisible()
+      await expect(settingsDialog.getByRole('heading', { name: 'Invalid plugin' })).toBeVisible()
       await expect(settingsDialog.getByText('plugins/broken-plugin/plugin.json')).toBeVisible()
       await expect(settingsDialog.getByText(/entryPoint/i)).toBeVisible()
     } finally {

@@ -6,7 +6,10 @@ import { _electron as electron, expect, test, type ElectronApplication, type Pag
 
 const appEntryPath = path.resolve(__dirname, '../../../apps/desktop/out/main/index.js')
 
-async function seedSettings(homeDirectory: string): Promise<{ appDataDirectory: string; workspaceDirectory: string }> {
+async function seedSettings(
+  homeDirectory: string,
+  options: { uiZoom?: 10 | 25 | 50 | 75 | 100 | 125 | 150 } = {}
+): Promise<{ appDataDirectory: string; workspaceDirectory: string }> {
   const appDataDirectory = path.join(homeDirectory, '.pecie')
   const workspaceDirectory = path.join(homeDirectory, 'workspace')
   await mkdir(appDataDirectory, { recursive: true })
@@ -19,7 +22,7 @@ async function seedSettings(homeDirectory: string): Promise<{ appDataDirectory: 
         locale: 'en-US',
         theme: 'light',
         fontPreference: 'classic',
-        uiZoom: 100,
+        uiZoom: options.uiZoom ?? 100,
         recentProjectPaths: [],
         archivedProjectPaths: [],
         expertModeEnabled: false,
@@ -96,14 +99,14 @@ async function waitForMainWindow(electronApp: ElectronApplication): Promise<Page
   throw new Error('Main renderer window did not appear.')
 }
 
-async function launchDesktop(): Promise<{
+async function launchDesktop(options: { uiZoom?: 10 | 25 | 50 | 75 | 100 | 125 | 150 } = {}): Promise<{
   electronApp: ElectronApplication
   page: Page
   homeDirectory: string
   appDataDirectory: string
 }> {
   const homeDirectory = await mkdtemp(path.join(tmpdir(), 'pecie-e2e-release-ui-'))
-  const seeded = await seedSettings(homeDirectory)
+  const seeded = await seedSettings(homeDirectory, { uiZoom: options.uiZoom })
   await seedPlugin(seeded.appDataDirectory)
 
   const electronApp = await electron.launch({
@@ -117,6 +120,25 @@ async function launchDesktop(): Promise<{
 
   const page = await waitForMainWindow(electronApp)
   return { electronApp, page, homeDirectory, appDataDirectory: seeded.appDataDirectory }
+}
+
+async function launchFirstRunDesktop(): Promise<{
+  electronApp: ElectronApplication
+  page: Page
+  homeDirectory: string
+}> {
+  const homeDirectory = await mkdtemp(path.join(tmpdir(), 'pecie-e2e-first-run-ui-'))
+  const electronApp = await electron.launch({
+    args: ['--no-sandbox', appEntryPath],
+    env: {
+      ...process.env,
+      ELECTRON_DISABLE_SANDBOX: '1',
+      HOME: homeDirectory
+    }
+  })
+
+  const page = await waitForMainWindow(electronApp)
+  return { electronApp, page, homeDirectory }
 }
 
 test.describe('FASE 5 Release UI guard', () => {
@@ -155,6 +177,60 @@ test.describe('FASE 5 Release UI guard', () => {
       await expect(settingsDialog.getByText('project.read, export.read')).toBeVisible()
       await expect(settingsDialog.getByText('onProjectOpen')).toBeVisible()
       await expect(settingsDialog.getByText('plugins/broken-release-ui-plugin/plugin.json')).toBeVisible()
+    } finally {
+      await electronApp.close()
+      await rm(homeDirectory, { recursive: true, force: true })
+    }
+  })
+
+  test('remains usable at the 800x600 minimum window with compact UI zoom options', async () => {
+    const { electronApp, page, homeDirectory } = await launchDesktop({ uiZoom: 10 })
+
+    try {
+      const windowMetrics = await electronApp.evaluate(({ BrowserWindow }) => {
+        const mainWindow = BrowserWindow.getAllWindows().find((window) => !window.webContents.getURL().startsWith('data:text/html'))
+        if (!mainWindow) {
+          throw new Error('Main window not found.')
+        }
+
+        mainWindow.setSize(800, 600)
+        return {
+          minimumSize: mainWindow.getMinimumSize(),
+          size: mainWindow.getSize()
+        }
+      })
+
+      expect(windowMetrics.minimumSize).toEqual([800, 600])
+      expect(windowMetrics.size).toEqual([800, 600])
+      await expect.poll(async () => page.evaluate(() => document.documentElement.dataset.uiZoom)).toBe('10')
+      await expect.poll(async () => page.evaluate(() => getComputedStyle(document.documentElement).fontSize)).toBe('6px')
+      await expect(page.getByRole('button', { name: 'Settings' })).toBeVisible()
+
+      await page.getByRole('button', { name: 'Settings' }).click()
+      const settingsDialog = page.getByRole('dialog', { name: 'Settings' })
+      await expect(settingsDialog).toBeVisible()
+
+      const zoomSelect = settingsDialog.getByLabel('Interface zoom')
+      await expect(zoomSelect).toBeVisible()
+      await expect(zoomSelect.locator('option')).toHaveText(['10%', '25%', '50%', '75%', '100%', '125%', '150%'])
+      await expect(zoomSelect).toHaveValue('10')
+    } finally {
+      await electronApp.close()
+      await rm(homeDirectory, { recursive: true, force: true })
+    }
+  })
+
+  test('offers compact UI zoom choices during first-run setup', async () => {
+    const { electronApp, page, homeDirectory } = await launchFirstRunDesktop()
+
+    try {
+      const zoomSelect = page.getByLabel('Interface zoom')
+      await expect(zoomSelect).toBeVisible()
+      await expect(zoomSelect.locator('option')).toHaveText(['10%', '25%', '50%', '75%', '100%', '125%', '150%'])
+
+      await zoomSelect.selectOption('25')
+      await expect.poll(async () => page.evaluate(() => document.documentElement.dataset.uiZoom)).toBe('25')
+      await expect(page.locator('.setup-overview__card').filter({ hasText: 'Interface zoom' })).toContainText('25%')
     } finally {
       await electronApp.close()
       await rm(homeDirectory, { recursive: true, force: true })

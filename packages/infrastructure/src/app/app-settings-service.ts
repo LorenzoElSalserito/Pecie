@@ -162,6 +162,8 @@ export class AppSettingsService {
         : 'system',
       fontPreference: candidate?.fontPreference === 'dyslexic' ? 'dyslexic' : 'classic',
       uiZoom:
+        candidate?.uiZoom === 10 ||
+        candidate?.uiZoom === 25 ||
         candidate?.uiZoom === 50 ||
         candidate?.uiZoom === 75 ||
         candidate?.uiZoom === 100 ||

@@ -4,6 +4,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { gzipSync } from 'node:zlib'
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url))
 const repoRoot = path.resolve(scriptDirectory, '..')
@@ -50,7 +51,7 @@ function run(command, args, options = {}) {
 }
 
 /**
- * Re-inject the project copyright and README into the correct Debian doc
+ * Re-inject the project copyright, license, README and changelog into the correct Debian doc
  * section of an already-built .deb, then repack it in place (root-owned,
  * with refreshed md5sums and Installed-Size). The .deb filename is left
  * untouched so the maker-deb pattern `<name>_<version>_<arch>.deb` is kept.
@@ -79,6 +80,22 @@ export function finalizeDeb(debPath) {
     const readmePath = path.join(docDir, 'README.md')
     fs.copyFileSync(readmeSource, readmePath)
     fs.chmodSync(readmePath, 0o644)
+
+    // LICENSE -> /usr/share/doc/<package>/LICENSE
+    const licenseSource = path.join(repoRoot, 'LICENSE')
+    const licensePath = path.join(docDir, 'LICENSE')
+    fs.copyFileSync(licenseSource, licensePath)
+    fs.chmodSync(licensePath, 0o644)
+
+    // CHANGELOG -> /usr/share/doc/<package>/changelog.gz and CHANGELOG.md
+    const changelogSource = path.join(repoRoot, 'CHANGELOG.md')
+    const changelogMarkdownPath = path.join(docDir, 'CHANGELOG.md')
+    const changelogGzipPath = path.join(docDir, 'changelog.gz')
+    const changelog = fs.readFileSync(changelogSource)
+    fs.copyFileSync(changelogSource, changelogMarkdownPath)
+    fs.writeFileSync(changelogGzipPath, gzipSync(changelog), { mode: 0o644 })
+    fs.chmodSync(changelogMarkdownPath, 0o644)
+    fs.chmodSync(changelogGzipPath, 0o644)
 
     refreshMd5sums(workDir)
     refreshInstalledSize(workDir)

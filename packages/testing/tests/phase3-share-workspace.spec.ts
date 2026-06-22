@@ -99,7 +99,7 @@ test.describe('FASE 3 Share Workspace', () => {
       await expect(shareDialog.getByRole('heading', { name: 'Privacy review' })).toBeVisible()
       await expect(shareDialog.getByRole('definition').filter({ hasText: 'Current snapshot + full history' })).toBeVisible()
       await expect(
-        shareDialog.getByText('Local Git history is included: content removed in the past may still be recoverable.')
+        shareDialog.getByText('Local history is included: content removed in the past may still be recoverable.')
       ).toBeVisible()
       await expect(shareDialog.getByText('critical')).toHaveCount(2)
     } finally {

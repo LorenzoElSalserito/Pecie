@@ -7,7 +7,7 @@ export type AuthorRole = 'student' | 'researcher' | 'writer' | 'editor' | 'autho
 
 export type AppFontPreference = 'classic' | 'dyslexic'
 
-export type AppUiZoom = 50 | 75 | 100 | 125 | 150
+export type AppUiZoom = 10 | 25 | 50 | 75 | 100 | 125 | 150
 
 export type ExpertCapabilityRisk = 'low' | 'medium' | 'high'
 

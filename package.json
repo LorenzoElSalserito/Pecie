@@ -18,6 +18,7 @@
     "fix:dev-native": "npm run rebuild:native:desktop",
     "start": "npm run start -w @pecie/desktop",
     "dev": "npm run dev -w @pecie/desktop",
+    "dist": "npm run dist -w @pecie/desktop",
     "dist:desktop": "npm run make:desktop",
     "dist:desktop:linux": "npm run dist:desktop:linux:deb",
     "dist:desktop:linux:deb": "npm run make:linux:deb -w @pecie/desktop",

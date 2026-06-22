@@ -114,6 +114,13 @@ async function manualSave(page: Page): Promise<void> {
   await expect(page.getByText('Document saved.')).toBeVisible()
 }
 
+async function expandContextPanel(page: Page): Promise<void> {
+  const expandButton = page.getByRole('button', { name: 'Expand panel' })
+  if (await expandButton.isVisible()) {
+    await expandButton.click()
+  }
+}
+
 function longDocumentBody(): string {
   const paragraph = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
   return Array.from({ length: 40 }, (_, index) => `Paragraph ${index + 1}. ${paragraph}`).join('\n\n')
@@ -133,8 +140,9 @@ test.describe('FASE 3 Page Boundary Markers', () => {
       await expect(markerToggle).toHaveAttribute('aria-pressed', 'false')
       await markerToggle.click()
       await expect(markerToggle).toHaveAttribute('aria-pressed', 'true')
+      await expandContextPanel(page)
 
-      const meta = page.locator('.editor-page-markers-meta')
+      const meta = page.locator('.context-page-markers-meta')
       await expect(meta).toContainText('Estimated pagination')
       await expect(meta).toContainText('the final result depends on the export engine')
       await expect(meta).not.toContainText('This format does not have fixed pages')
@@ -159,8 +167,9 @@ test.describe('FASE 3 Page Boundary Markers', () => {
       await expect(markerToggle).toBeVisible()
       await markerToggle.click()
       await expect(markerToggle).toHaveAttribute('aria-pressed', 'true')
+      await expandContextPanel(page)
 
-      const meta = page.locator('.editor-page-markers-meta')
+      const meta = page.locator('.context-page-markers-meta')
       await expect(meta).toContainText('This format does not have fixed pages')
       await expect(page.locator('.page-marker-glyph')).toHaveCount(0)
     } finally {

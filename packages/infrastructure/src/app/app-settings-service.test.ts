@@ -134,4 +134,33 @@ describe('AppSettingsService', () => {
     }
     expect(raw.expertModeEnabled).toBe(true)
   })
+
+  it('accepts compact UI zoom values and falls back for unsupported values', async () => {
+    const root = await mkdtemp(path.join(tmpdir(), 'pecie-app-settings-ui-zoom-'))
+    cleanupPaths.push(root)
+    const userDataDirectory = path.join(root, 'user-data')
+    const documentsDirectory = path.join(root, 'documents')
+    const service = new AppSettingsService(userDataDirectory, documentsDirectory, 'en-US')
+
+    const bootstrap = await service.bootstrap()
+    for (const uiZoom of [10, 25, 50] as const) {
+      const response = await service.saveSettings({
+        settings: {
+          ...bootstrap.settings,
+          uiZoom
+        }
+      })
+
+      expect(response.settings.uiZoom).toBe(uiZoom)
+    }
+
+    const fallbackResponse = await service.saveSettings({
+      settings: {
+        ...bootstrap.settings,
+        uiZoom: 5 as never
+      }
+    })
+
+    expect(fallbackResponse.settings.uiZoom).toBe(100)
+  })
 })

@@ -2,7 +2,10 @@ import { useEffect, useState, type ReactNode } from 'react'
 
 import { ThemeContext } from './theme-context'
 import { globalThemeStyles } from './theme.css'
-import type { ResolvedThemeMode, ThemeMode } from './tokens'
+import { tokens, type ResolvedThemeMode, type ThemeMode } from './tokens'
+
+export const UI_ZOOM_OPTIONS = [10, 25, 50, 75, 100, 125, 150] as const
+export type AppUiZoom = (typeof UI_ZOOM_OPTIONS)[number]
 
 function resolveTheme(mode: ThemeMode): ResolvedThemeMode {
   if (mode === 'system') {
@@ -21,7 +24,7 @@ export function ThemeProvider({
   children: ReactNode
   defaultMode?: ThemeMode
   fontPreference?: 'classic' | 'dyslexic'
-  uiZoom?: 50 | 75 | 100 | 125 | 150
+  uiZoom?: AppUiZoom
 }): React.JSX.Element {
   const [mode, setMode] = useState<ThemeMode>(defaultMode)
   const [resolvedMode, setResolvedMode] = useState<ResolvedThemeMode>(() => resolveTheme(defaultMode))
@@ -50,9 +53,21 @@ export function ThemeProvider({
   }, [fontPreference])
 
   useEffect(() => {
-    document.documentElement.style.zoom = `${uiZoom}%`
+    document.documentElement.style.removeProperty('zoom')
+    document.body.style.removeProperty('zoom')
+    document.documentElement.dataset.uiZoom = String(uiZoom)
     document.documentElement.style.setProperty('--pecie-ui-zoom', `${uiZoom}%`)
-  }, [uiZoom])
+    document.documentElement.style.fontSize = `${uiZoom}%`
+
+    const fontScale = fontPreference === 'dyslexic' ? 0.9 : 1
+    const uiFontScale = fontPreference === 'dyslexic' ? 0.92 : 1
+    const zoomScale = uiZoom / 100
+    document.documentElement.style.setProperty('--pecie-body-size', `${tokens.typography.body.size * fontScale * zoomScale}px`)
+    document.documentElement.style.setProperty('--pecie-heading-size', `${tokens.typography.heading.size * uiFontScale * zoomScale}px`)
+    document.documentElement.style.setProperty('--pecie-subheading-size', `${tokens.typography.subheading.size * uiFontScale * zoomScale}px`)
+    document.documentElement.style.setProperty('--pecie-small-size', `${tokens.typography.small.size * uiFontScale * zoomScale}px`)
+    document.documentElement.style.setProperty('--pecie-caption-size', `${tokens.typography.caption.size * uiFontScale * zoomScale}px`)
+  }, [fontPreference, uiZoom])
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')

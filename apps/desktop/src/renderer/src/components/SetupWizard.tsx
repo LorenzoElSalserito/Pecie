@@ -1,14 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 
 import type { AppFontPreference, AppSettings, AuthorProfile, SupportedLocale } from '@pecie/schemas'
-import { Button, type ThemeMode } from '@pecie/ui'
+import { Button, UI_ZOOM_OPTIONS, type ThemeMode } from '@pecie/ui'
 
 import appIcon from '../asset/Icon.svg'
 import { SUPPORTED_LOCALES, localeLabel, t } from '../i18n'
 import type { AuthorFieldsProps, SetupWizardProps, WorkspaceFieldsProps } from './types'
 import { authorRoles } from './types'
-
-const UI_ZOOM_OPTIONS = [50, 75, 100, 125, 150] as const
 
 export function WorkspaceFields({ locale, settings, setSettings }: WorkspaceFieldsProps): React.JSX.Element {
   return (

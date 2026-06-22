@@ -246,6 +246,7 @@ test.describe('FASE 5 Visual Blocks', () => {
       await page.locator('.quick-resume-banner').click()
       await expect(page.getByRole('button', { name: 'Export' })).toBeVisible()
 
+      await page.getByRole('button', { name: 'Writing assistance tools' }).click()
       await page.getByRole('button', { name: 'Diagram' }).click()
       await page.getByRole('button', { name: 'Mind map' }).click()
       await page.getByRole('button', { name: 'Chart' }).click()
@@ -294,7 +295,7 @@ test.describe('FASE 5 Visual Blocks', () => {
       await exportDialog.locator('[data-tutorial-id="export-profile"]').selectOption('blank-markdown-pdf')
       await exportDialog.getByLabel('Output path').fill(outputPath)
       await exportDialog.getByLabel('Show preview before saving').uncheck()
-      await expect(exportDialog.getByText(/Required capabilities: pandoc, weasyprint/)).toBeVisible()
+      await expect(exportDialog.getByText(/Required components: Pandoc, WeasyPrint/)).toBeVisible()
       await exportDialog.getByRole('button', { name: 'Start export' }).click()
       await expect(exportDialog.getByText('Export state: export completed')).toBeVisible({ timeout: 45_000 })
 
