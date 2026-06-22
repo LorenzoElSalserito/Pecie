@@ -157,6 +157,8 @@ const EXTENSION_TO_MIME: Record<string, string> = {
   webp: 'image/webp',
   gif: 'image/gif'
 }
+const DELETE_PROJECT_MAX_ATTEMPTS = 12
+const DELETE_PROJECT_RETRY_DELAY_MS = 500
 
 type ProjectIndexAdapter = {
   initialize: (databasePath: string) => void
@@ -798,7 +800,7 @@ export class ProjectService {
   }
 
   public async deleteProject(input: DeleteProjectRequest): Promise<DeleteProjectResponse> {
-    await rm(input.projectPath, { force: true, maxRetries: 5, recursive: true, retryDelay: 100 })
+    await this.removeProjectDirectory(input.projectPath)
     await this.log({
       level: 'warn',
       category: 'project',
@@ -1261,6 +1263,31 @@ export class ProjectService {
         GIT_COMMITTER_NAME: 'Pecie',
         GIT_COMMITTER_EMAIL: 'local@pecie.app'
       }
+    })
+  }
+
+  private async removeProjectDirectory(projectPath: string): Promise<void> {
+    for (let attempt = 1; attempt <= DELETE_PROJECT_MAX_ATTEMPTS; attempt += 1) {
+      try {
+        await rm(projectPath, { force: true, maxRetries: 3, recursive: true, retryDelay: 100 })
+        return
+      } catch (error) {
+        if (!this.isTransientRemoveError(error) || attempt === DELETE_PROJECT_MAX_ATTEMPTS) {
+          throw error
+        }
+        await this.delay(DELETE_PROJECT_RETRY_DELAY_MS)
+      }
+    }
+  }
+
+  private isTransientRemoveError(error: unknown): boolean {
+    const code = typeof error === 'object' && error !== null && 'code' in error ? error.code : undefined
+    return code === 'ENOTEMPTY' || code === 'EBUSY' || code === 'EPERM'
+  }
+
+  private async delay(ms: number): Promise<void> {
+    await new Promise<void>((resolve) => {
+      setTimeout(resolve, ms)
     })
   }
 
