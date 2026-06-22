@@ -46,6 +46,20 @@ License: AGPL-3.0-only
 `
 }
 
+function buildFallbackChangelog() {
+  const packageJsonPath = path.join(repoRoot, 'package.json')
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
+  const version = packageJson.version ?? '0.0.0'
+  const date = new Date().toISOString().slice(0, 10)
+
+  return `# Changelog
+
+## ${version} - ${date}
+
+- Release package generated without a repository CHANGELOG.md.
+`
+}
+
 function run(command, args, options = {}) {
   return execFileSync(command, args, { stdio: 'pipe', ...options })
 }
@@ -91,8 +105,10 @@ export function finalizeDeb(debPath) {
     const changelogSource = path.join(repoRoot, 'CHANGELOG.md')
     const changelogMarkdownPath = path.join(docDir, 'CHANGELOG.md')
     const changelogGzipPath = path.join(docDir, 'changelog.gz')
-    const changelog = fs.readFileSync(changelogSource)
-    fs.copyFileSync(changelogSource, changelogMarkdownPath)
+    const changelog = fs.existsSync(changelogSource)
+      ? fs.readFileSync(changelogSource)
+      : Buffer.from(buildFallbackChangelog())
+    fs.writeFileSync(changelogMarkdownPath, changelog, { mode: 0o644 })
     fs.writeFileSync(changelogGzipPath, gzipSync(changelog), { mode: 0o644 })
     fs.chmodSync(changelogMarkdownPath, 0o644)
     fs.chmodSync(changelogGzipPath, 0o644)
