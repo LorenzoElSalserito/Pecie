@@ -798,7 +798,7 @@ export class ProjectService {
   }
 
   public async deleteProject(input: DeleteProjectRequest): Promise<DeleteProjectResponse> {
-    await rm(input.projectPath, { force: true, recursive: true })
+    await rm(input.projectPath, { force: true, maxRetries: 5, recursive: true, retryDelay: 100 })
     await this.log({
       level: 'warn',
       category: 'project',
