@@ -101,16 +101,13 @@ export function finalizeDeb(debPath) {
     fs.copyFileSync(licenseSource, licensePath)
     fs.chmodSync(licensePath, 0o644)
 
-    // CHANGELOG -> /usr/share/doc/<package>/changelog.gz and CHANGELOG.md
+    // CHANGELOG -> /usr/share/doc/<package>/changelog.gz
     const changelogSource = path.join(repoRoot, 'CHANGELOG.md')
-    const changelogMarkdownPath = path.join(docDir, 'CHANGELOG.md')
     const changelogGzipPath = path.join(docDir, 'changelog.gz')
     const changelog = fs.existsSync(changelogSource)
       ? fs.readFileSync(changelogSource)
       : Buffer.from(buildFallbackChangelog())
-    fs.writeFileSync(changelogMarkdownPath, changelog, { mode: 0o644 })
     fs.writeFileSync(changelogGzipPath, gzipSync(changelog), { mode: 0o644 })
-    fs.chmodSync(changelogMarkdownPath, 0o644)
     fs.chmodSync(changelogGzipPath, 0o644)
 
     refreshMd5sums(workDir)
