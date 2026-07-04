@@ -1,4 +1,10 @@
-import Database from 'better-sqlite3'
+import { createRequire } from 'node:module'
+
+type BetterSqlite3Module = typeof import('better-sqlite3')
+type BetterSqlite3Database = import('better-sqlite3').Database
+
+const requireFromHere = createRequire(import.meta.url)
+let DatabaseConstructor: BetterSqlite3Module | undefined
 
 export interface IndexedDocumentInput {
   documentId: string
@@ -33,7 +39,13 @@ export interface SearchAttachmentIndexResult {
   snippet: string
 }
 
-function withDatabase<T>(databasePath: string, action: (database: Database.Database) => T): T {
+function getDatabaseConstructor(): BetterSqlite3Module {
+  DatabaseConstructor ??= requireFromHere('better-sqlite3') as BetterSqlite3Module
+  return DatabaseConstructor
+}
+
+function withDatabase<T>(databasePath: string, action: (database: BetterSqlite3Database) => T): T {
+  const Database = getDatabaseConstructor()
   const database = new Database(databasePath)
 
   try {
@@ -240,7 +252,7 @@ export function searchDerivedIndex(
   })
 }
 
-function upsertDocumentInDatabase(database: Database.Database, input: IndexedDocumentInput & { nodeId: string }): void {
+function upsertDocumentInDatabase(database: BetterSqlite3Database, input: IndexedDocumentInput & { nodeId: string }): void {
   database
     .prepare(
       `

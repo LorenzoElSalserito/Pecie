@@ -1,6 +1,6 @@
 {
   "name": "@pecie/desktop",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "main": "out/main/index.js",
   "productName": "pecie",
   "genericName": "pecie",
@@ -25,7 +25,7 @@
     "prepare:export-runtime": "node ../../scripts/prepare-export-runtime.mjs",
     "build": "npm run ensure:pandoc-runtime && npm run ensure:weasy-runtime && npm run prepare:export-runtime && npm run check:export-runtime && npm run typecheck && electron-vite build",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
-    "package": "npm run prepare:runtime-links && npm run build && node ../../scripts/run-desktop-forge.mjs package",
+    "package": "npm run prepare:runtime-links && npm run build && npm --prefix ../.. run rebuild:native:desktop && node ../../scripts/run-desktop-forge.mjs package",
     "make": "npm run package && node ../../scripts/run-desktop-forge.mjs make",
     "make:linux": "npm run make:linux:deb",
     "make:linux:deb": "npm run package && node ../../scripts/run-desktop-forge.mjs make --platform linux --targets @electron-forge/maker-deb",

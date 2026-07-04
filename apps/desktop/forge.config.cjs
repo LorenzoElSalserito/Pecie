@@ -75,9 +75,7 @@ module.exports = {
       ProductName: 'pecie'
     }
   },
-  rebuildConfig: {
-    ignoreModules: ['better-sqlite3']
-  },
+  rebuildConfig: {},
   makers,
   hooks: {
     // After the .deb is built, inject the project copyright and README into the

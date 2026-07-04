@@ -1,7 +1,5 @@
 import { access, mkdir, readFile, rename, rm, stat } from 'node:fs/promises'
 import { createHash, randomUUID } from 'node:crypto'
-import { execFile } from 'node:child_process'
-import { promisify } from 'node:util'
 import path from 'node:path'
 import { inflateRawSync } from 'node:zlib'
 import mammoth from 'mammoth'
@@ -97,8 +95,6 @@ import {
 import { HistoryService } from '../history/history-service'
 import { GitAdapter } from '../history/git-adapter'
 
-const execFileAsync = promisify(execFile)
-
 const PROJECT_DIRECTORIES = [
   'docs/chapters',
   'docs/frontmatter',
@@ -144,7 +140,7 @@ const PROJECT_GITIGNORE_ENTRIES = [
   'logs/local-audit/*.log'
 ]
 
-const APP_MIN_VERSION = '0.1.0'
+const APP_MIN_VERSION = '0.1.1'
 const ATTACHMENTS_RELATIVE_DIRECTORY = 'assets/attachments'
 const MAX_ATTACHMENT_SIZE_BYTES = 500 * 1024 * 1024
 const MEDIA_RELATIVE_DIRECTORY = 'assets/media'
@@ -169,6 +165,8 @@ type ProjectIndexAdapter = {
   search: typeof searchDerivedIndex
 }
 
+type ProjectIndexSearchResults = ReturnType<typeof searchDerivedIndex>
+
 const defaultIndexAdapter: ProjectIndexAdapter = {
   initialize: initializeDerivedIndexDatabase,
   upsert: upsertDerivedIndexDocument,
@@ -183,6 +181,7 @@ export class ProjectService {
   private readonly indexAdapter: ProjectIndexAdapter
   private readonly logger?: AppLoggerService
   private readonly historyService: HistoryService
+  private searchIndexDisabledReason?: string
 
   public constructor(
     fileSystem: ProjectFileSystem = new ProjectFileSystem(),
@@ -325,24 +324,7 @@ export class ProjectService {
       }
     }
 
-    const indexPath = this.getIndexPath(projectPath)
-    this.indexAdapter.initialize(indexPath)
-    for (const node of binder.nodes) {
-      if (node.type !== 'document' || !node.path) {
-        continue
-      }
-
-      const rawDocument = await this.fileSystem.readText(projectPath, node.path)
-      const parsedDocument = this.parseDocument(node, rawDocument)
-      this.indexAdapter.upsert(indexPath, {
-        nodeId: node.id,
-        documentId: parsedDocument.documentId,
-        path: parsedDocument.path,
-        title: parsedDocument.title,
-        body: parsedDocument.body,
-        updatedAt: createdAt
-      })
-    }
+    await this.rebuildDerivedIndex(projectPath, binder, createdAt)
     const projectWithStats = await this.refreshProjectAuthorship(projectPath, binder, project)
     await this.fileSystem.writeJson(projectPath, 'project.json', projectWithStats)
     await this.initializeGitRepository(projectPath)
@@ -493,7 +475,7 @@ export class ProjectService {
       ...binder,
       nodes: updatedNodes
     })
-    this.indexAdapter.upsert(this.getIndexPath(input.projectPath), {
+    await this.upsertDocumentIndex(input.projectPath, {
       nodeId: node.id,
       documentId: nextDocument.documentId,
       path: nextDocument.path,
@@ -661,7 +643,7 @@ export class ProjectService {
         ? await this.createDuplicatedDocument(input.projectPath, binder.nodes, createdNode, createdAt, input.duplicateFromDocumentId)
         : this.createInitialDocument(createdNode, createdAt, input.template ?? 'blank')
       await this.fileSystem.writeText(input.projectPath, createdNode.path, this.serializeDocument(document))
-      this.indexAdapter.upsert(this.getIndexPath(input.projectPath), {
+      await this.upsertDocumentIndex(input.projectPath, {
         nodeId: createdNode.id,
         documentId: document.documentId,
         path: document.path,
@@ -722,7 +704,7 @@ export class ProjectService {
       const deletedNode = nodeMap.get(deletedNodeId)
       if (deletedNode?.type === 'document' && deletedNode.path && deletedNode.documentId) {
         await this.fileSystem.deleteEntry(input.projectPath, deletedNode.path)
-        this.indexAdapter.remove(this.getIndexPath(input.projectPath), deletedNode.documentId)
+        await this.removeDocumentIndex(input.projectPath, deletedNode.documentId)
       }
     }
 
@@ -742,7 +724,7 @@ export class ProjectService {
   }
 
   public async searchDocuments(input: SearchDocumentsRequest): Promise<SearchDocumentsResponse> {
-    const results = this.indexAdapter.search(this.getIndexPath(input.projectPath), input.query, input.limit ?? 8)
+    const results = await this.searchProjectIndex(input.projectPath, input.query, input.limit ?? 8)
     await this.log({
       level: 'info',
       category: 'project',
@@ -886,10 +868,16 @@ export class ProjectService {
     }
   }
 
-  private async rebuildDerivedIndex(projectPath: string, binder: { rootId: string; nodes: BinderNode[] }): Promise<void> {
+  private async rebuildDerivedIndex(
+    projectPath: string,
+    binder: { rootId: string; nodes: BinderNode[] },
+    updatedAt = new Date().toISOString()
+  ): Promise<void> {
     await this.fileSystem.ensureDir(projectPath, 'cache')
     const indexPath = this.getIndexPath(projectPath)
-    this.indexAdapter.initialize(indexPath)
+    await this.runIndexOperation(projectPath, 'initialize-derived-index', () => {
+      this.indexAdapter.initialize(indexPath)
+    })
 
     for (const node of binder.nodes) {
       if (node.type !== 'document' || !node.path) {
@@ -898,13 +886,13 @@ export class ProjectService {
 
       const rawDocument = await this.fileSystem.readText(projectPath, node.path)
       const parsedDocument = this.parseDocument(node, rawDocument)
-      this.indexAdapter.upsert(indexPath, {
+      await this.upsertDocumentIndex(projectPath, {
         nodeId: node.id,
         documentId: parsedDocument.documentId,
         path: parsedDocument.path,
         title: parsedDocument.title,
         body: parsedDocument.body,
-        updatedAt: new Date().toISOString()
+        updatedAt
       })
     }
 
@@ -916,7 +904,7 @@ export class ProjectService {
 
   private async indexAttachment(projectPath: string, attachment: AttachmentRecord): Promise<void> {
     const extractedText = await this.extractAttachmentText(projectPath, attachment).catch(() => '')
-    this.indexAdapter.upsertAttachment(this.getIndexPath(projectPath), {
+    await this.upsertAttachmentIndex(projectPath, {
       relativePath: attachment.relativePath,
       absolutePath: attachment.absolutePath,
       name: attachment.name,
@@ -924,6 +912,91 @@ export class ProjectService {
       content: extractedText,
       updatedAt: attachment.importedAt
     })
+  }
+
+  private async upsertDocumentIndex(
+    projectPath: string,
+    input: Parameters<ProjectIndexAdapter['upsert']>[1]
+  ): Promise<void> {
+    await this.runIndexOperation(projectPath, 'upsert-document-index', () => {
+      this.indexAdapter.upsert(this.getIndexPath(projectPath), input)
+    })
+  }
+
+  private async upsertAttachmentIndex(
+    projectPath: string,
+    input: Parameters<ProjectIndexAdapter['upsertAttachment']>[1]
+  ): Promise<void> {
+    await this.runIndexOperation(projectPath, 'upsert-attachment-index', () => {
+      this.indexAdapter.upsertAttachment(this.getIndexPath(projectPath), input)
+    })
+  }
+
+  private async removeDocumentIndex(projectPath: string, documentId: string): Promise<void> {
+    await this.runIndexOperation(projectPath, 'remove-document-index', () => {
+      this.indexAdapter.remove(this.getIndexPath(projectPath), documentId)
+    })
+  }
+
+  private async searchProjectIndex(projectPath: string, query: string, limit: number): Promise<ProjectIndexSearchResults> {
+    return this.runIndexOperation(
+      projectPath,
+      'search-derived-index',
+      () => this.indexAdapter.search(this.getIndexPath(projectPath), query, limit),
+      this.emptyIndexResults()
+    )
+  }
+
+  private async runIndexOperation<T>(
+    projectPath: string,
+    operation: string,
+    action: () => T,
+    fallback: T
+  ): Promise<T>
+  private async runIndexOperation(projectPath: string, operation: string, action: () => void): Promise<void>
+  private async runIndexOperation<T>(
+    projectPath: string,
+    operation: string,
+    action: () => T,
+    fallback?: T
+  ): Promise<T | void> {
+    if (this.searchIndexDisabledReason) {
+      return fallback
+    }
+
+    try {
+      return action()
+    } catch (error) {
+      await this.disableSearchIndex(projectPath, operation, error)
+      return fallback
+    }
+  }
+
+  private async disableSearchIndex(projectPath: string, operation: string, error: unknown): Promise<void> {
+    if (this.searchIndexDisabledReason) {
+      return
+    }
+
+    this.searchIndexDisabledReason = error instanceof Error ? error.message : String(error)
+    await this.log({
+      level: 'warn',
+      category: 'project',
+      event: 'search-index-disabled',
+      message: 'Derived search index unavailable; project operations will continue without local full-text search.',
+      context: {
+        projectPath,
+        operation,
+        reason: this.searchIndexDisabledReason
+      }
+    })
+  }
+
+  private emptyIndexResults(): ProjectIndexSearchResults {
+    return {
+      nodes: [],
+      content: [],
+      attachments: []
+    }
   }
 
   private async buildAttachmentPreview(
@@ -1215,7 +1288,7 @@ export class ProjectService {
     const deletion = deleteBinderNode(binder, sourceNode.id)
     await this.fileSystem.writeJson(input.projectPath, 'binder.json', deletion.binder)
     await this.fileSystem.deleteEntry(input.projectPath, sourceNode.path)
-    this.indexAdapter.upsert(this.getIndexPath(input.projectPath), {
+    await this.upsertDocumentIndex(input.projectPath, {
       nodeId: targetNode.id,
       documentId: mergedDocument.documentId,
       path: mergedDocument.path,
@@ -1223,7 +1296,7 @@ export class ProjectService {
       body: mergedDocument.body,
       updatedAt: savedAt
     })
-    this.indexAdapter.remove(this.getIndexPath(input.projectPath), sourceNode.documentId)
+    await this.removeDocumentIndex(input.projectPath, sourceNode.documentId)
     const refreshedProject = await this.refreshProjectAuthorship(
       input.projectPath,
       deletion.binder,
@@ -1252,18 +1325,7 @@ export class ProjectService {
   }
 
   private async initializeGitRepository(projectPath: string): Promise<void> {
-    await execFileAsync('git', ['init'], { cwd: projectPath })
-    await execFileAsync('git', ['add', '.'], { cwd: projectPath })
-    await execFileAsync('git', ['commit', '--allow-empty', '-m', 'bootstrap: initial project state'], {
-      cwd: projectPath,
-      env: {
-        ...process.env,
-        GIT_AUTHOR_NAME: 'Pecie',
-        GIT_AUTHOR_EMAIL: 'local@pecie.app',
-        GIT_COMMITTER_NAME: 'Pecie',
-        GIT_COMMITTER_EMAIL: 'local@pecie.app'
-      }
-    })
+    await this.historyService.initializeRepository(projectPath)
   }
 
   private async removeProjectDirectory(projectPath: string): Promise<void> {
@@ -1355,7 +1417,7 @@ export class ProjectService {
       ...binder,
       nodes: updatedNodes
     })
-    this.indexAdapter.upsert(this.getIndexPath(projectPath), {
+    await this.upsertDocumentIndex(projectPath, {
       nodeId: node.id,
       documentId: document.documentId,
       path: document.path,

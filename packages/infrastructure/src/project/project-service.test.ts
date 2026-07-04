@@ -4,6 +4,7 @@ import path from 'node:path'
 import { readFile } from 'node:fs/promises'
 
 import { afterEach, describe, expect, it } from 'vitest'
+import { projectTemplates, type ProjectTemplateId } from '@pecie/domain'
 
 import { ProjectFileSystem } from '../fs/project-file-system'
 import { AppLoggerService } from '../logging/app-logger-service'
@@ -19,6 +20,31 @@ const noopIndexAdapter = {
   remove: () => undefined,
   search: () => ({ nodes: [], content: [], attachments: [] })
 }
+
+const nativeModuleMismatchIndexAdapter = {
+  initialize: () => {
+    throw new Error(
+      'The module was compiled against a different Node.js version using NODE_MODULE_VERSION 108. This version of Node.js requires NODE_MODULE_VERSION 121.'
+    )
+  },
+  upsert: () => {
+    throw new Error('native module unavailable')
+  },
+  upsertAttachment: () => {
+    throw new Error('native module unavailable')
+  },
+  removeAttachment: () => {
+    throw new Error('native module unavailable')
+  },
+  remove: () => {
+    throw new Error('native module unavailable')
+  },
+  search: () => {
+    throw new Error('native module unavailable')
+  }
+}
+
+const editorialTemplateIds = Object.keys(projectTemplates) as ProjectTemplateId[]
 
 function createMemoryIndexAdapter() {
   const documents = new Map<string, { nodeId: string; documentId: string; path: string; title: string; body: string }>()
@@ -236,6 +262,59 @@ describe('ProjectService', () => {
     await Promise.all(cleanupPaths.splice(0).map((target) => rm(target, { force: true, maxRetries: 5, recursive: true, retryDelay: 100 })))
   })
 
+  it.each(editorialTemplateIds)(
+    'creates and manually saves %s projects without requiring a system git executable',
+    async (template) => {
+      const baseDirectory = await mkdtemp(path.join(tmpdir(), 'pecie-project-service-no-system-git-'))
+      const noGitPath = await mkdtemp(path.join(tmpdir(), 'pecie-no-system-git-bin-'))
+      cleanupPaths.push(baseDirectory, noGitPath)
+
+      const previousPath = process.env.PATH
+      process.env.PATH = noGitPath
+      try {
+        const fileSystem = new ProjectFileSystem()
+        const logger = new AppLoggerService(baseDirectory)
+        const historyService = new HistoryService(fileSystem, new GitAdapter(), logger)
+        const service = new ProjectService(fileSystem, noopIndexAdapter, logger, historyService)
+        const createdProject = await service.createProject({
+          directory: baseDirectory,
+          projectName: `no-system-git-${template.toLowerCase()}`,
+          title: `No System Git ${template}`,
+          language: 'it-IT',
+          template,
+          authorProfile: {
+            name: 'Fixture Author',
+            role: 'writer',
+            preferredLanguage: 'it-IT'
+          }
+        })
+        const editableDocument = createdProject.binder.nodes.find((node) => node.type === 'document' && node.documentId)
+        expect(editableDocument?.documentId).toBeTruthy()
+
+        await service.saveDocument({
+          projectPath: createdProject.projectPath,
+          documentId: editableDocument?.documentId ?? '',
+          title: `Documento ${template}`,
+          body: `# Documento ${template}\n\nScrittura di certificazione senza git di sistema.\n`,
+          authorProfile: {
+            name: 'Fixture Author',
+            role: 'writer',
+            preferredLanguage: 'it-IT'
+          },
+          saveMode: 'manual'
+        })
+
+        const repairedTimeline = await historyService.repairTimeline({
+          projectPath: createdProject.projectPath
+        })
+        expect(repairedTimeline.snapshot.events.some((event) => event.kind === 'bootstrap')).toBe(true)
+        expect(repairedTimeline.snapshot.events.some((event) => event.kind === 'checkpoint')).toBe(true)
+      } finally {
+        process.env.PATH = previousPath
+      }
+    }
+  )
+
   it('creates a valid .pe project and reopens it', async () => {
     const baseDirectory = await mkdtemp(path.join(tmpdir(), 'pecie-project-service-'))
     cleanupPaths.push(baseDirectory)
@@ -297,6 +376,41 @@ describe('ProjectService', () => {
     const gitignore = await fileSystem.readText(createdProject.projectPath, '.gitignore')
     expect(gitignore).toContain('cache/derived/')
     expect(gitignore).toContain('cache/preview/')
+  })
+
+  it('keeps project creation available when the native search index module has an ABI mismatch', async () => {
+    const baseDirectory = await mkdtemp(path.join(tmpdir(), 'pecie-project-service-native-mismatch-'))
+    cleanupPaths.push(baseDirectory)
+
+    const service = new ProjectService(undefined, nativeModuleMismatchIndexAdapter)
+    const createdProject = await service.createProject({
+      directory: baseDirectory,
+      projectName: 'native-mismatch-demo',
+      title: 'Native Mismatch Demo',
+      language: 'it-IT',
+      template: 'book',
+      authorProfile: {
+        name: 'Fixture Author',
+        role: 'writer',
+        preferredLanguage: 'it-IT'
+      }
+    })
+
+    expect(createdProject.projectPath.endsWith('.pe')).toBe(true)
+    expect(createdProject.project.documentKind).toBe('book')
+    await expect(readFile(path.join(createdProject.projectPath, 'manifest.json'), 'utf8')).resolves.toContain(
+      'Native Mismatch Demo'
+    )
+
+    const searchResponse = await service.searchDocuments({
+      projectPath: createdProject.projectPath,
+      query: 'capitolo'
+    })
+    expect(searchResponse.results).toEqual({
+      nodes: [],
+      content: [],
+      attachments: []
+    })
   })
 
   it('creates blank projects with a neutral structure that stays fully customizable', async () => {

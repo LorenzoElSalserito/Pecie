@@ -89,6 +89,12 @@ export class HistoryService {
     await this.writeTimelineMaterialization(projectPath)
   }
 
+  public async initializeRepository(projectPath: string): Promise<void> {
+    await this.git.init(projectPath)
+    await this.git.addAll(projectPath)
+    await this.git.commit(projectPath, commitMessageFormat.bootstrap(), { name: 'Pecie', email: 'local@pecie.app' }, true)
+  }
+
   public async createCheckpoint(input: CreateCheckpointRequest): Promise<CreateCheckpointResponse> {
     const hasChanges = await this.git.hasChanges(input.projectPath)
     if (!hasChanges) {
