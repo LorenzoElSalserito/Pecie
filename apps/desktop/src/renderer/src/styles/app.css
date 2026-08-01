@@ -1,3 +1,20 @@
+/*
+ * Bootstrap Icons webfont, vendored locally with a query-less URL.
+ * The stock `bootstrap-icons/font/bootstrap-icons.css` references the font as
+ * `bootstrap-icons.woff2?<hash>`. Under the packaged app the renderer loads over
+ * `file://`, where the `?<hash>` suffix is treated as part of the filename, so the
+ * font 404s and every `.bi-*` glyph renders as a tofu square. This `@font-face` is
+ * declared after that import (app.css is imported last in main.tsx), so it wins and
+ * points at bundled font files with no query string — fully self-contained in the .deb.
+ */
+@font-face {
+  font-family: 'bootstrap-icons';
+  src:
+    url('../asset/fonts/bootstrap-icons.woff2') format('woff2'),
+    url('../asset/fonts/bootstrap-icons.woff') format('woff');
+  font-display: block;
+}
+
 @font-face {
   font-family: 'Source Serif 4';
   src: url('../asset/fonts/SourceSerif4-Regular.ttf') format('truetype');
