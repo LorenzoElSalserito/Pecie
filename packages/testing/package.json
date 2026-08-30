@@ -1,6 +1,6 @@
 {
   "name": "@pecie/testing",
-  "version": "0.1.2",
+  "version": "0.1.5",
   "license": "AGPL-3.0-only",
   "scripts": {
     "test:e2e": "npm --prefix ../.. run rebuild:native:desktop && playwright test"

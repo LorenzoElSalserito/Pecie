@@ -24,7 +24,7 @@ export class GitAdapter {
   public async addAll(projectPath: string): Promise<void> {
     const status = await git.statusMatrix({ fs, dir: projectPath })
     await Promise.all(
-      status.map(([filepath, _headStatus, workdirStatus]) => {
+      status.map(([filepath, , workdirStatus]) => {
         if (workdirStatus === 0) {
           return git.remove({ fs, dir: projectPath, filepath })
         }
@@ -36,7 +36,7 @@ export class GitAdapter {
   public async statusPorcelain(projectPath: string): Promise<string> {
     const status = await git.statusMatrix({ fs, dir: projectPath })
     return status
-      .filter(([_filepath, headStatus, workdirStatus, stageStatus]) => headStatus !== workdirStatus || workdirStatus !== stageStatus)
+      .filter(([, headStatus, workdirStatus, stageStatus]) => headStatus !== workdirStatus || workdirStatus !== stageStatus)
       .map(([filepath]) => filepath)
       .join('\n')
   }

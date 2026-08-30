@@ -1,4 +1,4 @@
-import { access, chmod, copyFile, cp, lstat, mkdir, readFile, readdir, readlink, rm, stat, symlink, writeFile } from 'node:fs/promises'
+import { access, chmod, copyFile, cp, mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises'
 import crypto from 'node:crypto'
 import path from 'node:path'
 import process from 'node:process'
@@ -52,7 +52,10 @@ async function readCapabilityMetadata(sourceDirectory) {
   return JSON.parse(await readFile(metadataPath, 'utf8'))
 }
 
-async function copyDirectoryPreservingSymlinks(sourceDirectory, targetDirectory) {
+// Symlinks are resolved into real files on purpose: a link kept inside the packaged
+// runtime would point at a build-machine path (or break when forge/deb/dmg repack the
+// tree), which is how the sidecar ended up with unresolved libjpeg/liblzma/libtiff.
+async function copyDirectoryMaterializingSymlinks(sourceDirectory, targetDirectory) {
   await rm(targetDirectory, { recursive: true, force: true })
   await mkdir(targetDirectory, { recursive: true })
   const entries = await readdir(sourceDirectory, { withFileTypes: true })
@@ -60,12 +63,10 @@ async function copyDirectoryPreservingSymlinks(sourceDirectory, targetDirectory)
   for (const entry of entries) {
     const sourcePath = path.join(sourceDirectory, entry.name)
     const targetPath = path.join(targetDirectory, entry.name)
-    const sourceStats = await lstat(sourcePath)
+    const sourceStats = await stat(sourcePath)
 
-    if (sourceStats.isSymbolicLink()) {
-      await symlink(await readlink(sourcePath), targetPath)
-    } else if (sourceStats.isDirectory()) {
-      await copyDirectoryPreservingSymlinks(sourcePath, targetPath)
+    if (sourceStats.isDirectory()) {
+      await copyDirectoryMaterializingSymlinks(sourcePath, targetPath)
     } else {
       await copyFile(sourcePath, targetPath)
       await chmod(targetPath, sourceStats.mode)
@@ -86,7 +87,7 @@ async function main() {
     if (await pathExists(vendorAbsolutePath)) {
       await mkdir(path.dirname(bundledAbsolutePath), { recursive: true })
       if (entry.capabilityId === 'weasyprint') {
-        await copyDirectoryPreservingSymlinks(path.dirname(vendorAbsolutePath), path.dirname(bundledAbsolutePath))
+        await copyDirectoryMaterializingSymlinks(path.dirname(vendorAbsolutePath), path.dirname(bundledAbsolutePath))
       } else {
         await cp(vendorAbsolutePath, bundledAbsolutePath, { force: true })
       }

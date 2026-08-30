@@ -4,6 +4,7 @@ import path from 'node:path'
 import process from 'node:process'
 import { spawn } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
+import { assertNoSymlinks, assertNoUnresolvedSharedObjects } from './lib/export-runtime-integrity.mjs'
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url))
 const repoRoot = path.resolve(scriptDirectory, '..')
@@ -127,11 +128,25 @@ async function main() {
 
   await rm(path.dirname(vendorExecutablePath), { recursive: true, force: true })
   await mkdir(path.dirname(vendorExecutablePath), { recursive: true })
+  // PyInstaller emits symlinks inside _internal (deduplicated shared objects such as
+  // libjpeg/liblzma/libtiff pointing at pillow.libs, plus the fontconfig conf.d entries).
+  // They must be materialised as real files: copying them as links would either keep a
+  // build-machine absolute path or break once the tree is repacked by forge/deb/dmg,
+  // leaving the sidecar with unresolved native dependencies on user machines.
   await cp(path.join(distDirectory, 'weasyprint'), path.dirname(vendorExecutablePath), {
     recursive: true,
-    force: true
+    force: true,
+    dereference: true
   })
   await chmod(vendorExecutablePath, 0o755)
+
+  const vendorBundleRoot = path.dirname(vendorExecutablePath)
+  await assertNoSymlinks(vendorBundleRoot, 'weasyprint-runtime')
+  await assertNoUnresolvedSharedObjects(
+    vendorBundleRoot,
+    [path.join(vendorBundleRoot, '_internal'), path.join(vendorBundleRoot, '_internal/pillow.libs')],
+    'weasyprint-runtime'
+  )
 
   const metadata = {
     capabilityId: 'weasyprint',

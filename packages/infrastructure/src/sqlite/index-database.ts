@@ -1,9 +1,11 @@
 import { createRequire } from 'node:module'
+import path from 'node:path'
+import type BetterSqlite3 from 'better-sqlite3'
 
-type BetterSqlite3Module = typeof import('better-sqlite3')
-type BetterSqlite3Database = import('better-sqlite3').Database
+type BetterSqlite3Module = typeof BetterSqlite3
+type BetterSqlite3Database = BetterSqlite3.Database
 
-const requireFromHere = createRequire(import.meta.url)
+const requireFromHere = createRequire(path.resolve(process.cwd(), 'package.json'))
 let DatabaseConstructor: BetterSqlite3Module | undefined
 
 export interface IndexedDocumentInput {

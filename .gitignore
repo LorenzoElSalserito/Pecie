@@ -39,6 +39,7 @@ coverage/
 # Cartelle generate da Electron Forge, Builder o affini
 out/
 dist-electron/
+scripts/.release-pending.json
 pack/
 *.asar
 *.deb

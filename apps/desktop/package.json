@@ -1,6 +1,6 @@
 {
   "name": "@pecie/desktop",
-  "version": "0.1.2",
+  "version": "0.1.5",
   "main": "out/main/index.js",
   "productName": "pecie",
   "genericName": "pecie",
@@ -16,6 +16,7 @@
     "dist": "npm run make",
     "dist:linux": "npm run make:linux:deb",
     "dist:linux:deb": "npm run make:linux:deb",
+    "dist:linux:rpm": "npm run make:linux:rpm",
     "dist:win": "npm run make:win",
     "dist:mac": "npm run make:mac",
     "ensure:pandoc-runtime": "node ../../scripts/ensure-pandoc-runtime.mjs",
@@ -29,6 +30,7 @@
     "make": "npm run package && node ../../scripts/run-desktop-forge.mjs make",
     "make:linux": "npm run make:linux:deb",
     "make:linux:deb": "npm run package && node ../../scripts/run-desktop-forge.mjs make --platform linux --targets @electron-forge/maker-deb",
+    "make:linux:rpm": "npm run make:linux:deb",
     "make:win": "npm run prepare:runtime-links && npm run build && electron-builder --config electron-builder.win.json --win nsis",
     "make:mac": "npm run package && node ../../scripts/run-desktop-forge.mjs make --platform darwin",
     "typecheck": "tsc --noEmit -p tsconfig.json",

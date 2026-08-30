@@ -16,6 +16,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run generate:types
+      - run: npm run verify:packaging
+      - run: npm run test:packaging
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run test:unit

@@ -5,6 +5,7 @@ import path from 'node:path'
 import process from 'node:process'
 import { promisify } from 'node:util'
 import { fileURLToPath } from 'node:url'
+import { assertNoSymlinks, assertNoUnresolvedSharedObjects } from './lib/export-runtime-integrity.mjs'
 
 const execFileAsync = promisify(execFile)
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url))
@@ -129,6 +130,18 @@ async function main() {
     if (weasyprintTargetConfig && weasyprintEntry.relativeExecutablePath !== weasyprintTargetConfig.vendorBinaryRelativePath) {
       throw new Error('[export-runtime] bundled weasyprint executable path does not match pinned configuration')
     }
+
+    // The sidecar ships every shared object it needs. Guard both invariants that keep it
+    // self-contained on a user machine: no symlink (it would point at a build-machine path
+    // or break when the tree is repacked) and no shared object the loader cannot resolve.
+    const weasyprintBundleRoot = path.dirname(bundledWeasyprintPath)
+    await assertNoSymlinks(weasyprintBundleRoot, 'export-runtime')
+    await assertNoUnresolvedSharedObjects(
+      weasyprintBundleRoot,
+      [path.join(weasyprintBundleRoot, '_internal'), path.join(weasyprintBundleRoot, '_internal/pillow.libs')],
+      'export-runtime'
+    )
+    console.log('[export-runtime] weasyprint sidecar has no symlinks and no unresolved shared objects')
   } else if (requireWeasyprintBundle) {
     throw new Error('[export-runtime] bundled weasyprint sidecar is required for official release checks')
   }

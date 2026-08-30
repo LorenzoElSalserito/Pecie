@@ -28,6 +28,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run generate:types
+      - run: npm run verify:packaging
+      - run: npm run test:packaging
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run test:unit
@@ -63,6 +65,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run generate:types
+      - run: npm run verify:packaging
       - run: npm run ${{ matrix.make_script }} -w @pecie/desktop
       - if: matrix.extra_scripts != ''
         run: ${{ matrix.extra_scripts }}

@@ -1,0 +1,54 @@
+{
+  "releases": [
+    {
+      "version": "0.1.5",
+      "date": "Sun, 30 Aug 2026 19:50:02 +0200",
+      "distribution": "unstable",
+      "urgency": "medium",
+      "maintainer": "Lorenzo DM <commercial.lorenzodm@gmail.com>",
+      "entries": [
+        "Maintenance release."
+      ]
+    },
+    {
+      "version": "0.1.4",
+      "date": "Sun, 30 Aug 2026 19:20:39 +0200",
+      "distribution": "unstable",
+      "urgency": "medium",
+      "maintainer": "Lorenzo DM <commercial.lorenzodm@gmail.com>",
+      "entries": [
+        "Changed: Pipeline di release automatizzata, versionata e conforme alle policy Debian."
+      ]
+    },
+    {
+      "version": "0.1.2",
+      "date": "Sat, 01 Aug 2026 12:00:00 +0200",
+      "distribution": "unstable",
+      "urgency": "medium",
+      "maintainer": "Lorenzo DM <commercial.lorenzodm@gmail.com>",
+      "entries": [
+        "Fixed: Correzioni applicative e nuove icone."
+      ]
+    },
+    {
+      "version": "0.1.1",
+      "date": "Sat, 04 Jul 2026 12:00:00 +0200",
+      "distribution": "unstable",
+      "urgency": "medium",
+      "maintainer": "Lorenzo DM <commercial.lorenzodm@gmail.com>",
+      "entries": [
+        "Changed: Versione finale 0.1.1."
+      ]
+    },
+    {
+      "version": "0.1.0",
+      "date": "Mon, 22 Jun 2026 12:00:00 +0200",
+      "distribution": "unstable",
+      "urgency": "medium",
+      "maintainer": "Lorenzo DM <commercial.lorenzodm@gmail.com>",
+      "entries": [
+        "Added: Prima release pubblica di Pecie."
+      ]
+    }
+  ]
+}
