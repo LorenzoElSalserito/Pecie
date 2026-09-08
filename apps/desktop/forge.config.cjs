@@ -2,7 +2,6 @@ const path = require('node:path')
 const { pathToFileURL } = require('node:url')
 
 const finalizeDebScript = path.resolve(__dirname, '../../scripts/finalize-deb.mjs')
-const buildRpmScript = path.resolve(__dirname, '../../scripts/build-rpm.mjs')
 const pendingReleasePath = path.resolve(__dirname, '../../scripts/.release-pending.json')
 
 const assetIconBasePath = path.resolve(__dirname, 'src/renderer/src/asset/Icon')
@@ -86,23 +85,16 @@ module.exports = {
     // correct Debian doc section (/usr/share/doc/pecie/) and repack in place.
     // The filename keeps the maker-deb pattern: pecie_<version>_<arch>.deb.
     //
-    // The finalized .deb is then converted to the .rpm shipped for Fedora/openSUSE,
-    // so every Linux artifact comes out of a single `make`. Set PECIE_SKIP_RPM=1 to
-    // skip it on a machine without the alien/rpmbuild toolchain.
+    // RPM conversion is deliberately a separate release step. This keeps ordinary
+    // Debian/AppImage builds independent from the alien/rpmbuild toolchain.
     async postMake(_forgeConfig, makeResults) {
       const { finalizeDeb } = await import(pathToFileURL(finalizeDebScript).href)
-      const { buildRpm } = await import(pathToFileURL(buildRpmScript).href)
       for (const result of makeResults) {
         for (const artifact of [...result.artifacts]) {
           if (!artifact.endsWith('.deb')) {
             continue
           }
           await finalizeDeb(artifact)
-          if (process.env.PECIE_SKIP_RPM === '1') {
-            continue
-          }
-          // Reported alongside the .deb so forge lists both packages as build output.
-          result.artifacts.push(await buildRpm(artifact))
         }
       }
       // Marker removed only after every artifact and post-processing step succeeds.

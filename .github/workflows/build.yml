@@ -44,16 +44,25 @@ jobs:
         include:
           - os: ubuntu-latest
             artifact_name: linux
-            make_script: make:linux:deb
-            extra_scripts: ''
+            make_script: make:linux:release
+            extra_scripts: 'sudo apt-get update && sudo apt-get install --yes alien rpm binutils && npm run make:linux:rpm -w @pecie/desktop'
+            artifact_paths: |
+              build/desktop/forge/make/**/*.deb
+              build/desktop/forge/make/**/*.rpm
+              build/desktop/appimage/*.AppImage
           - os: windows-latest
             artifact_name: windows
             make_script: make:win
             extra_scripts: ''
+            artifact_paths: build/desktop/windows/*.exe
           - os: macos-latest
             artifact_name: macos
             make_script: make:mac
             extra_scripts: ''
+            artifact_paths: |
+              build/desktop/forge/make/**/*.dmg
+              build/desktop/forge/make/**/*.pkg
+              build/desktop/forge/make/**/*.zip
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -73,8 +82,7 @@ jobs:
         with:
           name: pecie-${{ matrix.artifact_name }}
           retention-days: 14
-          path: |
-            build/desktop/**
+          path: ${{ matrix.artifact_paths }}
           if-no-files-found: error
 
   release:

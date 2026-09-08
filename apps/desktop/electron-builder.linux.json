@@ -1,0 +1,35 @@
+{
+  "appId": "com.pecie.desktop",
+  "productName": "pecie",
+  "directories": {
+    "output": "../../build/desktop/appimage",
+    "buildResources": "src/renderer/src/asset"
+  },
+  "files": [
+    "out/**/*",
+    "package.json"
+  ],
+  "extraResources": [
+    {
+      "from": "resources/export-runtime",
+      "to": "export-runtime"
+    }
+  ],
+  "extraMetadata": {
+    "main": "out/main/index.js"
+  },
+  "linux": {
+    "artifactName": "pecie-${version}-${arch}.${ext}",
+    "category": "Office",
+    "executableName": "pecie",
+    "icon": "Icon.png",
+    "target": [
+      {
+        "target": "AppImage",
+        "arch": [
+          "x64"
+        ]
+      }
+    ]
+  }
+}

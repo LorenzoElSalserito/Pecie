@@ -27,6 +27,10 @@ import splashLogoSvg from '../renderer/src/asset/Icon.svg?raw'
 
 const shouldDisableElectronSandbox = process.env.ELECTRON_DISABLE_SANDBOX === '1'
 
+if (process.platform === 'linux') {
+  app.setName('pecie')
+}
+
 if (shouldDisableElectronSandbox) {
   app.commandLine.appendSwitch('no-sandbox')
   app.commandLine.appendSwitch('disable-setuid-sandbox')
@@ -37,7 +41,7 @@ function uniquePaths(paths: string[]): string[] {
 }
 
 function getAppIconPath(): string {
-  return appIconPath
+  return join(__dirname, appIconPath.replace(/^[/\\]+/, ''))
 }
 
 function getSplashLogoMarkup(): string {
@@ -104,6 +108,7 @@ function createSplashWindow(): BrowserWindow {
               display: block;
               width: 100%;
               height: 100%;
+              filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 10px rgba(255, 255, 255, 0.72));
             }
             .mark--fallback {
               display: grid;

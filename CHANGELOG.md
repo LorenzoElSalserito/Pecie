@@ -5,6 +5,23 @@ Tutte le modifiche rilevanti a Pecie sono documentate in questo file secondo
 
 ## [Unreleased]
 
+## [0.1.7] - 2026-09-08
+
+### Changed
+- Sostituite le icone applicative Linux, Windows, macOS e dell'interfaccia con la nuova identità visiva.
+
+### Fixed
+- Risolto il percorso runtime dell'icona Electron su Linux, così barra delle applicazioni e finestre usano l'asset Pecie invece del fallback Electron.
+- Applicata un'ombra bianca permanente all'icona mostrata nello splash, nel wizard e nel launcher, indipendentemente dal tema.
+
+## [0.1.6] - 2026-08-30
+
+### Added
+- Pacchetto Linux portabile AppImage pubblicato insieme agli altri artefatti di release.
+
+### Fixed
+- Pipeline GitHub Actions resa indipendente da `alien` per le build Debian e AppImage; la toolchain RPM viene installata e usata soltanto nello step dedicato.
+
 ## [0.1.5] - 2026-08-30
 
 

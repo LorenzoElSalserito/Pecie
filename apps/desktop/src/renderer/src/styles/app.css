@@ -533,6 +533,8 @@ a:focus-visible,
   background: color-mix(in srgb, var(--pecie-color-surfaceStrong) 75%, transparent);
   padding: 0.55rem;
   border: 1px solid var(--pecie-color-borderSubtle);
+  filter: drop-shadow(0 0 0.25rem rgba(255, 255, 255, 0.95))
+    drop-shadow(0 0 0.65rem rgba(255, 255, 255, 0.72));
 }
 
 .launcher-brand-mark {
