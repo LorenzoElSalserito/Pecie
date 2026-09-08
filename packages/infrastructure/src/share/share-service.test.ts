@@ -1,8 +1,9 @@
-import { mkdtemp, readFile, rm } from 'node:fs/promises'
+import { createHash } from 'node:crypto'
+import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { ProjectFileSystem } from '../fs/project-file-system'
 import { GitAdapter } from '../history/git-adapter'
@@ -24,6 +25,7 @@ describe('ShareService', () => {
   const cleanupPaths: string[] = []
 
   afterEach(async () => {
+    vi.unstubAllEnvs()
     await Promise.all(cleanupPaths.splice(0).map((target) => rm(target, { force: true, recursive: true })))
   })
 
@@ -107,6 +109,40 @@ describe('ShareService', () => {
     expect(imported.projectPath).toBe(path.join(baseDirectory, 'share-fixture-01.pe'))
     const importedManifest = await readFile(path.join(imported.projectPath, 'manifest.json'), 'utf8')
     expect(importedManifest).toContain('shared')
+  })
+
+  it('finishes automatic git packing before returning an imported snapshot', async () => {
+    const baseDirectory = await mkdtemp(path.join(tmpdir(), 'pecie-share-gc-'))
+    cleanupPaths.push(baseDirectory)
+    const { fileSystem, shareService, project } = await createFixtureProject(baseDirectory)
+
+    // Git samples objects in bucket 17 for gc.auto. Populate it explicitly so
+    // the test triggers packing regardless of the fixture's other object IDs.
+    let objects = 0
+    for (let candidate = 0; objects < 3; candidate += 1) {
+      const body = `gc regression ${candidate}`
+      const oid = createHash('sha1').update(`blob ${Buffer.byteLength(body)}\0${body}`).digest('hex')
+      if (oid.startsWith('17')) {
+        await fileSystem.writeText(project.projectPath, `gc-fixture-${objects}.txt`, body)
+        objects += 1
+      }
+    }
+
+    const packagePath = path.join(baseDirectory, 'snapshot.pe-share')
+    await shareService.createPackage({ projectPath: project.projectPath, include: 'current-only', outputPath: packagePath })
+
+    const config = { 'gc.auto': '1', 'gc.autoDetach': 'true', 'maintenance.autoDetach': 'true' }
+    vi.stubEnv('GIT_CONFIG_COUNT', String(Object.keys(config).length))
+    Object.entries(config).forEach(([key, value], index) => {
+      vi.stubEnv(`GIT_CONFIG_KEY_${index}`, key)
+      vi.stubEnv(`GIT_CONFIG_VALUE_${index}`, value)
+    })
+
+    const imported = await shareService.importPackage({ packagePath, workspaceDirectory: baseDirectory, mode: 'fork' })
+    const gitPath = path.join(imported.projectPath, '.git')
+    expect((await readdir(path.join(gitPath, 'objects/pack'))).some((name) => name.endsWith('.pack'))).toBe(true)
+    expect(await readdir(gitPath)).not.toContain('gc.pid')
+    await rm(imported.projectPath, { recursive: true, force: true })
   })
 
   it('creates and imports share packages with git history', async () => {

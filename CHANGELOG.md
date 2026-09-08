@@ -5,6 +5,9 @@ Tutte le modifiche rilevanti a Pecie sono documentate in questo file secondo
 
 ## [Unreleased]
 
+### Fixed
+- L'importazione dei pacchetti condivisi attende il completamento della manutenzione automatica Git, evitando scritture in background e l'errore intermittente `ENOTEMPTY` durante la pulizia delle cartelle nei test di release.
+
 ## [0.1.7] - 2026-09-08
 
 ### Changed

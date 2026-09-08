@@ -20,6 +20,8 @@ import { shareImportModes, shareIncludeModes, validateManifest, validateSharePac
 import { ProjectFileSystem } from '../fs/project-file-system'
 
 const execFileAsync = promisify(execFile)
+// Wait for automatic maintenance before copying or removing repository files.
+const GIT_FOREGROUND_OPTIONS = ['-c', 'gc.autoDetach=false', '-c', 'maintenance.autoDetach=false']
 
 const EXCLUDED_PATHS = ['cache', 'logs', 'exports/out']
 const PACKAGE_ROOT = 'package'
@@ -177,7 +179,7 @@ export class ShareService {
   private async restoreGitHistory(projectPath: string, bundlePath: string): Promise<void> {
     const tempCloneDirectory = await mkdtemp(path.join(tmpdir(), 'pecie-share-history-clone-'))
     try {
-      await execFileAsync('git', ['clone', bundlePath, tempCloneDirectory], { cwd: projectPath })
+      await execFileAsync('git', [...GIT_FOREGROUND_OPTIONS, 'clone', bundlePath, tempCloneDirectory], { cwd: projectPath })
       await this.fileSystem.deleteEntry(projectPath, '.git')
       await cp(path.join(tempCloneDirectory, '.git'), path.join(projectPath, '.git'), { recursive: true })
     } finally {
@@ -188,7 +190,7 @@ export class ShareService {
   private async initializeSnapshotHistory(projectPath: string): Promise<void> {
     await execFileAsync('git', ['init'], { cwd: projectPath })
     await execFileAsync('git', ['add', '.'], { cwd: projectPath })
-    await execFileAsync('git', ['commit', '--allow-empty', '-m', 'share: imported snapshot'], {
+    await execFileAsync('git', [...GIT_FOREGROUND_OPTIONS, 'commit', '--allow-empty', '-m', 'share: imported snapshot'], {
       cwd: projectPath,
       env: {
         ...process.env,
