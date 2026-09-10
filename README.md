@@ -6,6 +6,20 @@ Pecie is a local-first editorial studio for writers, researchers, students, acad
 
 It brings writing, structure, research material, citations, visual blocks, project history, privacy controls, sharing, and export tools into one desktop workspace. Pecie is designed for serious writing projects that need more than a folder of loose files.
 
+## Building release packages
+
+Run `npm run dist` from the repository root to build for the current operating system: DEB, RPM and AppImage on Linux, an EXE installer on Windows, or a DMG on macOS. The existing versioning step still applies; set `PECIE_NO_BUMP=1` to keep the current version.
+
+On Debian/Ubuntu, install the packaging tools `fakeroot`, `alien`, `rpm`, and `binutils` first. RPM conversion uses root-owned files, a temporary RPM database, and dependency filters for bundled libraries.
+
+To convert an existing Debian package without rebuilding the app or changing its version:
+
+```sh
+node scripts/build-rpm.mjs path/to/pecie_0.1.8_amd64.deb
+```
+
+The RPM is written next to the Debian package. Use this script for Pecie conversions; a direct `alien --to-rpm` invocation does not apply the project's packaging fixes.
+
 ## What Pecie Is For
 
 Large writing projects are rarely just text. They include outlines, drafts, references, notes, source documents, images, versions, export settings, and decisions made over time.

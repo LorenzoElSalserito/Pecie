@@ -1,6 +1,6 @@
 {
   "name": "@pecie/desktop",
-  "version": "0.1.7",
+  "version": "0.1.9",
   "main": "out/main/index.js",
   "productName": "pecie",
   "genericName": "pecie",
@@ -13,7 +13,7 @@
   "scripts": {
     "start": "electron-vite preview",
     "dev": "electron-vite dev",
-    "dist": "npm run make",
+    "dist": "node ../../scripts/dist-desktop.mjs",
     "dist:linux": "npm run make:linux:release",
     "dist:linux:deb": "npm run make:linux:deb",
     "dist:linux:rpm": "npm run make:linux:rpm",
@@ -32,9 +32,10 @@
     "make:linux:deb": "npm run package && node ../../scripts/run-desktop-forge.mjs make --platform linux --targets @electron-forge/maker-deb",
     "make:linux:appimage": "npm run prepare:runtime-links && npm run build && npm --prefix ../.. run rebuild:native:desktop && electron-builder --config electron-builder.linux.json --linux AppImage",
     "make:linux:rpm": "node ../../scripts/build-rpm.mjs",
-    "make:linux:release": "npm run make:linux:deb && npm run make:linux:appimage",
+    "make:linux:release": "npm run make:linux:deb && npm run make:linux:rpm && npm run make:linux:appimage",
     "make:win": "npm run prepare:runtime-links && npm run build && electron-builder --config electron-builder.win.json --win nsis",
     "make:mac": "npm run package && node ../../scripts/run-desktop-forge.mjs make --platform darwin",
+    "make:mac:dmg": "npm run package && node ../../scripts/run-desktop-forge.mjs make --platform darwin --targets @electron-forge/maker-dmg",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test:unit": "vitest run --passWithNoTests"
   },

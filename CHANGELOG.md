@@ -5,6 +5,16 @@ Tutte le modifiche rilevanti a Pecie sono documentate in questo file secondo
 
 ## [Unreleased]
 
+## [0.1.9] - 2026-09-10
+
+### Fixed
+- Conversione RPM con database temporaneo privato e spec separato dal contenuto installabile; escluso il segnaposto `.gitkeep` del runtime dal pacchetto Debian.
+
+### Changed
+- `npm run dist` seleziona gli artefatti per il sistema corrente: DEB, RPM e AppImage su Linux, installer EXE su Windows e DMG su macOS.
+
+## [0.1.8] - 2026-09-10
+
 ### Fixed
 - L'importazione dei pacchetti condivisi attende il completamento della manutenzione automatica Git, evitando scritture in background e l'errore intermittente `ENOTEMPTY` durante la pulizia delle cartelle nei test di release.
 

@@ -34,6 +34,8 @@ export async function finalizeDeb(debPath) {
   const workDir = fs.mkdtempSync(path.join(path.dirname(absoluteDeb), '.pecie-deb-'))
   try {
     run('dpkg-deb', ['-R', absoluteDeb, workDir])
+    // Repository placeholders are not runtime resources.
+    fs.rmSync(path.join(workDir, 'usr/lib/pecie/resources/export-runtime/.gitkeep'), { force: true })
     await assertPackagedRuntimeIsSelfContained(workDir)
     const version = readJson(paths.desktopPackage).version
     installDocumentation(workDir, version)

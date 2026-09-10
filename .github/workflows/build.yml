@@ -44,25 +44,20 @@ jobs:
         include:
           - os: ubuntu-latest
             artifact_name: linux
-            make_script: make:linux:release
-            extra_scripts: 'sudo apt-get update && sudo apt-get install --yes alien rpm binutils && npm run make:linux:rpm -w @pecie/desktop'
+            setup_script: 'sudo apt-get update && sudo apt-get install --yes fakeroot alien rpm binutils'
             artifact_paths: |
               build/desktop/forge/make/**/*.deb
               build/desktop/forge/make/**/*.rpm
               build/desktop/appimage/*.AppImage
           - os: windows-latest
             artifact_name: windows
-            make_script: make:win
-            extra_scripts: ''
+            setup_script: ''
             artifact_paths: build/desktop/windows/*.exe
           - os: macos-latest
             artifact_name: macos
-            make_script: make:mac
-            extra_scripts: ''
+            setup_script: ''
             artifact_paths: |
               build/desktop/forge/make/**/*.dmg
-              build/desktop/forge/make/**/*.pkg
-              build/desktop/forge/make/**/*.zip
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -75,9 +70,9 @@ jobs:
       - run: npm ci
       - run: npm run generate:types
       - run: npm run verify:packaging
-      - run: npm run ${{ matrix.make_script }} -w @pecie/desktop
-      - if: matrix.extra_scripts != ''
-        run: ${{ matrix.extra_scripts }}
+      - if: matrix.setup_script != ''
+        run: ${{ matrix.setup_script }}
+      - run: npm run dist -w @pecie/desktop
       - uses: actions/upload-artifact@v4
         with:
           name: pecie-${{ matrix.artifact_name }}

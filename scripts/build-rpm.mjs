@@ -186,8 +186,9 @@ function rewriteSpec(spec, bundledLibraryNames, rpmDir) {
   return `${updated.slice(0, descriptionIndex)}${macros}\n\n${updated.slice(descriptionIndex)}`
 }
 
-function queryRpmFiles(rpmPath) {
+function queryRpmFiles(rpmPath, rpmDb) {
   return run('rpm', [
+    '--dbpath', rpmDb,
     '-qp',
     '--qf',
     '[%{FILENAMES}\\t%{FILEMODES:perms}\\n]',
@@ -205,8 +206,8 @@ function queryRpmFiles(rpmPath) {
 }
 
 /** Refuse shared directory ownership even if alien changes its spec format later. */
-function assertNoSharedDirectoryOwnership(rpmPath) {
-  const offending = queryRpmFiles(rpmPath)
+function assertNoSharedDirectoryOwnership(rpmPath, rpmDb) {
+  const offending = queryRpmFiles(rpmPath, rpmDb)
     .filter(({ mode }) => mode.startsWith('d'))
     .map(({ name }) => name.replace(/\/+$/, ''))
     .filter(
@@ -228,9 +229,9 @@ function assertNoSharedDirectoryOwnership(rpmPath) {
  * itself ships. One surviving entry means an uninstallable RPM, which is the exact
  * failure this script exists to prevent.
  */
-function assertNoBundledRequires(rpmPath, bundledLibraryNames) {
+function assertNoBundledRequires(rpmPath, bundledLibraryNames, rpmDb) {
   const bundled = new Set(bundledLibraryNames)
-  const offending = run('rpm', ['-qp', '--requires', rpmPath])
+  const offending = run('rpm', ['--dbpath', rpmDb, '-qp', '--requires', rpmPath])
     .split('\n')
     .map((line) => line.trim())
     .filter((line) => line.length > 0)
@@ -311,23 +312,31 @@ export async function buildRpm(debPath) {
 
     const rpmDir = path.join(workDir, 'rpms')
     await mkdir(rpmDir, { recursive: true })
+    const rpmDb = path.join(workDir, 'rpmdb')
+    await mkdir(rpmDb, { recursive: true })
+    run('rpm', ['--dbpath', rpmDb, '--initdb'])
 
+    // Build metadata must not be part of the payload checked by rpmbuild.
+    const rewrittenSpecPath = path.join(workDir, specName)
     await writeFile(
-      specPath,
+      rewrittenSpecPath,
       rewriteSpec(await readFile(specPath, 'utf8'), bundledLibraryNames, rpmDir)
     )
+    await rm(specPath)
 
     const build = spawnSync(
       'rpmbuild',
       [
         '--define',
         `_topdir ${workDir}`,
+        '--define',
+        `_dbpath ${rpmDb}`,
         '--buildroot',
         buildRoot,
         '--target',
         `${process.arch === 'arm64' ? 'aarch64' : 'x86_64'}-unknown-linux`,
         '-bb',
-        specPath
+        rewrittenSpecPath
       ],
       { cwd: buildRoot, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }
     )
@@ -346,8 +355,8 @@ export async function buildRpm(debPath) {
     }
 
     const builtRpm = path.join(rpmDir, rpmName)
-    assertNoBundledRequires(builtRpm, bundledLibraryNames)
-    assertNoSharedDirectoryOwnership(builtRpm)
+    assertNoBundledRequires(builtRpm, bundledLibraryNames, rpmDb)
+    assertNoSharedDirectoryOwnership(builtRpm, rpmDb)
 
     const targetRpm = path.join(path.dirname(absoluteDeb), rpmName)
     await fs.promises.copyFile(builtRpm, targetRpm)
