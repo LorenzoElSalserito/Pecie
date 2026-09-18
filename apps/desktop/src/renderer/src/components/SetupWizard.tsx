@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 
-import type { AppFontPreference, AppSettings, AuthorProfile, SupportedLocale } from '@pecie/schemas'
+import type { AppSettings, AuthorProfile, SupportedLocale } from '@pecie/schemas'
+import { getFontDefinition } from '@pecie/schemas'
 import { Button, UI_ZOOM_OPTIONS, type ThemeMode } from '@pecie/ui'
 
 import appIcon from '../asset/Icon.svg'
 import { SUPPORTED_LOCALES, localeLabel, t } from '../i18n'
 import type { AuthorFieldsProps, SetupWizardProps, WorkspaceFieldsProps } from './types'
 import { authorRoles } from './types'
+import { FontPicker } from './FontPicker'
 
 export function WorkspaceFields({ locale, settings, setSettings }: WorkspaceFieldsProps): React.JSX.Element {
   return (
@@ -71,21 +73,14 @@ export function WorkspaceFields({ locale, settings, setSettings }: WorkspaceFiel
         </select>
       </label>
 
-      <label className="field">
+      <div className="field field--wide">
         <span>{t(locale, 'fontPreference')}</span>
-        <select
+        <FontPicker
+          locale={locale}
+          onChange={(fontId) => setSettings({ ...settings, fontPreference: fontId })}
           value={settings.fontPreference}
-          onChange={(event) =>
-            setSettings({
-              ...settings,
-              fontPreference: event.target.value as AppFontPreference
-            })
-          }
-        >
-          <option value="classic">{t(locale, 'fontClassic')}</option>
-          <option value="dyslexic">{t(locale, 'fontDyslexic')}</option>
-        </select>
-      </label>
+        />
+      </div>
 
       <label className="field">
         <span>{t(locale, 'uiZoom')}</span>
@@ -317,7 +312,7 @@ export function SetupWizard({ bootstrap, onPreviewChange, onComplete }: SetupWiz
           </article>
           <article className="setup-overview__card">
             <span>{t(locale, 'fontPreference')}</span>
-            <strong>{t(locale, draft.fontPreference === 'dyslexic' ? 'fontDyslexic' : 'fontClassic')}</strong>
+            <strong>{getFontDefinition(draft.fontPreference).label}</strong>
           </article>
           <article className="setup-overview__card">
             <span>{t(locale, 'uiZoom')}</span>

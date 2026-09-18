@@ -1,3 +1,5 @@
+import { HEADING_FONT_DEFINITION, MONO_FONT_DEFINITION, UI_FONT_DEFINITION, fontFamilyStack } from '@pecie/schemas'
+
 import { tokens } from './tokens'
 
 function toCssVariables(prefix: string, values: Record<string, string | number>): string {
@@ -13,13 +15,15 @@ export const globalThemeStyles = `
   ${toCssVariables('--pecie-radius', tokens.radius)}
   ${toCssVariables('--pecie-shadow', tokens.shadow)}
   ${toCssVariables('--pecie-transition', tokens.transition)}
-  --pecie-font-heading: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
-  --pecie-font-serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
-  --pecie-font-body: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
-  --pecie-font-ui: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
-  --pecie-font-mono: "IBM Plex Mono", "SFMono-Regular", monospace;
+  --pecie-font-heading: ${fontFamilyStack(HEADING_FONT_DEFINITION)};
+  --pecie-font-serif: ${fontFamilyStack(HEADING_FONT_DEFINITION)};
+  --pecie-font-body: ${fontFamilyStack(HEADING_FONT_DEFINITION)};
+  --pecie-font-ui: ${fontFamilyStack(UI_FONT_DEFINITION)};
+  --pecie-font-mono: ${fontFamilyStack(MONO_FONT_DEFINITION)};
   --pecie-font-body-scale: 1;
   --pecie-font-ui-scale: 1;
+  --pecie-font-body-letter-spacing: normal;
+  --pecie-font-body-word-spacing: normal;
   --pecie-body-size: ${tokens.typography.body.size}px;
   --pecie-body-line-height: ${tokens.typography.body.lineHeight};
   --pecie-heading-size: ${tokens.typography.heading.size}px;
@@ -32,17 +36,6 @@ export const globalThemeStyles = `
   --pecie-caption-line-height: ${tokens.typography.caption.lineHeight};
 }
 
-[data-font='dyslexic'] {
-  --pecie-font-body: "OpenDyslexicRegular", "OpenDyslexic", "Arial", sans-serif;
-  --pecie-font-ui: "OpenDyslexicRegular", "OpenDyslexic", "Arial", sans-serif;
-  --pecie-font-body-scale: 0.9;
-  --pecie-font-ui-scale: 0.92;
-  --pecie-body-size: ${Math.round(tokens.typography.body.size * 0.9 * 100) / 100}px;
-  --pecie-heading-size: ${Math.round(tokens.typography.heading.size * 0.92 * 100) / 100}px;
-  --pecie-subheading-size: ${Math.round(tokens.typography.subheading.size * 0.92 * 100) / 100}px;
-  --pecie-small-size: ${Math.round(tokens.typography.small.size * 0.92 * 100) / 100}px;
-  --pecie-caption-size: ${Math.round(tokens.typography.caption.size * 0.92 * 100) / 100}px;
-}
 
 [data-theme='light'] {
   ${toCssVariables('--pecie-color', tokens.color.light)}

@@ -5,7 +5,8 @@ import { loader } from '@monaco-editor/react'
 import * as monaco from 'monaco-editor'
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
 
-import 'bootstrap-icons/font/bootstrap-icons.css'
+import './styles/bootstrap-icons.css'
+import './styles/fonts.css'
 import './styles/app.css'
 
 import App from './App'

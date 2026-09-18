@@ -5,7 +5,9 @@ export type SupportedLocale = 'it-IT' | 'en-US' | 'de-DE' | 'es-ES' | 'fr-FR' | 
 
 export type AuthorRole = 'student' | 'researcher' | 'writer' | 'editor' | 'author'
 
-export type AppFontPreference = 'classic' | 'dyslexic'
+// Font identifier from the bundled typography catalog (see packages/schemas/src/fonts.ts).
+// Legacy values 'classic' and 'dyslexic' are still accepted and normalized on load.
+export type AppFontPreference = string
 
 export type AppUiZoom = 10 | 25 | 50 | 75 | 100 | 125 | 150
 

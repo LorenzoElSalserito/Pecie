@@ -1,5 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 
+import { fontFamilyStack, getFontDefinition, UI_FONT_DEFINITION } from '@pecie/schemas'
+
 import { ThemeContext } from './theme-context'
 import { globalThemeStyles } from './theme.css'
 import { tokens, type ResolvedThemeMode, type ThemeMode } from './tokens'
@@ -18,12 +20,13 @@ function resolveTheme(mode: ThemeMode): ResolvedThemeMode {
 export function ThemeProvider({
   children,
   defaultMode = 'system',
-  fontPreference = 'classic',
+  fontPreference = 'source-serif-4',
   uiZoom = 100
 }: {
   children: ReactNode
   defaultMode?: ThemeMode
-  fontPreference?: 'classic' | 'dyslexic'
+  /** Id from the bundled font catalog; legacy 'classic' / 'dyslexic' values are normalized. */
+  fontPreference?: string
   uiZoom?: AppUiZoom
 }): React.JSX.Element {
   const [mode, setMode] = useState<ThemeMode>(defaultMode)
@@ -49,7 +52,14 @@ export function ThemeProvider({
   }, [])
 
   useEffect(() => {
-    document.documentElement.dataset.font = fontPreference
+    const font = getFontDefinition(fontPreference)
+    const root = document.documentElement
+    root.dataset.font = font.id
+    root.dataset.fontCategory = font.category
+    root.style.setProperty('--pecie-font-body', fontFamilyStack(font))
+    root.style.setProperty('--pecie-font-ui', fontFamilyStack(font.ui ? font : UI_FONT_DEFINITION))
+    root.style.setProperty('--pecie-font-body-letter-spacing', font.letterSpacing ?? 'normal')
+    root.style.setProperty('--pecie-font-body-word-spacing', font.wordSpacing ?? 'normal')
   }, [fontPreference])
 
   useEffect(() => {
@@ -59,8 +69,9 @@ export function ThemeProvider({
     document.documentElement.style.setProperty('--pecie-ui-zoom', `${uiZoom}%`)
     document.documentElement.style.fontSize = `${uiZoom}%`
 
-    const fontScale = fontPreference === 'dyslexic' ? 0.9 : 1
-    const uiFontScale = fontPreference === 'dyslexic' ? 0.92 : 1
+    const font = getFontDefinition(fontPreference)
+    const fontScale = font.scale
+    const uiFontScale = font.ui ? Math.min(1, font.scale + 0.04) : 1
     const zoomScale = uiZoom / 100
     document.documentElement.style.setProperty('--pecie-body-size', `${tokens.typography.body.size * fontScale * zoomScale}px`)
     document.documentElement.style.setProperty('--pecie-heading-size', `${tokens.typography.heading.size * uiFontScale * zoomScale}px`)

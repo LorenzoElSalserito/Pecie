@@ -147,6 +147,14 @@ test.describe('FASE 3 Page Boundary Markers', () => {
       await expect(meta).toContainText('the final result depends on the export engine')
       await expect(meta).not.toContainText('This format does not have fixed pages')
 
+      // Monaco only materializes glyph decorations for rendered lines: walk the document so the
+      // first estimated page boundary scrolls into the editor viewport.
+      await page.locator('.monaco-editor').first().click()
+      await page.keyboard.press(`${controlKey}+Home`)
+      for (let step = 0; step < 24 && (await page.locator('.page-marker-glyph').count()) === 0; step += 1) {
+        await page.keyboard.press('PageDown')
+        await page.waitForTimeout(120)
+      }
       await expect(page.locator('.page-marker-glyph').first()).toBeVisible()
     } finally {
       await electronApp.close()

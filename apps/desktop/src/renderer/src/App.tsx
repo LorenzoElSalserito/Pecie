@@ -26,7 +26,6 @@ import type { GuideCenterSection, LoadedProject, ToastItem, ToastTone } from './
 import { createToast, logEvent } from './components/utils'
 import { Workspace } from './components/Workspace'
 import { t } from './i18n'
-import 'open-dyslexic/open-dyslexic-regular.css'
 import desktopPackage from '../../../package.json'
 
 function AppShell(): React.JSX.Element {

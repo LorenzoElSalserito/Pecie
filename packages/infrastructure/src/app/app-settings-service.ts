@@ -14,7 +14,7 @@ import type {
   SaveAppSettingsResponse,
   SupportedLocale
 } from '@pecie/schemas'
-import { validateBinderDocument } from '@pecie/schemas'
+import { normalizeFontPreference, validateBinderDocument } from '@pecie/schemas'
 import type { PreviewMode } from '@pecie/schemas'
 
 import { ProjectFileSystem } from '../fs/project-file-system'
@@ -160,7 +160,7 @@ export class AppSettingsService {
       theme: candidate?.theme === 'light' || candidate?.theme === 'dark' || candidate?.theme === 'system'
         ? candidate.theme
         : 'system',
-      fontPreference: candidate?.fontPreference === 'dyslexic' ? 'dyslexic' : 'classic',
+      fontPreference: normalizeFontPreference(candidate?.fontPreference),
       uiZoom:
         candidate?.uiZoom === 10 ||
         candidate?.uiZoom === 25 ||

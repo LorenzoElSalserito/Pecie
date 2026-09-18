@@ -1,48 +1,7 @@
 /*
- * Bootstrap Icons webfont, vendored locally with a query-less URL.
- * The stock `bootstrap-icons/font/bootstrap-icons.css` references the font as
- * `bootstrap-icons.woff2?<hash>`. Under the packaged app the renderer loads over
- * `file://`, where the `?<hash>` suffix is treated as part of the filename, so the
- * font 404s and every `.bi-*` glyph renders as a tofu square. This `@font-face` is
- * declared after that import (app.css is imported last in main.tsx), so it wins and
- * points at bundled font files with no query string — fully self-contained in the .deb.
+ * Typography: every @font-face lives in `fonts.css` / `bootstrap-icons.css` (bundled, query-less
+ * local files). Font-family variables are defined by the ThemeProvider from the shared catalog.
  */
-@font-face {
-  font-family: 'bootstrap-icons';
-  src:
-    url('../asset/fonts/bootstrap-icons.woff2') format('woff2'),
-    url('../asset/fonts/bootstrap-icons.woff') format('woff');
-  font-display: block;
-}
-
-@font-face {
-  font-family: 'Source Serif 4';
-  src: url('../asset/fonts/SourceSerif4-Regular.ttf') format('truetype');
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Source Serif 4';
-  src: url('../asset/fonts/SourceSerif4-Semibold.ttf') format('truetype');
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Source Serif 4';
-  src: url('../asset/fonts/SourceSerif4-Bold.ttf') format('truetype');
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-}
-
-:root {
-  --pecie-font-heading: 'Source Serif 4', Georgia, serif;
-  --pecie-font-serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
-}
 
 *,
 *::before,
@@ -86,6 +45,8 @@ body {
   font-family: var(--pecie-font-body);
   font-size: var(--pecie-body-size);
   line-height: var(--pecie-body-line-height);
+  letter-spacing: var(--pecie-font-body-letter-spacing);
+  word-spacing: var(--pecie-font-body-word-spacing);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -2764,19 +2725,12 @@ a:focus-visible,
 }
 
 .format-chip__icon {
-  display: inline-flex;
-  width: 0.6rem;
-  height: 0.6rem;
-  opacity: 0.88;
-  background-color: currentColor;
-  mask-image: var(--format-icon);
-  mask-repeat: no-repeat;
-  mask-position: center;
-  mask-size: contain;
-  -webkit-mask-image: var(--format-icon);
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  -webkit-mask-size: contain;
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  fill: currentColor;
+  opacity: 0.92;
+  pointer-events: none;
 }
 
 .panel-toggle .bi,
@@ -5443,6 +5397,453 @@ html[data-theme='light'] .message-box {
 .resize-handle:active::after {
   opacity: 1;
   background: var(--pecie-color-accent);
+}
+
+/* ── Typography & layout refinements (bundled fonts, font picker, viewport-locked workspace) ── */
+
+/* Interface chrome always uses the bundled UI face; the manuscript uses the chosen writing font. */
+.editor-title-input,
+.editor-sheet__header h2,
+.markdown-render,
+.scrivenings-view,
+.corkboard-card__excerpt {
+  font-family: var(--pecie-font-body);
+}
+
+.editor-title-input {
+  font-weight: 700;
+}
+
+.markdown-render h1,
+.markdown-render h2,
+.markdown-render h3,
+.markdown-render h4 {
+  font-family: var(--pecie-font-body);
+  letter-spacing: -0.015em;
+}
+
+/* Launcher hero: brand moment in the editorial heading face, vertically balanced. */
+.launcher-hero {
+  align-content: center;
+}
+
+.launcher-hero__tagline {
+  font-family: var(--pecie-font-heading);
+  font-size: clamp(1.7rem, 2.4vw, 2.2rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.08;
+}
+
+.launcher-hero__subtitle {
+  font-size: 0.96rem;
+  line-height: 1.45;
+}
+
+/* Dialog header: icon badge + left-aligned title (was space-between → title drifted right). */
+.dialog-card__header {
+  justify-content: flex-start;
+  gap: 0.8rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--pecie-color-borderSubtle);
+}
+
+.dialog-card__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: var(--pecie-radius-md);
+  background: color-mix(in srgb, var(--pecie-color-accent) 12%, transparent);
+  color: var(--pecie-color-accent);
+  font-size: 1.15rem;
+  opacity: 1;
+}
+
+.dialog-card__header h2 {
+  margin: 0;
+}
+
+/* Workspace: the document owns the viewport. Header stays put, editor and side panels scroll internally. */
+.workspace-shell {
+  height: 100vh;
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr);
+  align-content: start;
+  overflow: hidden;
+}
+
+.workspace-shell > .workspace-grid {
+  min-height: 0;
+}
+
+.workspace-binder,
+.workspace-context {
+  min-height: 0;
+  align-content: start;
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-rows: max-content;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.workspace-binder:not(.workspace-binder--collapsed),
+.workspace-context:not(.workspace-context--collapsed) {
+  scrollbar-gutter: stable;
+}
+
+.workspace-alt-view {
+  min-height: 0;
+}
+
+.editor-surface {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-block-end: 0.25rem;
+}
+
+.editor-sheet {
+  display: flex;
+  flex-direction: column;
+  flex: 1 0 auto;
+  min-height: 0;
+}
+
+.editor-sheet > .editor-layout {
+  flex: 1 1 0;
+  min-height: 22rem;
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.editor-layout .editor-pane {
+  height: 100%;
+  min-height: 0;
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.editor-layout .editor-pane--preview {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.editor-layout .editor-monaco {
+  height: 100%;
+  min-height: 0;
+}
+
+.workspace-grid--focus .editor-surface {
+  overflow-y: auto;
+}
+
+@media (max-width: 900px) {
+  .workspace-shell {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+
+  .editor-surface {
+    overflow: visible;
+  }
+}
+
+/* Binder node actions: icon-only controls with tooltips (labels stay for assistive tech). */
+.binder-actions--icons .pecie-btn {
+  min-height: 2.35rem;
+  padding-inline: 0.4rem;
+  font-size: 1.05rem;
+}
+
+.binder-actions--icons .pecie-btn:not(:disabled):hover {
+  color: var(--pecie-color-accent);
+}
+
+.binder-actions--icons .binder-actions__danger:not(:disabled):hover {
+  color: var(--pecie-color-danger);
+  background: color-mix(in srgb, var(--pecie-color-danger) 10%, transparent);
+}
+
+.binder-actions > .pecie-btn:only-child {
+  grid-column: 1 / -1;
+  white-space: nowrap;
+}
+
+.binder-actions .pecie-btn .bi + span {
+  margin-inline-start: 0.1rem;
+}
+
+/* Writing surface first: lean chrome, wide sheet, the editor takes every remaining pixel. */
+.workspace-shell {
+  padding: clamp(0.55rem, 1.1vw, 0.85rem);
+  gap: 0.55rem;
+}
+
+.workspace-header {
+  padding: 0.55rem 0.9rem;
+}
+
+.workspace-grid {
+  gap: 0.55rem;
+}
+
+.editor-surface {
+  padding-inline: 0;
+}
+
+.editor-sheet {
+  width: min(100%, 70rem);
+  padding: 0.75rem clamp(0.9rem, 1.8vw, 1.5rem) 0.6rem;
+  gap: 0.55rem;
+}
+
+.editor-surface--focus .editor-sheet {
+  width: min(100%, 78rem);
+  padding-inline: clamp(1.2rem, 2.6vw, 2.4rem);
+}
+
+.editor-statusbar {
+  padding: 0.35rem 0.6rem;
+  gap: 0.5rem;
+}
+
+.editor-title-field {
+  padding: 0;
+}
+
+.editor-title-input {
+  font-size: clamp(1.45rem, 2.1vw, 1.7rem);
+  padding: 0.2rem 0 0.25rem;
+  line-height: 1.15;
+}
+
+.editor-surface--focus .editor-title-input {
+  font-size: clamp(1.6rem, 2.4vw, 1.9rem);
+}
+
+.editor-footer {
+  padding: 0.35rem 0.5rem 0;
+  gap: 0.6rem;
+}
+
+.editor-sheet > .editor-layout {
+  min-height: 18rem;
+  gap: 0.6rem;
+}
+
+.editor-monaco {
+  border-radius: var(--pecie-radius-md);
+}
+
+/* ── Font picker ── */
+.field--wide {
+  grid-column: 1 / -1;
+}
+
+.font-picker {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.font-picker__current {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.9rem;
+  align-items: start;
+  padding: 0.95rem 1.05rem;
+  border: 1px solid color-mix(in srgb, var(--pecie-color-accent) 22%, var(--pecie-color-borderSubtle));
+  border-radius: var(--pecie-radius-lg);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 20%, transparent), transparent 52%),
+    color-mix(in srgb, var(--pecie-color-accent) 5%, var(--pecie-color-surface));
+}
+
+.font-picker__current-copy {
+  display: grid;
+  gap: 0.28rem;
+  min-width: 0;
+}
+
+.font-picker__current-name {
+  font-size: 1.55rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--pecie-color-text);
+}
+
+.font-picker__meta,
+.font-picker__option-meta {
+  font-family: var(--pecie-font-ui);
+  font-size: var(--pecie-caption-size);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--pecie-color-textSubtle);
+}
+
+.font-picker__sample {
+  margin: 0.2rem 0 0;
+  font-size: 1.05rem;
+  line-height: 1.5;
+  color: var(--pecie-color-textMuted);
+}
+
+.font-picker__toggle {
+  white-space: nowrap;
+}
+
+.font-picker__browser {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.85rem;
+  border: 1px solid var(--pecie-color-borderSubtle);
+  border-radius: var(--pecie-radius-lg);
+  background: color-mix(in srgb, var(--pecie-color-surfaceStrong) 22%, transparent);
+}
+
+.font-picker__toolbar {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.font-picker__search {
+  position: relative;
+  display: block;
+}
+
+.font-picker__search .bi {
+  position: absolute;
+  top: 50%;
+  left: 0.8rem;
+  transform: translateY(-50%);
+  color: var(--pecie-color-textSubtle);
+  pointer-events: none;
+}
+
+.font-picker__search input {
+  width: 100%;
+  min-height: 2.55rem;
+  padding: 0.45rem 0.75rem 0.45rem 2.3rem;
+  border: 1px solid var(--pecie-color-border);
+  border-radius: var(--pecie-radius-md);
+  background: var(--pecie-color-surface);
+  color: var(--pecie-color-text);
+  font-family: var(--pecie-font-ui);
+}
+
+.font-picker__categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.font-picker__categories .toggle-chip[aria-pressed='true'] {
+  border-color: var(--pecie-color-accent);
+  background: color-mix(in srgb, var(--pecie-color-accent) 14%, transparent);
+  color: var(--pecie-color-text);
+}
+
+.font-picker__hint,
+.font-picker__empty {
+  margin: 0;
+  font-family: var(--pecie-font-ui);
+  font-size: var(--pecie-small-size);
+  color: var(--pecie-color-textMuted);
+}
+
+.font-picker__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr));
+  gap: 0.55rem;
+  max-height: 24rem;
+  overflow-y: auto;
+  padding: 0.15rem;
+  overscroll-behavior: contain;
+}
+
+.font-picker__option {
+  position: relative;
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.75rem 0.85rem 0.7rem;
+  border: 1px solid var(--pecie-color-borderSubtle);
+  border-radius: var(--pecie-radius-md);
+  background: var(--pecie-color-surface);
+  cursor: pointer;
+  transition:
+    border-color var(--pecie-transition-fast),
+    background var(--pecie-transition-fast),
+    transform var(--pecie-transition-fast),
+    box-shadow var(--pecie-transition-fast);
+}
+
+.font-picker__option:hover {
+  border-color: color-mix(in srgb, var(--pecie-color-accent) 40%, var(--pecie-color-border));
+  box-shadow: var(--pecie-shadow-sm);
+}
+
+.font-picker__option--selected {
+  border-color: var(--pecie-color-accent);
+  background: color-mix(in srgb, var(--pecie-color-accent) 8%, var(--pecie-color-surface));
+  box-shadow: 0 0 0 1px var(--pecie-color-accent);
+}
+
+/* The radio covers the whole card: real hit target, native keyboard semantics, no visible control. */
+.font-picker__option input[type='radio'] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+  appearance: none;
+  border: 0;
+}
+
+.font-picker__option:has(input:focus-visible) {
+  outline: 3px solid var(--pecie-color-focus);
+  outline-offset: 2px;
+}
+
+.font-picker__option-name {
+  font-size: 1.08rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--pecie-color-text);
+  padding-right: 1.4rem;
+}
+
+.font-picker__option-glyphs {
+  font-size: 0.98rem;
+  line-height: 1.3;
+  color: var(--pecie-color-textMuted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.font-picker__option-check {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.7rem;
+  color: var(--pecie-color-accent);
+  font-size: 1rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .font-picker__option:hover {
+    transform: translateY(-1px);
+  }
+}
+
+@media (max-width: 720px) {
+  .font-picker__current {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ── WCAG 2.3.3: prefers-reduced-motion ── */

@@ -1,6 +1,6 @@
 {
   "name": "pecie",
-  "version": "0.1.9",
+  "version": "0.2.0",
   "private": true,
   "description": "Pecie - Hub di scrittura",
   "author": "Lorenzo DM",
@@ -56,7 +56,6 @@
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@vitejs/plugin-react": "^4.2.0",
-    "bootstrap-icons": "1.13.1",
     "electron": "^29.0.0",
     "electron-builder": "24.13.3",
     "electron-vite": "^2.0.0",
@@ -72,7 +71,6 @@
     "mammoth": "1.12.0",
     "marked": "^15.0.12",
     "monaco-editor": "0.55.1",
-    "open-dyslexic": "1.0.3",
     "pdfjs-dist": "5.6.205",
     "prettier": "^3.0.0",
     "react": "^18.2.0",

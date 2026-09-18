@@ -103,7 +103,7 @@ test.describe('FASE 2 Timeline', () => {
     const { electronApp, page, homeDirectory } = await launchDesktop()
 
     try {
-      await expect.poll(async () => page.evaluate(() => document.documentElement.dataset.font)).toBe('dyslexic')
+      await expect.poll(async () => page.evaluate(() => document.documentElement.dataset.font)).toBe('open-dyslexic')
       await createBlankProject(page, 'Phase 2 Timeline')
       await openPrimaryDocument(page)
       await replaceEditorBody(page, 'Alpha beta gamma.')
@@ -127,7 +127,7 @@ test.describe('FASE 2 Timeline', () => {
     const { electronApp, page, homeDirectory } = await launchDesktop()
 
     try {
-      await expect.poll(async () => page.evaluate(() => document.documentElement.dataset.font)).toBe('dyslexic')
+      await expect.poll(async () => page.evaluate(() => document.documentElement.dataset.font)).toBe('open-dyslexic')
       await createBlankProject(page, 'Phase 2 Restore Selection')
       await openPrimaryDocument(page)
 

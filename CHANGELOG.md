@@ -5,6 +5,23 @@ Tutte le modifiche rilevanti a Pecie sono documentate in questo file secondo
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-17
+
+### Added
+- Libreria tipografica integrata: oltre cinquanta font FOSS di taglio editoriale (graziati per lettura lunga, titolazione, slab, lineari, monospazio, leggibilità) selezionabili come font di scrittura dal wizard e dalle Impostazioni, con ricerca, categorie e anteprima dal vivo.
+- Test e2e che verificano il rendering delle icone Bootstrap dal webfont incluso, il caricamento locale di tutti i font, la scelta e la persistenza del font e il blocco del workspace alla viewport.
+
+### Changed
+- Icone Bootstrap e font (inclusi OpenDyslexic e Source Serif 4) sono ora asset del repository con URL locali senza query string: l'app non dipende più dai pacchetti npm `bootstrap-icons` e `open-dyslexic`.
+- Interfaccia in IBM Plex Sans e titoli in Source Serif 4 inclusi nell'app, così l'aspetto è identico su ogni sistema operativo.
+- Il workspace occupa esattamente la finestra: intestazione fissa, editor e pannelli laterali scorrono al proprio interno e il titolo del documento resta sempre visibile.
+- Intestazione dei dialoghi allineata a sinistra con badge icona; hero del launcher in font editoriale e centrato.
+
+### Fixed
+- Il font per titoli Source Serif 4 non veniva mai caricato: le variabili tipografiche iniettate dal tema sovrascrivevano la dichiarazione del foglio di stile.
+- Aprendo un documento la pagina scorreva verso il basso nascondendo titolo e barra di stato dell'editor.
+- L'impostazione legacy `fontPreference: "dyslexic"` viene mappata su OpenDyslexic, `"classic"` su Source Serif 4.
+
 ## [0.1.9] - 2026-09-10
 
 ### Fixed

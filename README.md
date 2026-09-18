@@ -191,12 +191,23 @@ Pecie is designed for sustained writing sessions.
 
 - Keyboard-oriented workflows
 - Visible focus states
-- Accessible font preference
+- Writing font chosen from a bundled library of more than fifty libre typefaces (editorial serifs, display, slab, sans, monospace) with live preview
+- Legibility fonts (Atkinson Hyperlegible, Lexend, OpenDyslexic) that also restyle the interface
 - UI zoom at common reading sizes
 - Light and dark themes
 - Reduced-motion and high-contrast support
 - Guided onboarding and recoverable tutorials
 - Localized interface in Italian, English, German, Spanish, French, and Portuguese
+
+## Typography and Icons
+
+Pecie ships its own typography: every font and icon is bundled inside the application and loads from local files, so the interface looks the same on Linux, Windows and macOS and works offline.
+
+- Writing font selectable in the setup wizard and in Settings, with search, categories and live preview
+- Interface set in IBM Plex Sans, headings in Source Serif 4, code in IBM Plex Mono
+- Bootstrap Icons vendored as a local webfont with the full glyph map
+- All families are Free and Open Source (SIL OFL, Apache 2.0, Bitstream); license texts live next to each family in `apps/desktop/src/renderer/src/asset/fonts/`
+- `python3 scripts/vendor-fonts.py` regenerates the bundle from the catalog in `packages/schemas/src/fonts.ts`
 
 ## Local-First Principles
 

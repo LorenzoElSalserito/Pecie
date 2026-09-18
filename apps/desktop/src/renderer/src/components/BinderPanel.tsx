@@ -493,19 +493,20 @@ export function BinderPanel({
           </button>
         )}
         <div className={`binder-actions${collapsed ? ' binder-actions--collapsed' : ''}`}>
-          <Button aria-label={collapsed ? t(locale, 'newNode') : undefined} disabled={busy} onClick={() => setIsCreateDialogOpen(true)} size="sm" variant="secondary">
-            {collapsed ? <i aria-hidden="true" className="bi bi-plus-lg"></i> : t(locale, 'newNode')}
+          <Button aria-label={collapsed ? t(locale, 'newNode') : undefined} disabled={busy} onClick={() => setIsCreateDialogOpen(true)} size="sm" title={t(locale, 'newNode')} variant="secondary">
+            <i aria-hidden="true" className="bi bi-plus-lg"></i>
+            {collapsed ? null : <span>{t(locale, 'newNode')}</span>}
           </Button>
         </div>
-        <div className={`binder-actions binder-actions--secondary${collapsed ? ' binder-actions--collapsed' : ''}`}>
-          <Button aria-label={collapsed ? t(locale, 'moveUp') : undefined} disabled={busy || !selectedNode} onClick={() => void moveSelected('up')} size="sm" variant="ghost">
-            {collapsed ? <i aria-hidden="true" className="bi bi-arrow-up"></i> : t(locale, 'moveUp')}
+        <div className={`binder-actions binder-actions--secondary binder-actions--icons${collapsed ? ' binder-actions--collapsed' : ''}`}>
+          <Button aria-label={t(locale, 'moveUp')} disabled={busy || !selectedNode} onClick={() => void moveSelected('up')} size="sm" title={t(locale, 'moveUp')} variant="ghost">
+            <i aria-hidden="true" className="bi bi-arrow-up"></i>
           </Button>
-          <Button aria-label={collapsed ? t(locale, 'moveDown') : undefined} disabled={busy || !selectedNode} onClick={() => void moveSelected('down')} size="sm" variant="ghost">
-            {collapsed ? <i aria-hidden="true" className="bi bi-arrow-down"></i> : t(locale, 'moveDown')}
+          <Button aria-label={t(locale, 'moveDown')} disabled={busy || !selectedNode} onClick={() => void moveSelected('down')} size="sm" title={t(locale, 'moveDown')} variant="ghost">
+            <i aria-hidden="true" className="bi bi-arrow-down"></i>
           </Button>
-          <Button aria-label={collapsed ? t(locale, 'deleteNode') : undefined} disabled={busy || !selectedNode} onClick={() => void deleteSelected()} size="sm" variant="ghost">
-            {collapsed ? <i aria-hidden="true" className="bi bi-trash3"></i> : t(locale, 'deleteNode')}
+          <Button aria-label={t(locale, 'deleteNode')} className="binder-actions__danger" disabled={busy || !selectedNode} onClick={() => void deleteSelected()} size="sm" title={t(locale, 'deleteNode')} variant="ghost">
+            <i aria-hidden="true" className="bi bi-trash3"></i>
           </Button>
         </div>
         <div aria-label={t(locale, 'binder')} className="binder-tree" onKeyDown={handleKeyDown} ref={treeRef} role="tree" tabIndex={-1}>

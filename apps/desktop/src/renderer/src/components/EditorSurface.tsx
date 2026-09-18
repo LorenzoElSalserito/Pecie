@@ -7,30 +7,9 @@ import type * as Monaco from 'monaco-editor'
 import { Button } from '@pecie/ui'
 import { renderVisualBlocksInMarkdown } from '@pecie/domain'
 import { visualBlockInsertCommands } from '@pecie/schemas'
-import typeH2Icon from 'bootstrap-icons/icons/type-h2.svg'
-import typeBoldIcon from 'bootstrap-icons/icons/type-bold.svg'
-import typeItalicIcon from 'bootstrap-icons/icons/type-italic.svg'
-import typeUnderlineIcon from 'bootstrap-icons/icons/type-underline.svg'
-import typeStrikethroughIcon from 'bootstrap-icons/icons/type-strikethrough.svg'
-import listUlIcon from 'bootstrap-icons/icons/list-ul.svg'
-import listOlIcon from 'bootstrap-icons/icons/list-ol.svg'
-import checklistIcon from 'bootstrap-icons/icons/check2-square.svg'
-import quoteIcon from 'bootstrap-icons/icons/blockquote-left.svg'
-import linkIcon from 'bootstrap-icons/icons/link-45deg.svg'
-import imageIcon from 'bootstrap-icons/icons/card-image.svg'
-import citationIcon from 'bootstrap-icons/icons/chat-left-quote.svg'
-import footnoteIcon from 'bootstrap-icons/icons/123.svg'
-import inlineCodeIcon from 'bootstrap-icons/icons/code.svg'
-import codeBlockIcon from 'bootstrap-icons/icons/code-square.svg'
-import highlightIcon from 'bootstrap-icons/icons/highlighter.svg'
-import superscriptIcon from 'bootstrap-icons/icons/superscript.svg'
-import subscriptIcon from 'bootstrap-icons/icons/subscript.svg'
-import tableIcon from 'bootstrap-icons/icons/table.svg'
-import diagramIcon from 'bootstrap-icons/icons/diagram-3.svg'
-import mindmapIcon from 'bootstrap-icons/icons/diagram-2.svg'
-import chartIcon from 'bootstrap-icons/icons/bar-chart-line.svg'
 
 import { t } from '../i18n'
+import { ToolbarIcon, type ToolbarIconName } from './ToolbarIcons'
 import { useDocumentEditor } from '../hooks/useDocumentEditor'
 import { ImageInsertDialog } from './ImageInsertDialog'
 import type { EditorFormatAction, EditorSurfaceProps, EditorViewMode, MonacoEditorComponent } from './types'
@@ -43,7 +22,7 @@ const CITEKEY_PATTERN = /(?:^|[\s([{\u201c\u2018])@([A-Za-z0-9:_-]*)$/
 type FormattingActionDefinition = {
   action: EditorFormatAction | 'visualMermaid' | 'visualMarkmap' | 'visualChart'
   label: string
-  icon: string
+  icon: ToolbarIconName
   group: 'core' | 'insert'
 }
 
@@ -166,9 +145,25 @@ export function EditorSurface({
   onPageMarkersSummaryChange
 }: EditorSurfaceProps): React.JSX.Element {
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null)
+  const monacoRef = useRef<typeof Monaco | null>(null)
   const citationCompletionDisposableRef = useRef<Monaco.IDisposable | null>(null)
   const [monacoTheme, setMonacoTheme] = useState<'vs' | 'vs-dark'>(document.documentElement.dataset.theme === 'dark' ? 'vs-dark' : 'vs')
   const [viewMode, setViewMode] = useState<EditorViewMode>('write')
+
+  // The writing font is a bundled webface chosen at runtime: Monaco caches glyph metrics per
+  // font-family string, so re-measure whenever a face finishes loading or the catalog choice changes.
+  useEffect(() => {
+    const remeasure = (): void => {
+      monacoRef.current?.editor.remeasureFonts()
+    }
+    document.fonts.addEventListener('loadingdone', remeasure)
+    const observer = new MutationObserver(remeasure)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-font', 'data-ui-zoom'] })
+    return () => {
+      document.fonts.removeEventListener('loadingdone', remeasure)
+      observer.disconnect()
+    }
+  }, [])
   const [isTableDialogOpen, setIsTableDialogOpen] = useState(false)
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false)
   const [isMarkdownToolsOpen, setIsMarkdownToolsOpen] = useState(false)
@@ -208,28 +203,28 @@ export function EditorSurface({
   }
   const formattingActions = useMemo<FormattingActionDefinition[]>(
     () => [
-      { action: 'heading', label: t(locale, 'markdownHeading'), icon: typeH2Icon, group: 'core' },
-      { action: 'bold', label: t(locale, 'markdownBold'), icon: typeBoldIcon, group: 'core' },
-      { action: 'italic', label: t(locale, 'markdownItalic'), icon: typeItalicIcon, group: 'core' },
-      { action: 'underline', label: t(locale, 'markdownUnderline'), icon: typeUnderlineIcon, group: 'core' },
-      { action: 'strikethrough', label: t(locale, 'markdownStrikethrough'), icon: typeStrikethroughIcon, group: 'core' },
-      { action: 'highlight', label: t(locale, 'markdownHighlight'), icon: highlightIcon, group: 'core' },
-      { action: 'quote', label: t(locale, 'markdownQuote'), icon: quoteIcon, group: 'core' },
-      { action: 'citation', label: t(locale, 'markdownCitation'), icon: citationIcon, group: 'core' },
-      { action: 'link', label: t(locale, 'markdownLink'), icon: linkIcon, group: 'core' },
-      { action: 'image', label: t(locale, 'markdownImage'), icon: imageIcon, group: 'insert' },
-      { action: 'inlineCode', label: t(locale, 'markdownInlineCode'), icon: inlineCodeIcon, group: 'insert' },
-      { action: 'codeBlock', label: t(locale, 'markdownCodeBlock'), icon: codeBlockIcon, group: 'insert' },
-      { action: 'bullets', label: t(locale, 'markdownBullets'), icon: listUlIcon, group: 'insert' },
-      { action: 'numbered', label: t(locale, 'markdownNumbered'), icon: listOlIcon, group: 'insert' },
-      { action: 'checklist', label: t(locale, 'markdownChecklist'), icon: checklistIcon, group: 'insert' },
-      { action: 'footnote', label: t(locale, 'markdownFootnote'), icon: footnoteIcon, group: 'insert' },
-      { action: 'superscript', label: t(locale, 'markdownSuperscript'), icon: superscriptIcon, group: 'insert' },
-      { action: 'subscript', label: t(locale, 'markdownSubscript'), icon: subscriptIcon, group: 'insert' },
-      { action: 'table', label: t(locale, 'markdownTable'), icon: tableIcon, group: 'insert' },
-      { action: 'visualMermaid', label: t(locale, 'visualBlocksMermaid'), icon: diagramIcon, group: 'insert' },
-      { action: 'visualMarkmap', label: t(locale, 'visualBlocksMarkmap'), icon: mindmapIcon, group: 'insert' },
-      { action: 'visualChart', label: t(locale, 'visualBlocksChart'), icon: chartIcon, group: 'insert' }
+      { action: 'heading', label: t(locale, 'markdownHeading'), icon: 'type-h2', group: 'core' },
+      { action: 'bold', label: t(locale, 'markdownBold'), icon: 'type-bold', group: 'core' },
+      { action: 'italic', label: t(locale, 'markdownItalic'), icon: 'type-italic', group: 'core' },
+      { action: 'underline', label: t(locale, 'markdownUnderline'), icon: 'type-underline', group: 'core' },
+      { action: 'strikethrough', label: t(locale, 'markdownStrikethrough'), icon: 'type-strikethrough', group: 'core' },
+      { action: 'highlight', label: t(locale, 'markdownHighlight'), icon: 'highlighter', group: 'core' },
+      { action: 'quote', label: t(locale, 'markdownQuote'), icon: 'blockquote-left', group: 'core' },
+      { action: 'citation', label: t(locale, 'markdownCitation'), icon: 'chat-left-quote', group: 'core' },
+      { action: 'link', label: t(locale, 'markdownLink'), icon: 'link-45deg', group: 'core' },
+      { action: 'image', label: t(locale, 'markdownImage'), icon: 'card-image', group: 'insert' },
+      { action: 'inlineCode', label: t(locale, 'markdownInlineCode'), icon: 'code', group: 'insert' },
+      { action: 'codeBlock', label: t(locale, 'markdownCodeBlock'), icon: 'code-square', group: 'insert' },
+      { action: 'bullets', label: t(locale, 'markdownBullets'), icon: 'list-ul', group: 'insert' },
+      { action: 'numbered', label: t(locale, 'markdownNumbered'), icon: 'list-ol', group: 'insert' },
+      { action: 'checklist', label: t(locale, 'markdownChecklist'), icon: 'check2-square', group: 'insert' },
+      { action: 'footnote', label: t(locale, 'markdownFootnote'), icon: '123', group: 'insert' },
+      { action: 'superscript', label: t(locale, 'markdownSuperscript'), icon: 'superscript', group: 'insert' },
+      { action: 'subscript', label: t(locale, 'markdownSubscript'), icon: 'subscript', group: 'insert' },
+      { action: 'table', label: t(locale, 'markdownTable'), icon: 'table', group: 'insert' },
+      { action: 'visualMermaid', label: t(locale, 'visualBlocksMermaid'), icon: 'diagram-3', group: 'insert' },
+      { action: 'visualMarkmap', label: t(locale, 'visualBlocksMarkmap'), icon: 'diagram-2', group: 'insert' },
+      { action: 'visualChart', label: t(locale, 'visualBlocksChart'), icon: 'bar-chart-line', group: 'insert' }
     ],
     [locale]
   )
@@ -817,11 +812,7 @@ export function EditorSurface({
                             title={formatToolbarTooltip(entry)}
                             type="button"
                           >
-                            <span
-                              aria-hidden="true"
-                              className="format-chip__icon"
-                              style={{ '--format-icon': `url(${entry.icon})` } as React.CSSProperties}
-                            ></span>
+                            <ToolbarIcon className="format-chip__icon" name={entry.icon} />
                           </button>
                         ))}
                       </div>
@@ -951,6 +942,7 @@ export function EditorSurface({
                     onChange={(value: string | undefined) => setDraftBody(value ?? '')}
                     onMount={(editor: Monaco.editor.IStandaloneCodeEditor, monaco: typeof Monaco) => {
                       editorRef.current = editor
+                      monacoRef.current = monaco
                       citationCompletionDisposableRef.current?.dispose()
                       citationCompletionDisposableRef.current = monaco.languages.registerCompletionItemProvider('markdown', {
                         triggerCharacters: ['@'],
@@ -1022,7 +1014,7 @@ export function EditorSurface({
                       lineNumbers: 'off',
                       minimap: { enabled: false },
                       overviewRulerLanes: 0,
-                      padding: { top: preferences.typewriterMode ? 96 : 28, bottom: 48 },
+                      padding: { top: preferences.typewriterMode ? 96 : 18, bottom: 40 },
                       renderLineHighlight: 'none',
                       scrollBeyondLastLine: false,
                       wordWrap: 'on'

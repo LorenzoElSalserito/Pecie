@@ -33,9 +33,9 @@ describe('desktop accessibility regressions', () => {
     const binderPanel = await readRepoFile('apps/desktop/src/renderer/src/components/BinderPanel.tsx')
 
     expect(binderPanel).toContain("aria-label={collapsed ? t(locale, 'newNode') : undefined}")
-    expect(binderPanel).toContain("aria-label={collapsed ? t(locale, 'moveUp') : undefined}")
-    expect(binderPanel).toContain("aria-label={collapsed ? t(locale, 'moveDown') : undefined}")
-    expect(binderPanel).toContain("aria-label={collapsed ? t(locale, 'deleteNode') : undefined}")
+    expect(binderPanel).toContain("aria-label={t(locale, 'moveUp')}")
+    expect(binderPanel).toContain("aria-label={t(locale, 'moveDown')}")
+    expect(binderPanel).toContain("aria-label={t(locale, 'deleteNode')}")
     expect(binderPanel).not.toContain('role="tree" tabIndex={0}')
   })
 })

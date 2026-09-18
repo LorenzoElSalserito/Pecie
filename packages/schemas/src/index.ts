@@ -1,4 +1,5 @@
 export * from './fixtures'
+export * from './fonts'
 export * from './expert'
 export * from './generated/types.generated'
 export * from './plugin'
