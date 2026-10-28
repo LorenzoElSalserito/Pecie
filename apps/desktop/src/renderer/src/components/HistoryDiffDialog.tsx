@@ -46,7 +46,7 @@ export function HistoryDiffDialog({
   const hasSelectionRestore = Boolean(onRestoreSelection)
 
   return (
-    <Dialog open={open} onClose={onClose} size="wide" icon="bi-layout-text-window-reverse" title={title} description={subtitle}>
+    <Dialog open={open} onClose={onClose} size="wide" icon="layout-text-window-reverse" title={title} description={subtitle}>
       <div className="history-diff-dialog">
         <div className="history-diff-dialog__panes">
           <section className="history-diff-pane">

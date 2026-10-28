@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import { Button } from '@pecie/ui'
+import { Button, Icon, Select } from '@pecie/ui'
 
 import type { CitationLibraryDiagnostic, ListCitationProfilesResponse } from '@pecie/schemas'
 
@@ -38,7 +38,7 @@ function CollapsibleSection({
     <section className="context-section">
       <button className="context-section__toggle" onClick={() => setOpen((v) => !v)} type="button" aria-expanded={open}>
         <h3>{title}</h3>
-        <i aria-hidden="true" className={`bi ${open ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
+        <Icon name={open ? 'chevron-up' : 'chevron-down'} />
       </button>
       <div
         ref={bodyRef}
@@ -175,14 +175,14 @@ export function ContextPanel({
   }, [citationDiagnosticsReloadToken, project.project.defaultCitationProfileId, project.projectPath])
 
   return (
-    <aside aria-labelledby="context-panel-title" className={`workspace-context${collapsed ? ' workspace-context--collapsed' : ''}`}>
+    <aside aria-label={t(locale, 'projectStatus')} aria-labelledby="context-panel-title" className={`workspace-context${collapsed ? ' workspace-context--collapsed' : ''}`}>
       <div className="panel-chrome">
         <div>
           <p className="eyebrow">{t(locale, 'projectStatus')}</p>
           {!collapsed ? <h2 id="context-panel-title">{t(locale, 'projectStatus')}</h2> : null}
         </div>
         <button aria-label={collapsed ? t(locale, 'expandSidebar') : t(locale, 'collapseSidebar')} className="panel-toggle" onClick={onToggleCollapsed} type="button">
-          <i aria-hidden="true" className={`bi ${collapsed ? 'bi-chevron-double-left' : 'bi-chevron-double-right'}`}></i>
+          <Icon name={collapsed ? 'chevron-double-left' : 'chevron-double-right'} />
         </button>
       </div>
 
@@ -190,7 +190,7 @@ export function ContextPanel({
         <>
           <div className="context-session-card">
             <span className="context-session-card__title">
-              <i aria-hidden="true" className="bi bi-clock"></i>
+              <Icon name="clock" />
               {t(locale, 'sessionActiveTitle')}
             </span>
             <div className="context-session-card__stats">
@@ -300,9 +300,7 @@ export function ContextPanel({
                   {t(locale, 'citationRefreshDiagnostics')}
                 </Button>
               </div>
-              <label className="field">
-                <span>{t(locale, 'citationProfile')}</span>
-                <select
+              <Select label={t(locale, 'citationProfile')}
                   disabled={citationProfilesBusy || citationProfilesLoading || citationProfiles.length === 0}
                   onChange={(event) => {
                     const profileId = event.target.value
@@ -330,8 +328,7 @@ export function ContextPanel({
                       {profile.label}
                     </option>
                   ))}
-                </select>
-              </label>
+                </Select>
               {citationProfiles.length > 0 ? (
                 <ul className="stack-list stack-list--tight">
                   {citationProfiles.map((profile) => (
@@ -438,7 +435,7 @@ export function ContextPanel({
               <Button disabled={attachmentsBusy} onClick={onImportAttachments} size="sm" type="button" variant="secondary">{t(locale, 'importAttachment')}</Button>
               <Button onClick={onOpenAttachmentsDirectory} size="sm" type="button" variant="ghost">{t(locale, 'openAttachmentsFolder')}</Button>
               <a className="pecie-btn pecie-btn--ghost pecie-btn--sm" href={donationUrl} rel="noreferrer" target="_blank">
-                <i aria-hidden="true" className="bi bi-heart-fill"></i>
+                <Icon name="heart-fill" />
                 {t(locale, 'supportByDonating')}
               </a>
             </div>
@@ -540,7 +537,7 @@ export function ContextPanel({
           {/* ── Current Selection (compact) ── */}
           {selectedNode ? (
             <div className="context-selection-bar">
-              <i aria-hidden="true" className={`bi ${selectedNode.type === 'folder' ? 'bi-folder2-open' : 'bi-file-earmark-text'}`}></i>
+              <Icon name={selectedNode.type === 'folder' ? 'folder2-open' : 'file-earmark-text'} />
               <div>
                 <strong>{selectedNode.title}</strong>
                 <small>{formatNodeType(locale, selectedNode.type)}</small>

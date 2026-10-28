@@ -1,6 +1,8 @@
 import { t } from '../i18n'
 import type { CorkboardViewProps } from './types'
 
+import { Chip } from '@pecie/ui'
+
 export function CorkboardView({ locale, documents, selectedNodeId, onSelectNode }: CorkboardViewProps): React.JSX.Element {
   return (
     <section className="workspace-alt-view">
@@ -16,7 +18,7 @@ export function CorkboardView({ locale, documents, selectedNodeId, onSelectNode 
             onClick={() => onSelectNode(document.nodeId)}
             type="button"
           >
-            <span className="status-pill">{document.status}</span>
+            <Chip kind="status">{document.status}</Chip>
             <strong>{document.title}</strong>
             <p>{document.summary || t(locale, 'corkboardEmptySummary')}</p>
             <footer>

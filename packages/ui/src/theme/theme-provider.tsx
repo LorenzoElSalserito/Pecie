@@ -78,6 +78,10 @@ export function ThemeProvider({
     document.documentElement.style.setProperty('--pecie-subheading-size', `${tokens.typography.subheading.size * uiFontScale * zoomScale}px`)
     document.documentElement.style.setProperty('--pecie-small-size', `${tokens.typography.small.size * uiFontScale * zoomScale}px`)
     document.documentElement.style.setProperty('--pecie-caption-size', `${tokens.typography.caption.size * uiFontScale * zoomScale}px`)
+    document.documentElement.style.setProperty('--pecie-display-size', `${tokens.typography.display.size * uiFontScale * zoomScale}px`)
+    document.documentElement.style.setProperty('--pecie-compact-size', `${tokens.typography.compact.size * uiFontScale * zoomScale}px`)
+    document.documentElement.style.setProperty('--pecie-h3-size', `${tokens.typography.h3.size * uiFontScale * zoomScale}px`)
+    document.documentElement.style.setProperty('--pecie-mono-size', `${tokens.typography.mono.size * uiFontScale * zoomScale}px`)
   }, [fontPreference, uiZoom])
 
   useEffect(() => {

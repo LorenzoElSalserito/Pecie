@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 
-import { outlinerColumns, type OutlinerColumnKey } from '@pecie/ui'
+import { Icon, outlinerColumns, type OutlinerColumnKey } from '@pecie/ui'
 
 import { t } from '../i18n'
 import type { OutlinerViewProps, WorkspaceDocumentSummary } from './types'
@@ -108,10 +108,7 @@ export function OutlinerView({ locale, documents, selectedNodeId, onSelectNode }
                         type="button"
                       >
                         <span>{t(locale, column.i18nKey)}</span>
-                        <i
-                          aria-hidden="true"
-                          className={`bi ${isActiveSort && sortState.direction === 'desc' ? 'bi-sort-down' : 'bi-sort-up'}`}
-                        ></i>
+                        <Icon name={isActiveSort && sortState.direction === 'desc' ? 'sort-down' : 'sort-up'} />
                       </button>
                     ) : (
                       t(locale, column.i18nKey)

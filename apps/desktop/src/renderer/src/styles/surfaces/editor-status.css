@@ -1,0 +1,73 @@
+/* ── Editor save indicator ── */
+.save-indicator {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 0.7rem;
+  height: 0.7rem;
+}
+
+.save-indicator::before {
+  content: '';
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--pecie-color-textSubtle);
+}
+
+.save-indicator--dirty::before {
+  background: var(--pecie-color-warning);
+}
+
+.save-indicator--saving::before {
+  width: 0.88rem;
+  height: 0.88rem;
+  border: 2px solid color-mix(in srgb, var(--pecie-color-warning) 38%, transparent);
+  border-top-color: var(--pecie-color-warning);
+  background: transparent;
+}
+
+.save-indicator--saved::before,
+.save-indicator--idle::before {
+  background: var(--pecie-color-success);
+}
+
+.save-indicator--error::before {
+  background: var(--pecie-color-danger);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .editor-layout {
+    transition: grid-template-columns 150ms ease;
+  }
+
+  .editor-pane {
+    transition:
+      opacity 150ms ease,
+      transform 150ms ease,
+      visibility 150ms step-end;
+  }
+
+  .editor-pane--hidden {
+    transform: translateY(6px);
+  }
+
+  .editor-monaco__ingest-flash {
+    animation: editor-ingest-flash 1350ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .save-indicator--dirty::before {
+    animation: workspace-session-pulse 1.5s ease-in-out infinite;
+  }
+
+  .save-indicator--saving::before {
+    animation: save-indicator-spin 800ms linear infinite;
+  }
+
+  .save-indicator--saved::before,
+  .save-indicator--idle::before {
+    animation: save-indicator-pulse 1.8s ease-in-out infinite;
+  }
+}

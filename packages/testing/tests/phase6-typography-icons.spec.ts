@@ -104,37 +104,47 @@ async function createProject(page: Page, title: string): Promise<void> {
 }
 
 test.describe('FASE 6 bundled typography and icons', () => {
-  test('renders every visible Bootstrap icon from the bundled webfont with no network or query-string assets', async () => {
+  test('renders every visible icon as an embedded SVG glyph: no icon font, no network, no query-string assets', async () => {
     const { electronApp, page, homeDirectory, failedRequests, consoleErrors } = await launchDesktop()
 
     try {
       await expect(page.getByLabel('Project title')).toBeVisible()
       const snapshot = await fontSnapshot(page)
       expect(snapshot.renderedUrl).toMatch(/^file:\/\//)
-      const iconFaces = snapshot.faces.filter((face) => face.family.replace(/['"]/g, '') === 'bootstrap-icons')
-      expect(iconFaces).toHaveLength(1)
-      expect(iconFaces[0].status).toBe('loaded')
+      // The icon webfont is gone: nothing in the document may declare or depend on it.
+      expect(snapshot.faces.filter((face) => face.family.replace(/['"]/g, '') === 'bootstrap-icons')).toEqual([])
 
       const iconReport = await page.evaluate(() => {
-        const icons = [...document.querySelectorAll<HTMLElement>('i.bi')]
+        const legacy = [...document.querySelectorAll<HTMLElement>('i.bi, i[class*="bi-"]')].map((icon) => icon.className)
+        const icons = [...document.querySelectorAll<SVGSVGElement>('svg.pecie-icon')]
         const visible = icons.filter((icon) => {
           const rect = icon.getBoundingClientRect()
           return rect.width > 0 && rect.height > 0 && getComputedStyle(icon).visibility !== 'hidden'
         })
         const broken = visible
           .map((icon) => {
-            const before = getComputedStyle(icon, '::before')
-            const content = before.content.replace(/["']/g, '')
+            const box = icon.getBoundingClientRect()
+            const paths = [...icon.querySelectorAll('path')]
+            const painted = paths.reduce((total, pathElement) => {
+              const pathBox = (pathElement as SVGGraphicsElement).getBBox()
+              return total + pathBox.width * pathBox.height
+            }, 0)
+            const style = getComputedStyle(icon)
             return {
-              className: icon.className,
-              fontFamily: before.fontFamily,
-              codePoint: content.codePointAt(0) ?? 0,
-              glyphWidth: icon.getBoundingClientRect().width
+              name: icon.dataset.icon ?? '',
+              width: box.width,
+              height: box.height,
+              paths: paths.length,
+              painted,
+              fill: style.fill,
+              viewBox: icon.getAttribute('viewBox'),
+              hidden: icon.getAttribute('aria-hidden') === 'true' || icon.getAttribute('role') === 'img'
             }
           })
-          .filter((entry) => !entry.fontFamily.includes('bootstrap-icons') || entry.codePoint < 0xf000 || entry.glyphWidth < 6)
-        return { total: icons.length, visible: visible.length, broken }
+          .filter((entry) => entry.width < 8 || entry.height < 8 || entry.paths === 0 || entry.painted < 10 || entry.fill === 'none' || entry.viewBox !== '0 0 16 16' || !entry.hidden)
+        return { legacy, total: icons.length, visible: visible.length, broken }
       })
+      expect(iconReport.legacy).toEqual([])
       expect(iconReport.visible).toBeGreaterThan(8)
       expect(iconReport.broken).toEqual([])
 
@@ -159,7 +169,7 @@ test.describe('FASE 6 bundled typography and icons', () => {
           try {
             return [...sheet.cssRules]
               .filter((rule): rule is CSSFontFaceRule => rule instanceof CSSFontFaceRule)
-              .map((rule) => rule.style.getPropertyValue('src'))
+              .map((rule) => `${rule.style.getPropertyValue('font-family')} ${rule.style.getPropertyValue('src')}`)
           } catch {
             return []
           }
@@ -169,6 +179,7 @@ test.describe('FASE 6 bundled typography and icons', () => {
       for (const src of stylesheetUrls) {
         expect(src).not.toMatch(/https?:\/\//)
         expect(src).not.toMatch(/\?[A-Za-z0-9]/)
+        expect(src).not.toMatch(/bootstrap-icons/)
       }
 
       expect(failedRequests.filter((entry) => /\.(woff2?|ttf|otf|svg)/.test(entry))).toEqual([])
@@ -179,7 +190,7 @@ test.describe('FASE 6 bundled typography and icons', () => {
     }
   })
 
-  test('renders the editor formatting toolbar from embedded SVG glyphs', async () => {
+  test('renders the editor formatting toolbar and the workspace chrome from embedded SVG glyphs', async () => {
     const { electronApp, page, homeDirectory, failedRequests } = await launchDesktop()
 
     try {
@@ -200,14 +211,15 @@ test.describe('FASE 6 bundled typography and icons', () => {
             return total + pathBox.width * pathBox.height
           }, 0)
           return {
-            title: chip.title,
+            title: chip.getAttribute('aria-label') ?? '',
             hasSvg: Boolean(svg),
             width: box?.width ?? 0,
             height: box?.height ?? 0,
             paths: paths.length,
             painted,
             fill: svg ? getComputedStyle(svg).fill : '',
-            images: chip.querySelectorAll('img').length
+            images: chip.querySelectorAll('img').length,
+            fonts: chip.querySelectorAll('i').length
           }
         })
       })
@@ -215,6 +227,7 @@ test.describe('FASE 6 bundled typography and icons', () => {
       for (const chip of report) {
         expect(chip.hasSvg, `${chip.title} has no inline svg`).toBe(true)
         expect(chip.images).toBe(0)
+        expect(chip.fonts).toBe(0)
         expect(chip.width, `${chip.title} icon has no width`).toBeGreaterThan(8)
         expect(chip.height, `${chip.title} icon has no height`).toBeGreaterThan(8)
         expect(chip.paths, `${chip.title} has no path data`).toBeGreaterThan(0)
@@ -224,18 +237,31 @@ test.describe('FASE 6 bundled typography and icons', () => {
       const titles = report.map((chip) => chip.title)
       expect(titles.some((title) => /Bold/i.test(title))).toBe(true)
       expect(titles.some((title) => /Citation/i.test(title))).toBe(true)
+      // Toolbar tooltips: every chip is described by a tooltip that also carries the shortcut where one exists.
+      const tooltips = await page.evaluate(() =>
+        [...document.querySelectorAll<HTMLButtonElement>('.format-chip')].map((chip) => ({
+          tooltip: chip.dataset.tooltip ?? '',
+          describedBy: chip.getAttribute('aria-describedby') ? document.getElementById(chip.getAttribute('aria-describedby') as string)?.textContent ?? '' : ''
+        }))
+      )
+      expect(tooltips.every((entry) => entry.tooltip.length > 0 && entry.tooltip === entry.describedBy)).toBe(true)
+      expect(tooltips.some((entry) => /Ctrl|Cmd|⌘/i.test(entry.tooltip))).toBe(true)
 
-      // Workspace icons (binder, header, status bar) still come from the bundled webfont.
+      // Workspace icons (binder, header, status bar, dialogs) are embedded SVG glyphs too.
       const workspaceIcons = await page.evaluate(() =>
-        [...document.querySelectorAll<HTMLElement>('.workspace-shell i.bi')]
+        [...document.querySelectorAll<SVGSVGElement>('.workspace-shell svg.pecie-icon')]
           .filter((icon) => icon.getBoundingClientRect().width > 0)
           .map((icon) => {
-            const before = getComputedStyle(icon, '::before')
-            return { className: icon.className, fontFamily: before.fontFamily, codePoint: before.content.replace(/["']/g, '').codePointAt(0) ?? 0 }
+            const painted = [...icon.querySelectorAll('path')].reduce((total, pathElement) => {
+              const pathBox = (pathElement as SVGGraphicsElement).getBBox()
+              return total + pathBox.width * pathBox.height
+            }, 0)
+            return { name: icon.dataset.icon ?? '', painted, fill: getComputedStyle(icon).fill }
           })
       )
       expect(workspaceIcons.length).toBeGreaterThan(10)
-      expect(workspaceIcons.filter((icon) => !icon.fontFamily.includes('bootstrap-icons') || icon.codePoint < 0xf000)).toEqual([])
+      expect(workspaceIcons.filter((icon) => !icon.name || icon.painted < 10 || icon.fill === 'none')).toEqual([])
+      expect(await page.locator('.workspace-shell i.bi').count()).toBe(0)
       expect(failedRequests.filter((entry) => /\.(woff2?|ttf|otf|svg)/.test(entry))).toEqual([])
     } finally {
       await electronApp.close()

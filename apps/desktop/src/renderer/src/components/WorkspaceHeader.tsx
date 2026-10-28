@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 
-import { Button } from '@pecie/ui'
+import { Button, Icon, Tabs, type IconName } from '@pecie/ui'
 
 import { t } from '../i18n'
 import type { WorkspaceHeaderProps } from './types'
@@ -74,7 +74,7 @@ export function WorkspaceHeader({
   }, [project.binder.nodes, project.binder.rootId, selectedNode])
 
   function renderOverflowItem(params: {
-    icon: string
+    icon: IconName
     label: string
     onClick: () => void
     shortcut?: string
@@ -89,7 +89,7 @@ export function WorkspaceHeader({
         type="button"
       >
         <span aria-hidden="true" className="overflow-menu__item-icon">
-          <i className={`bi ${params.icon}`}></i>
+          <Icon name={params.icon} />
         </span>
         <span className="overflow-menu__item-label">{params.label}</span>
         {params.shortcut ? <span className="overflow-menu__item-meta">{params.shortcut}</span> : null}
@@ -102,7 +102,7 @@ export function WorkspaceHeader({
       {/* ── Left: Identity ── */}
       <div className="workspace-header__identity">
         <button className="workspace-header__back" onClick={onBackToProjects} type="button" aria-label={t(locale, 'backToProjects')}>
-          <i aria-hidden="true" className="bi bi-arrow-left"></i>
+          <Icon name="arrow-left" />
         </button>
         <div className="workspace-header__title-group">
           <p className="eyebrow">{t(locale, 'appName')}</p>
@@ -147,10 +147,10 @@ export function WorkspaceHeader({
             title={binderToggleLabel}
             type="button"
           >
-            <i
-              aria-hidden="true"
-              className={`bi ${binderCollapsed ? 'bi-layout-sidebar-inset' : 'bi-layout-sidebar'} workspace-toggle__icon${binderCollapsed ? '' : ' workspace-toggle__icon--active'}`}
-            ></i>
+            <Icon
+              className={`workspace-toggle__icon${binderCollapsed ? '' : ' workspace-toggle__icon--active'}`}
+              name={binderCollapsed ? 'layout-sidebar-inset' : 'layout-sidebar'}
+            />
           </button>
           <button
             aria-label={contextToggleLabel}
@@ -160,46 +160,41 @@ export function WorkspaceHeader({
             title={contextToggleLabel}
             type="button"
           >
-            <i
-              aria-hidden="true"
-              className={`bi ${contextCollapsed ? 'bi-layout-sidebar-inset-reverse' : 'bi-layout-sidebar-reverse'} workspace-toggle__icon${contextCollapsed ? '' : ' workspace-toggle__icon--active'}`}
-            ></i>
+            <Icon
+              className={`workspace-toggle__icon${contextCollapsed ? '' : ' workspace-toggle__icon--active'}`}
+              name={contextCollapsed ? 'layout-sidebar-inset-reverse' : 'layout-sidebar-reverse'}
+            />
           </button>
         </div>
-        <div className="workspace-header__view-switcher" role="tablist" aria-label={t(locale, 'workspaceViewsTitle')}>
-          {([
-            ['editor', t(locale, 'workspaceViewEditor')],
-            ['research', t(locale, 'workspaceViewResearch')],
-            ['timeline', t(locale, 'workspaceViewTimeline')],
-            ['outliner', t(locale, 'workspaceViewOutliner')],
-            ['corkboard', t(locale, 'workspaceViewCorkboard')],
-            ['scrivenings', t(locale, 'workspaceViewScrivenings')]
-          ] as const).map(([view, label]) => (
-            <button
-              aria-selected={workspaceView === view}
-              className={`workspace-view-chip${workspaceView === view ? ' workspace-view-chip--active' : ''}`}
-              data-tutorial-id={`workspace-view-${view}`}
-              key={view}
-              onClick={() => onChangeWorkspaceView(view)}
-              role="tab"
-              tabIndex={workspaceView === view ? 0 : -1}
-              type="button"
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+        <Tabs
+          activeItemClassName="workspace-view-chip--active"
+          className="workspace-header__view-switcher"
+          itemClassName="workspace-view-chip"
+          items={(
+            [
+              ['editor', t(locale, 'workspaceViewEditor')],
+              ['research', t(locale, 'workspaceViewResearch')],
+              ['timeline', t(locale, 'workspaceViewTimeline')],
+              ['outliner', t(locale, 'workspaceViewOutliner')],
+              ['corkboard', t(locale, 'workspaceViewCorkboard')],
+              ['scrivenings', t(locale, 'workspaceViewScrivenings')]
+            ] as const
+          ).map(([view, label]) => ({ value: view, label, tutorialId: `workspace-view-${view}` }))}
+          label={t(locale, 'workspaceViewsTitle')}
+          onChange={onChangeWorkspaceView}
+          value={workspaceView}
+        />
       </div>
 
       {/* ── Right: Primary Actions + Overflow ── */}
       <div className="workspace-header__actions">
         <div className="workspace-header__action-group workspace-header__action-group--primary">
           <Button data-tutorial-id="workspace-open-export" onClick={onOpenExport} size="sm" variant="secondary">
-            <i aria-hidden="true" className="bi bi-box-arrow-up"></i>
+            <Icon name="box-arrow-up" />
             {t(locale, 'export')}
           </Button>
           <Button onClick={onNewProject} size="sm">
-            <i aria-hidden="true" className="bi bi-plus-lg"></i>
+            <Icon name="plus-lg" />
             {t(locale, 'newProject')}
           </Button>
         </div>
@@ -214,7 +209,7 @@ export function WorkspaceHeader({
             size="sm"
             variant="ghost"
           >
-            <i aria-hidden="true" className="bi bi-three-dots"></i>
+            <Icon name="three-dots" />
           </Button>
           {overflowOpen ? (
             <>
@@ -225,7 +220,7 @@ export function WorkspaceHeader({
               />
               <div className="overflow-menu" role="menu">
                 {renderOverflowItem({
-                  icon: 'bi-folder2-open',
+                  icon: 'folder2-open',
                   label: t(locale, 'openAnotherProject'),
                   onClick: () => {
                     onOpenProject()
@@ -233,7 +228,7 @@ export function WorkspaceHeader({
                   }
                 })}
                 {renderOverflowItem({
-                  icon: 'bi-archive',
+                  icon: 'archive',
                   label: t(locale, 'manageProjects'),
                   onClick: () => {
                     onManageProjects()
@@ -241,7 +236,7 @@ export function WorkspaceHeader({
                   }
                 })}
                 {renderOverflowItem({
-                  icon: 'bi-share',
+                  icon: 'share',
                   label: t(locale, 'shareTitle'),
                   onClick: () => {
                     onOpenShare()
@@ -249,7 +244,7 @@ export function WorkspaceHeader({
                   }
                 })}
                 {renderOverflowItem({
-                  icon: 'bi-book',
+                  icon: 'book',
                   label: t(locale, 'guideCenterTitle'),
                   tutorialId: 'workspace-open-guide',
                   onClick: () => {
@@ -259,7 +254,7 @@ export function WorkspaceHeader({
                 })}
                 <div className="overflow-menu__divider"></div>
                 {renderOverflowItem({
-                  icon: 'bi-gear',
+                  icon: 'gear',
                   label: t(locale, 'settings'),
                   tutorialId: 'workspace-open-settings',
                   onClick: () => {

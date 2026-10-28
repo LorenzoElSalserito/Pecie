@@ -1,0 +1,23 @@
+/* ── Progress bar (indeterminate) ── */
+.progress-bar {
+  position: relative;
+  height: 3px;
+  overflow: hidden;
+  border-radius: var(--pecie-radius-full);
+  background: var(--pecie-color-borderSubtle);
+}
+
+.progress-bar__track {
+  position: absolute;
+  inset: 0;
+  width: 25%;
+  border-radius: var(--pecie-radius-full);
+  background: var(--pecie-color-accent);
+  animation: progress-indeterminate 1.4s ease-in-out infinite;
+}
+
+
+.progress-bar--determinate .progress-bar__track {
+  animation: none;
+  transition: width var(--pecie-motion-normal) var(--pecie-ease-standard);
+}

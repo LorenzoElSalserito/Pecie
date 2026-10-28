@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import type { AppSettings, AuthorProfile, SupportedLocale } from '@pecie/schemas'
 import { getFontDefinition } from '@pecie/schemas'
-import { Button, UI_ZOOM_OPTIONS, type ThemeMode } from '@pecie/ui'
+import { Button, Icon, UI_ZOOM_OPTIONS, type IconName, type ThemeMode } from '@pecie/ui'
 
 import appIcon from '../asset/Icon.svg'
 import { SUPPORTED_LOCALES, localeLabel, t } from '../i18n'
@@ -194,7 +194,7 @@ export function SetupWizard({ bootstrap, onPreviewChange, onComplete }: SetupWiz
   const locale = draft.locale
   const authorNameError = touched && !draft.authorProfile.name.trim() ? t(locale, 'authorNameRequired') : null
   const currentStep = displayedStep
-  const currentStepIconClass = currentStep === 0 ? 'bi-folder2-open' : 'bi-person'
+  const currentStepIcon: IconName = currentStep === 0 ? 'folder2-open' : 'person'
 
   function clearTransitionTimeouts(): void {
     transitionTimeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId))
@@ -327,7 +327,7 @@ export function SetupWizard({ bootstrap, onPreviewChange, onComplete }: SetupWiz
           {isCompleting ? (
             <div className="setup-celebration" role="status">
               <div aria-hidden="true" className="setup-celebration__icon">
-                <i className="bi bi-check2"></i>
+                <Icon name="check2" />
               </div>
               <div className="setup-celebration__copy">
                 <p className="eyebrow">{t(locale, 'setupReadyEyebrow')}</p>
@@ -339,7 +339,7 @@ export function SetupWizard({ bootstrap, onPreviewChange, onComplete }: SetupWiz
             <>
               <div aria-hidden="true" className="setup-step-hero">
                 <div className="setup-step-hero__icon-shell">
-                  <i className={`bi ${currentStepIconClass} setup-step-hero__icon`}></i>
+                  <Icon className="setup-step-hero__icon" name={currentStepIcon} />
                 </div>
               </div>
               <div className="section-heading section-heading--compact">
@@ -354,7 +354,7 @@ export function SetupWizard({ bootstrap, onPreviewChange, onComplete }: SetupWiz
             <>
               <div aria-hidden="true" className="setup-step-hero">
                 <div className="setup-step-hero__icon-shell">
-                  <i className={`bi ${currentStepIconClass} setup-step-hero__icon`}></i>
+                  <Icon className="setup-step-hero__icon" name={currentStepIcon} />
                 </div>
               </div>
               <div className="section-heading section-heading--compact">

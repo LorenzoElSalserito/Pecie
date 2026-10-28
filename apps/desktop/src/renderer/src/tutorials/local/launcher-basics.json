@@ -1,7 +1,7 @@
 {
   "id": "launcher-basics",
   "schemaVersion": 1,
-  "icon": "bi-rocket-takeoff",
+  "icon": "rocket-takeoff",
   "titleKey": "onboardingTitle",
   "steps": [
     {

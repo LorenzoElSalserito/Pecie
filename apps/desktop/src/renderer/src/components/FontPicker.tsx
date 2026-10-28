@@ -2,7 +2,7 @@ import { useId, useMemo, useState } from 'react'
 
 import type { FontCategory, FontDefinition, SupportedLocale } from '@pecie/schemas'
 import { FONT_CATALOG, FONT_CATEGORIES, fontFamilyStack, getFontDefinition } from '@pecie/schemas'
-import { Button } from '@pecie/ui'
+import { Button, Icon } from '@pecie/ui'
 
 import { t } from '../i18n'
 
@@ -70,7 +70,7 @@ export function FontPicker({ locale, value, onChange, defaultExpanded = false }:
           type="button"
           variant={expanded ? 'ghost' : 'secondary'}
         >
-          <i aria-hidden="true" className={`bi ${expanded ? 'bi-chevron-up' : 'bi-fonts'}`}></i>
+          <Icon name={expanded ? 'chevron-up' : 'fonts'} />
           {t(locale, expanded ? 'fontPickerClose' : 'fontPickerChange')}
         </Button>
       </div>
@@ -79,7 +79,7 @@ export function FontPicker({ locale, value, onChange, defaultExpanded = false }:
         <div className="font-picker__browser" id={listId}>
           <div className="font-picker__toolbar">
             <label className="font-picker__search">
-              <i aria-hidden="true" className="bi bi-search"></i>
+              <Icon name="search" />
               <input
                 aria-label={t(locale, 'fontPickerSearch')}
                 onChange={(event) => setQuery(event.target.value)}
@@ -143,7 +143,7 @@ export function FontPicker({ locale, value, onChange, defaultExpanded = false }:
                       {t(locale, `fontCategory_${font.category}`)}
                       {font.ui ? ` · ${t(locale, 'fontPickerAppliesUi')}` : ''}
                     </span>
-                    {selected ? <i aria-hidden="true" className="bi bi-check-lg font-picker__option-check"></i> : null}
+                    {selected ? <Icon className="font-picker__option-check" name="check-lg" /> : null}
                   </label>
                 )
               })}

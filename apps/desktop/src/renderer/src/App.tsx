@@ -73,6 +73,11 @@ function AppShell(): React.JSX.Element {
   const settings = bootstrap?.settings
   const locale = settings?.locale ?? 'en-US'
 
+  // The document language follows the UI locale so assistive tech picks the right voice and hyphenation.
+  useEffect(() => {
+    document.documentElement.lang = locale
+  }, [locale])
+
   const saveSettings = useCallback(
     async (nextSettings: AppSettings) => {
       const response = await window.pecie.invokeSafe('settings:save', { settings: nextSettings })

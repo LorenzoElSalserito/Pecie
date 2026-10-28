@@ -19,14 +19,21 @@ describe('desktop accessibility regressions', () => {
     expect(auditMatrix).toContain('Manual Pass Queue')
   })
 
-  it('keeps workspace and editor tablists on a single tab stop', async () => {
+  it('keeps workspace and editor tablists on a single tab stop through the design-system primitives', async () => {
     const workspaceHeader = await readRepoFile('apps/desktop/src/renderer/src/components/WorkspaceHeader.tsx')
-    const editorSurface = await readRepoFile('apps/desktop/src/renderer/src/components/EditorSurface.tsx')
+    const editorSurface = await readRepoFile('apps/desktop/src/renderer/src/components/editor/EditorStatusBar.tsx')
+    const tabs = await readRepoFile('packages/ui/src/components/tabs.tsx')
+    const segmented = await readRepoFile('packages/ui/src/components/segmented-control.tsx')
 
-    expect(workspaceHeader).toContain('role="tablist"')
-    expect(workspaceHeader).toContain('tabIndex={workspaceView === view ? 0 : -1}')
-    expect(editorSurface).toContain('role="tablist"')
-    expect(editorSurface).toContain('tabIndex={viewMode === mode ? 0 : -1}')
+    expect(workspaceHeader).toContain('<Tabs')
+    expect(workspaceHeader).toContain('value={workspaceView}')
+    expect(editorSurface).toContain('<SegmentedControl')
+    expect(editorSurface).toContain('value={viewMode}')
+    for (const source of [tabs, segmented]) {
+      expect(source).toContain('role="tablist"')
+      expect(source).toContain('tabIndex={active ? 0 : -1}')
+      expect(source).toMatch(/ArrowRight|ArrowLeft/)
+    }
   })
 
   it('keeps collapsed binder icon controls named for screen readers', async () => {

@@ -1,0 +1,357 @@
+.panel-chrome h2 {
+  margin: 0;
+  font-family: var(--pecie-font-ui);
+  letter-spacing: -0.025em;
+}
+
+.workspace-binder,
+.workspace-context {
+  border: 1px solid var(--pecie-color-borderSubtle);
+  border-radius: var(--pecie-radius-xl);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 18%, transparent), transparent 48%),
+    color-mix(in srgb, var(--pecie-color-surface) 94%, transparent);
+  box-shadow: var(--pecie-shadow-md);
+}
+
+.panel-chrome {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.workspace-shell {
+  display: grid;
+  gap: 0.9rem;
+  min-height: 100vh;
+  max-width: 110rem;
+  margin: 0 auto;
+  padding: clamp(0.85rem, 1.8vw, 1.35rem);
+}
+
+.workspace-grid {
+  position: relative;
+  z-index: 0;
+  display: grid;
+  grid-template-columns: clamp(16rem, var(--binder-width, 17.5rem), 28rem) auto minmax(0, 1fr) auto clamp(17rem, var(--context-width, 18.75rem), 30rem);
+  gap: 0.7rem;
+  align-items: stretch;
+}
+
+.workspace-binder {
+  grid-column: 1;
+}
+
+.resize-handle--left {
+  grid-column: 2;
+}
+
+.resize-handle--right {
+  grid-column: 4;
+}
+
+.workspace-context {
+  grid-column: 5;
+}
+
+.workspace-grid--binder-collapsed {
+  grid-template-columns: 4.5rem 0 minmax(0, 1fr) auto clamp(17rem, var(--context-width, 18.75rem), 30rem);
+}
+
+.workspace-grid--context-collapsed {
+  grid-template-columns: clamp(16rem, var(--binder-width, 17.5rem), 28rem) auto minmax(0, 1fr) 0 4.5rem;
+}
+
+.workspace-grid--binder-collapsed.workspace-grid--context-collapsed {
+  grid-template-columns: 4.5rem 0 minmax(0, 1fr) 0 4.5rem;
+}
+
+.workspace-grid.workspace-grid--focus {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .workspace-grid {
+    transition: grid-template-columns 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+.workspace-binder,
+.workspace-context {
+  display: grid;
+  align-self: stretch;
+  position: static;
+  z-index: 1;
+  min-width: 0;
+  max-height: none;
+  overflow: hidden;
+  overflow-y: auto;
+  gap: 0.78rem;
+  transition: padding var(--pecie-transition-normal), opacity var(--pecie-transition-fast);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 24%, transparent), transparent 46%),
+    linear-gradient(180deg, color-mix(in srgb, var(--pecie-color-surfaceStrong) 16%, transparent), transparent 22%),
+    color-mix(in srgb, var(--pecie-color-surface) 94%, transparent);
+  border-radius: var(--pecie-radius-xl);
+  border: 1px solid color-mix(in srgb, var(--pecie-color-borderSubtle) 88%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 34%, transparent),
+    0 18px 34px color-mix(in srgb, black 6%, transparent);
+  padding: 0.92rem;
+  backdrop-filter: blur(12px);
+}
+
+.workspace-binder--collapsed,
+.workspace-context--collapsed {
+  width: 4.5rem;
+  min-width: 4.5rem;
+  padding: 0.7rem 0.45rem;
+  align-content: start;
+  grid-auto-rows: min-content;
+  row-gap: 0.55rem;
+  justify-items: center;
+  overflow: hidden;
+}
+
+.panel-chrome {
+  align-items: center;
+  margin-bottom: 0;
+  position: static;
+  padding: 0.12rem 0.1rem 0.72rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--pecie-color-borderSubtle) 72%, transparent);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 26%, transparent), transparent 54%),
+    linear-gradient(180deg, color-mix(in srgb, var(--pecie-color-surfaceStrong) 14%, transparent), transparent 78%),
+    color-mix(in srgb, var(--pecie-color-background) 93%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+.panel-chrome__actions {
+  display: inline-flex;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.panel-toggle {
+  min-width: 2rem;
+  min-height: 2rem;
+  border: 1px solid var(--pecie-color-borderSubtle);
+  border-radius: var(--pecie-radius-full);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 18%, transparent), transparent 40%),
+    var(--pecie-color-background);
+  color: var(--pecie-color-textMuted);
+  cursor: pointer;
+  transition:
+    background var(--pecie-transition-fast),
+    border-color var(--pecie-transition-fast),
+    color var(--pecie-transition-fast),
+    box-shadow var(--pecie-transition-fast);
+}
+
+.panel-toggle:hover {
+  color: var(--pecie-color-text);
+  border-color: color-mix(in srgb, var(--pecie-color-accent) 24%, var(--pecie-color-border));
+  box-shadow: var(--pecie-shadow-sm);
+}
+
+.panel-toggle[aria-pressed='true'] {
+  color: var(--pecie-color-text);
+  border-color: color-mix(in srgb, var(--pecie-color-accent) 30%, var(--pecie-color-border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 20%, transparent), transparent 48%),
+    color-mix(in srgb, var(--pecie-color-accent) 10%, var(--pecie-color-background));
+}
+
+.panel-chrome h2 {
+  font-size: 1.05rem;
+}
+
+.workspace-context {
+  align-self: stretch;
+}
+
+.workspace-context .stack-list {
+  max-height: none;
+  overflow: visible;
+  padding-right: 0;
+}
+
+.workspace-binder--collapsed .panel-chrome,
+.workspace-context--collapsed .panel-chrome {
+  justify-content: center;
+  width: 100%;
+  position: static;
+  display: grid;
+  justify-items: center;
+  gap: 0.4rem;
+  padding: 0.1rem 0 0.35rem;
+  border-bottom: none;
+  background: transparent;
+  backdrop-filter: none;
+}
+
+.workspace-binder--collapsed .eyebrow,
+.workspace-context--collapsed .eyebrow {
+  max-width: 100%;
+  margin: 0;
+  text-align: center;
+  white-space: normal;
+  line-height: 1.15;
+  letter-spacing: 0.06em;
+  font-size: 0.58rem;
+}
+
+.workspace-binder--collapsed .panel-chrome__actions,
+.workspace-context--collapsed .panel-chrome__actions {
+  width: 100%;
+  justify-content: center;
+}
+
+.workspace-binder--collapsed .binder-search-collapsed {
+  margin: 0;
+}
+
+.workspace-context--collapsed {
+  align-content: start;
+  justify-items: center;
+}
+
+@media (max-width: 1180px) {
+.workspace-grid {
+    grid-template-columns: clamp(14rem, 28vw, 18rem) auto minmax(0, 1fr) auto clamp(15rem, 30vw, 19rem);
+    gap: 0.6rem;
+  }
+
+.resize-handle {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+.workspace-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.8rem;
+  }
+
+.workspace-binder,
+.workspace-context,
+.resize-handle--left,
+.resize-handle--right {
+    grid-column: 1;
+  }
+
+.workspace-binder,
+.workspace-context {
+    position: static;
+    max-height: none;
+    width: 100%;
+    min-width: 0;
+  }
+
+.workspace-shell {
+    padding: 5.25rem 1rem 1rem;
+  }
+}
+
+/* ── Resize Handle ── */
+.resize-handle {
+  position: relative;
+  width: 4px;
+  cursor: col-resize;
+  background: transparent;
+  z-index: 5;
+  flex-shrink: 0;
+  align-self: stretch;
+  border-radius: var(--pecie-radius-full);
+  transition: background var(--pecie-transition-fast);
+}
+
+.workspace-grid--binder-collapsed .resize-handle--left,
+.workspace-grid--context-collapsed .resize-handle--right {
+  display: none;
+}
+
+.resize-handle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2px;
+  height: 3.2rem;
+  border-radius: var(--pecie-radius-full);
+  background: var(--pecie-color-borderSubtle);
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity var(--pecie-transition-fast);
+}
+
+.resize-handle:hover {
+  background: color-mix(in srgb, var(--pecie-color-accent) 12%, transparent);
+}
+
+.resize-handle:hover::after {
+  opacity: 1;
+  background: var(--pecie-color-accent);
+}
+
+.resize-handle:active {
+  background: color-mix(in srgb, var(--pecie-color-accent) 18%, transparent);
+}
+
+.resize-handle:active::after {
+  opacity: 1;
+  background: var(--pecie-color-accent);
+}
+
+/* Workspace: the document owns the viewport. Header stays put, editor and side panels scroll internally. */
+.workspace-shell {
+  height: 100vh;
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr);
+  align-content: start;
+  overflow: hidden;
+}
+
+.workspace-shell > .workspace-grid {
+  min-height: 0;
+}
+
+.workspace-binder,
+.workspace-context {
+  min-height: 0;
+  align-content: start;
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-rows: max-content;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.workspace-binder:not(.workspace-binder--collapsed),
+.workspace-context:not(.workspace-context--collapsed) {
+  scrollbar-gutter: stable;
+}
+
+.workspace-grid--focus .editor-surface {
+  overflow-y: auto;
+}
+
+@media (max-width: 900px) {
+.workspace-shell {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+}
+
+/* Writing surface first: lean chrome, wide sheet, the editor takes every remaining pixel. */
+.workspace-shell {
+  padding: clamp(0.55rem, 1.1vw, 0.85rem);
+  gap: 0.55rem;
+}
+
+.workspace-grid {
+  gap: 0.55rem;
+}
+

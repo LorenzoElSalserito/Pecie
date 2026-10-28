@@ -56,4 +56,4 @@ Each family directory contains its own license text.
 - **Source Code Pro** — OFL (`source-code-pro/OFL.txt`)
 - **Courier Prime** — OFL (`courier-prime/OFL.txt`)
 - **OpenDyslexic** — Bitstream Vera-derived license (`open-dyslexic/LICENSE.txt`)
-- **Bootstrap Icons** — MIT (`bootstrap-icons/LICENSE`)
+- **Bootstrap Icons** — MIT, embedded as inline SVG path data in `packages/ui/src/icons/` (`LICENSE-bootstrap-icons.txt`)

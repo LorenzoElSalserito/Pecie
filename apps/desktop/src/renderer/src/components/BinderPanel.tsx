@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import type { AddBinderNodeResponse } from '@pecie/schemas'
-import { Button, Dialog } from '@pecie/ui'
+import { Button, Chip, Dialog, Icon } from '@pecie/ui'
 
 import { t } from '../i18n'
 import type { BinderNodeDialogProps, BinderPanelProps, BinderTemplateId, VisibleBinderNode } from './types'
@@ -99,7 +99,7 @@ export function BinderNodeDialog({
   const canCreate = !busy && (!isDuplicateMode || Boolean(duplicateFromDocumentId))
 
   return (
-    <Dialog open={open} onClose={onClose} size="compact" icon="bi-plus-circle" title={t(locale, 'newNodeTitle')}>
+    <Dialog open={open} onClose={onClose} size="compact" icon="plus-circle" title={t(locale, 'newNodeTitle')}>
       <div className="dialog-form">
         <section className="context-card">
           <h3>{t(locale, 'newNodeDestination')}</h3>
@@ -186,7 +186,7 @@ export function BinderNodeDialog({
             <section className="context-card context-card--soft">
               <div className="template-preview__header">
                 <h3>{t(locale, 'newNodeTemplatePreview')}</h3>
-                {previewLoading ? <span className="count-chip">{t(locale, 'loadingDocument')}</span> : null}
+                {previewLoading ? <Chip>{t(locale, 'loadingDocument')}</Chip> : null}
               </div>
               <pre className="template-preview">
                 {previewLoading ? t(locale, 'newNodePreviewLoading') : previewText.trim() || t(locale, 'newNodePreviewEmpty')}
@@ -458,16 +458,16 @@ export function BinderPanel({
         placementOptions={placementOptions}
         projectPath={project.projectPath}
       />
-      <aside aria-labelledby="binder-panel-title" className={`workspace-binder${collapsed ? ' workspace-binder--collapsed' : ''}`}>
+      <aside aria-label={t(locale, 'binder')} aria-labelledby="binder-panel-title" className={`workspace-binder${collapsed ? ' workspace-binder--collapsed' : ''}`}>
         <div className="panel-chrome">
           <div>
             <p className="eyebrow">{t(locale, 'binder')}</p>
             {!collapsed ? <h2 id="binder-panel-title">{projectTitle}</h2> : null}
           </div>
           <div className="panel-chrome__actions">
-            {!collapsed ? <span className="count-chip">{`${visibleNodes.length} ${t(locale, 'nodes')}`}</span> : null}
+            {!collapsed ? <Chip>{`${visibleNodes.length} ${t(locale, 'nodes')}`}</Chip> : null}
             <button aria-label={collapsed ? t(locale, 'expandSidebar') : t(locale, 'collapseSidebar')} className="panel-toggle" onClick={onToggleCollapsed} type="button">
-              <i aria-hidden="true" className={`bi ${collapsed ? 'bi-chevron-double-right' : 'bi-chevron-double-left'}`}></i>
+              <Icon name={collapsed ? 'chevron-double-right' : 'chevron-double-left'} />
             </button>
           </div>
         </div>
@@ -475,7 +475,7 @@ export function BinderPanel({
         {!collapsed ? (
           <div className="binder-search binder-search--actions">
             <button className="binder-search-launch" onClick={onOpenGlobalSearch} type="button">
-              <i aria-hidden="true" className="bi bi-search binder-search__icon"></i>
+              <Icon className="binder-search__icon" name="search" />
               <span>{t(locale, 'globalSearchTitle')}</span>
             </button>
             <Button disabled={attachmentsBusy} onClick={() => void onImportAttachments()} size="sm" variant="ghost">
@@ -489,24 +489,24 @@ export function BinderPanel({
             onClick={onToggleCollapsed}
             type="button"
           >
-            <i aria-hidden="true" className="bi bi-search"></i>
+            <Icon name="search" />
           </button>
         )}
         <div className={`binder-actions${collapsed ? ' binder-actions--collapsed' : ''}`}>
           <Button aria-label={collapsed ? t(locale, 'newNode') : undefined} disabled={busy} onClick={() => setIsCreateDialogOpen(true)} size="sm" title={t(locale, 'newNode')} variant="secondary">
-            <i aria-hidden="true" className="bi bi-plus-lg"></i>
+            <Icon name="plus-lg" />
             {collapsed ? null : <span>{t(locale, 'newNode')}</span>}
           </Button>
         </div>
         <div className={`binder-actions binder-actions--secondary binder-actions--icons${collapsed ? ' binder-actions--collapsed' : ''}`}>
           <Button aria-label={t(locale, 'moveUp')} disabled={busy || !selectedNode} onClick={() => void moveSelected('up')} size="sm" title={t(locale, 'moveUp')} variant="ghost">
-            <i aria-hidden="true" className="bi bi-arrow-up"></i>
+            <Icon name="arrow-up" />
           </Button>
           <Button aria-label={t(locale, 'moveDown')} disabled={busy || !selectedNode} onClick={() => void moveSelected('down')} size="sm" title={t(locale, 'moveDown')} variant="ghost">
-            <i aria-hidden="true" className="bi bi-arrow-down"></i>
+            <Icon name="arrow-down" />
           </Button>
           <Button aria-label={t(locale, 'deleteNode')} className="binder-actions__danger" disabled={busy || !selectedNode} onClick={() => void deleteSelected()} size="sm" title={t(locale, 'deleteNode')} variant="ghost">
-            <i aria-hidden="true" className="bi bi-trash3"></i>
+            <Icon name="trash3" />
           </Button>
         </div>
         <div aria-label={t(locale, 'binder')} className="binder-tree" onKeyDown={handleKeyDown} ref={treeRef} role="tree" tabIndex={-1}>
@@ -519,13 +519,13 @@ export function BinderPanel({
               <div key={node.id}>
                 {!collapsed && startsSupportSection ? (
                   <div className="binder-tree__section-divider" role="separator">
-                    <i aria-hidden="true" className="bi bi-journal-bookmark binder-tree__section-divider-icon binder-tree__section-divider-icon--support"></i>
+                    <Icon className="binder-tree__section-divider-icon binder-tree__section-divider-icon--support" name="journal-bookmark" />
                     <span>{`${t(locale, 'binderSupport')} · ${supportNodeCount}`}</span>
                   </div>
                 ) : null}
                 {!collapsed && index === 0 ? (
                   <div className="binder-tree__section-divider binder-tree__section-divider--top" role="separator">
-                    <i aria-hidden="true" className="bi bi-journal-text binder-tree__section-divider-icon binder-tree__section-divider-icon--manuscript"></i>
+                    <Icon className="binder-tree__section-divider-icon binder-tree__section-divider-icon--manuscript" name="journal-text" />
                     <span>{`${t(locale, 'binderManuscript')} · ${manuscriptNodeCount}`}</span>
                   </div>
                 ) : null}
@@ -574,7 +574,7 @@ export function BinderPanel({
                     {
                       '--binder-depth': node.depth,
                       '--reveal-index': node.parentId === recentlyExpandedFolderId ? (node.parentId ? (project.binder.nodes.find((entry) => entry.id === node.parentId)?.children?.findIndex((childId) => childId === node.id) ?? 0) : 0) : 0,
-                      paddingInlineStart: `${0.8 + node.depth * 0.85}rem`
+                      paddingInlineStart: collapsed ? undefined : `${0.8 + node.depth * 0.85}rem`
                     } as React.CSSProperties
                   }
                   tabIndex={selectedId === node.id ? 0 : -1}
@@ -583,7 +583,7 @@ export function BinderPanel({
                 >
                   {!collapsed && node.type === 'folder' ? (
                     <span aria-hidden="true" className={`binder-tree__disclosure${node.isExpanded ? ' binder-tree__disclosure--expanded' : ''}`}>
-                      <i className="bi bi-chevron-right"></i>
+                      <Icon name="chevron-right" />
                     </span>
                   ) : null}
                   <span
@@ -596,7 +596,7 @@ export function BinderPanel({
                           : 'binder-tree__marker--document'
                     }`}
                   >
-                    <i className={`bi ${node.type === 'folder' ? 'bi-folder2-open' : isSupport ? 'bi-journal-bookmark' : 'bi-file-earmark-text'}`}></i>
+                    <Icon name={node.type === 'folder' ? 'folder2-open' : isSupport ? 'journal-bookmark' : 'file-earmark-text'} />
                   </span>
                   {collapsed ? (
                     selectedId === node.id ? <span className="binder-tree__dot-active" aria-hidden="true"></span> : null

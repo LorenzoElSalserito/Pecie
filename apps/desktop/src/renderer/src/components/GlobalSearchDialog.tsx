@@ -92,7 +92,7 @@ export function GlobalSearchDialog({
   }
 
   return (
-    <Dialog open={open} onClose={onClose} size="wide" icon="bi-search" title={t(locale, 'globalSearchTitle')}>
+    <Dialog open={open} onClose={onClose} size="wide" icon="search" title={t(locale, 'globalSearchTitle')}>
       <div className="dialog-form">
         <label className="field">
           <span>{t(locale, 'globalSearchField')}</span>

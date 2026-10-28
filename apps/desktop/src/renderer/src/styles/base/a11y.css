@@ -1,0 +1,85 @@
+@media (prefers-reduced-motion: reduce) {
+  .workspace-grid {
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workspace-toggle__icon {
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .context-section__body {
+    transition: none;
+  }
+}
+
+/* ── WCAG 2.3.3: prefers-reduced-motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── WCAG 1.4.11: prefers-contrast (high contrast overrides) ── */
+@media (prefers-contrast: more) {
+button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  a:focus-visible,
+  [tabindex]:focus-visible {
+    outline-width: 4px;
+    outline-offset: 4px;
+  }
+
+  .context-card,
+.setup-overview__card,
+.metric-grid__item,
+.recent-list__item,
+.binder-tree__item,
+.project-library__item,
+.guide-card,
+.editor-blueprint__rail,
+.dialog-card,
+.workspace-binder,
+.workspace-context,
+.editor-sheet,
+.toast {
+    border-width: 2px;
+    border-color: var(--pecie-color-text);
+  }
+
+  .field input,
+  .field select,
+  .field textarea {
+    border-width: 2px;
+    border-color: var(--pecie-color-text);
+  }
+
+  .eyebrow,
+.field span,
+.field-hint,
+.meta-list dt,
+.editor-blueprint__rail span,
+.metric-grid__item span,
+.setup-overview__card span {
+    color: var(--pecie-color-textMuted);
+  }
+
+  .muted-copy,
+  .lead,
+  .binder-tree__content small,
+  .recent-list__item span,
+  .meta-list dd,
+  .stack-list span {
+    color: var(--pecie-color-text);
+  }
+}

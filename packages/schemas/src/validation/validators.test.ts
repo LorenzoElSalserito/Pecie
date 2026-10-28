@@ -59,7 +59,7 @@ describe('schema validators', () => {
       validateTutorialScript({
         id: 'workspace-basics',
         schemaVersion: 1,
-        icon: 'bi-layout-text-window-reverse',
+        icon: 'layout-text-window-reverse',
         titleKey: 'tutorialWorkspaceTitle',
         steps: [
           {
@@ -85,7 +85,7 @@ describe('schema validators', () => {
       validateTutorialScript({
         id: 'fragile-copy-selector',
         schemaVersion: 1,
-        icon: 'bi-compass',
+        icon: 'compass',
         titleKey: 'tutorialWorkspaceTitle',
         steps: [
           {

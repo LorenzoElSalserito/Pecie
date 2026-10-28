@@ -1,4 +1,4 @@
-import { Button, Dialog } from '@pecie/ui'
+import { Button, Dialog, Icon } from '@pecie/ui'
 
 import { t } from '../i18n'
 import { donationUrl } from '../support-links'
@@ -10,14 +10,14 @@ export function InfoDialog({ open, locale, version, onClose }: InfoDialogProps):
   }
 
   return (
-    <Dialog open={open} onClose={onClose} size="compact" icon="bi-info-circle" title={t(locale, 'infoTitle')}>
+    <Dialog open={open} onClose={onClose} size="compact" icon="info-circle" title={t(locale, 'infoTitle')}>
       <div className="dialog-form">
         <section className="context-card context-card--soft">
           <p>{t(locale, 'appInfoLine', { version })}</p>
         </section>
         <div className="dialog-actions dialog-actions--end">
           <a className="pecie-btn pecie-btn--primary pecie-btn--sm" href={donationUrl} rel="noreferrer" target="_blank">
-            <i aria-hidden="true" className="bi bi-heart-fill"></i>
+            <Icon name="heart-fill" />
             {t(locale, 'supportByDonating')}
           </a>
           <Button onClick={onClose} size="sm" type="button" variant="ghost">

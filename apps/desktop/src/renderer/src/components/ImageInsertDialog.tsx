@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import { Button, Dialog } from '@pecie/ui'
+import { Button, Dialog, Icon } from '@pecie/ui'
 
 import { t } from '../i18n'
 import type { ImageInsertDialogProps } from './types'
@@ -114,7 +114,7 @@ export function ImageInsertDialog({
       open={open}
       onClose={handleClose}
       size="default"
-      icon="bi-image"
+      icon="image"
       title={t(locale, 'imageDialogTitle')}
     >
       <div className="image-insert-dialog">
@@ -126,12 +126,12 @@ export function ImageInsertDialog({
             variant="secondary"
             disabled={busy}
           >
-            <i className="bi bi-folder2-open" aria-hidden="true"></i>{' '}
+            <Icon name="folder2-open" />{' '}
             {t(locale, 'imageDialogPickFile')}
           </Button>
           {fileName ? (
             <span className="image-insert-dialog__file-info">
-              <i className="bi bi-file-earmark-image" aria-hidden="true"></i>{' '}
+              <Icon name="file-earmark-image" />{' '}
               <strong>{fileName}</strong>
               {fileSize > 0 ? ` (${formatFileSize(fileSize, locale)})` : null}
             </span>

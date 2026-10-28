@@ -1,0 +1,195 @@
+.font-picker {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.font-picker__current {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.9rem;
+  align-items: start;
+  padding: 0.95rem 1.05rem;
+  border: 1px solid color-mix(in srgb, var(--pecie-color-accent) 22%, var(--pecie-color-borderSubtle));
+  border-radius: var(--pecie-radius-lg);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 20%, transparent), transparent 52%),
+    color-mix(in srgb, var(--pecie-color-accent) 5%, var(--pecie-color-surface));
+}
+
+.font-picker__current-copy {
+  display: grid;
+  gap: 0.28rem;
+  min-width: 0;
+}
+
+.font-picker__current-name {
+  font-size: 1.55rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--pecie-color-text);
+}
+
+.font-picker__meta,
+.font-picker__option-meta {
+  font-family: var(--pecie-font-ui);
+  font-size: var(--pecie-caption-size);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--pecie-color-textSubtle);
+}
+
+.font-picker__sample {
+  margin: 0.2rem 0 0;
+  font-size: 1.05rem;
+  line-height: 1.5;
+  color: var(--pecie-color-textMuted);
+}
+
+.font-picker__toggle {
+  white-space: nowrap;
+}
+
+.font-picker__browser {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.85rem;
+  border: 1px solid var(--pecie-color-borderSubtle);
+  border-radius: var(--pecie-radius-lg);
+  background: color-mix(in srgb, var(--pecie-color-surfaceStrong) 22%, transparent);
+}
+
+.font-picker__toolbar {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.font-picker__search {
+  position: relative;
+  display: block;
+}
+
+.font-picker__search input {
+  width: 100%;
+  min-height: 2.55rem;
+  padding: 0.45rem 0.75rem 0.45rem 2.3rem;
+  border: 1px solid var(--pecie-color-border);
+  border-radius: var(--pecie-radius-md);
+  background: var(--pecie-color-surface);
+  color: var(--pecie-color-text);
+  font-family: var(--pecie-font-ui);
+}
+
+.font-picker__categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.font-picker__categories .toggle-chip[aria-pressed='true'] {
+  border-color: var(--pecie-color-accent);
+  background: color-mix(in srgb, var(--pecie-color-accent) 14%, transparent);
+  color: var(--pecie-color-text);
+}
+
+.font-picker__hint,
+.font-picker__empty {
+  margin: 0;
+  font-family: var(--pecie-font-ui);
+  font-size: var(--pecie-small-size);
+  color: var(--pecie-color-textMuted);
+}
+
+.font-picker__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr));
+  gap: 0.55rem;
+  max-height: 24rem;
+  overflow-y: auto;
+  padding: 0.15rem;
+  overscroll-behavior: contain;
+}
+
+.font-picker__option {
+  position: relative;
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.75rem 0.85rem 0.7rem;
+  border: 1px solid var(--pecie-color-borderSubtle);
+  border-radius: var(--pecie-radius-md);
+  background: var(--pecie-color-surface);
+  cursor: pointer;
+  transition:
+    border-color var(--pecie-transition-fast),
+    background var(--pecie-transition-fast),
+    transform var(--pecie-transition-fast),
+    box-shadow var(--pecie-transition-fast);
+}
+
+.font-picker__option:hover {
+  border-color: color-mix(in srgb, var(--pecie-color-accent) 40%, var(--pecie-color-border));
+  box-shadow: var(--pecie-shadow-sm);
+}
+
+.font-picker__option--selected {
+  border-color: var(--pecie-color-accent);
+  background: color-mix(in srgb, var(--pecie-color-accent) 8%, var(--pecie-color-surface));
+  box-shadow: 0 0 0 1px var(--pecie-color-accent);
+}
+
+/* The radio covers the whole card: real hit target, native keyboard semantics, no visible control. */
+.font-picker__option input[type='radio'] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+  appearance: none;
+  border: 0;
+}
+
+.font-picker__option:has(input:focus-visible) {
+  outline: 3px solid var(--pecie-color-focus);
+  outline-offset: 2px;
+}
+
+.font-picker__option-name {
+  font-size: 1.08rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--pecie-color-text);
+  padding-right: 1.4rem;
+}
+
+.font-picker__option-glyphs {
+  font-size: 0.98rem;
+  line-height: 1.3;
+  color: var(--pecie-color-textMuted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.font-picker__option-check {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.7rem;
+  color: var(--pecie-color-accent);
+  font-size: 1rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .font-picker__option:hover {
+    transform: translateY(-1px);
+  }
+}
+
+@media (max-width: 720px) {
+  .font-picker__current {
+    grid-template-columns: 1fr;
+  }
+}
+

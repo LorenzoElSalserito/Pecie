@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 
-import { Button, timelineEventKinds } from '@pecie/ui'
+import { Banner, Button, Icon, timelineEventKinds } from '@pecie/ui'
 
 import { t } from '../i18n'
 import type { TimelineViewProps } from './types'
@@ -151,12 +151,12 @@ export function TimelineView({
             <p>{t(locale, 'timelineLoading')}</p>
           ) : timeline && renderWindow.groups.length > 0 ? (
             <>
-              <p className="message-box" role="status">
+              <Banner>
                 {t(locale, 'timelineRenderedEvents', {
                   rendered: String(renderWindow.renderedEventCount),
                   total: String(renderWindow.totalEventCount)
                 })}
-              </p>
+              </Banner>
               <div className="timeline-groups" role="list">
                 {renderWindow.groups.map((group) => (
                   <section className="timeline-group" key={group.groupId} role="listitem">
@@ -170,7 +170,7 @@ export function TimelineView({
                         return (
                           <li className={`timeline-item${event.integrity !== 'ok' ? ' timeline-item--warning' : ''}`} key={event.timelineEventId}>
                             <div className="timeline-item__icon">
-                              <i aria-hidden="true" className={`bi ${presentation.icon}`}></i>
+                              <Icon name={presentation.icon} />
                             </div>
                             <div className="timeline-item__body">
                               <div className="timeline-item__meta">

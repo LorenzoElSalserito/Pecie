@@ -1,0 +1,95 @@
+/*
+ * Typography: every @font-face lives in `fonts.css` (bundled, query-less local files).
+ * Font-family variables are defined by the ThemeProvider from the shared catalog.
+ * Icons: inline SVG glyphs rendered by the `<Icon>` component from `@pecie/ui`; no icon font.
+ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--pecie-color-accent) 18%, transparent), transparent 26%),
+    radial-gradient(circle at 85% 12%, color-mix(in srgb, var(--pecie-color-focus) 12%, transparent), transparent 20%),
+    radial-gradient(circle at bottom right, color-mix(in srgb, var(--pecie-color-accent) 10%, transparent), transparent 24%),
+    linear-gradient(180deg, color-mix(in srgb, var(--pecie-color-surfaceStrong) 12%, transparent), transparent 18%),
+    var(--pecie-color-background);
+}
+
+html[data-theme='dark'] {
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--pecie-color-accent) 18%, transparent), transparent 26%),
+    radial-gradient(circle at 85% 12%, color-mix(in srgb, var(--pecie-color-focus) 12%, transparent), transparent 20%),
+    radial-gradient(circle at bottom right, color-mix(in srgb, var(--pecie-color-accent) 10%, transparent), transparent 24%),
+    linear-gradient(180deg, color-mix(in srgb, var(--pecie-color-surfaceStrong) 12%, transparent), transparent 18%),
+    var(--pecie-color-background);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  overflow-y: auto;
+  background: transparent;
+  color: var(--pecie-color-text);
+  font-family: var(--pecie-font-body);
+  font-size: var(--pecie-body-size);
+  line-height: var(--pecie-body-line-height);
+  letter-spacing: var(--pecie-font-body-letter-spacing);
+  word-spacing: var(--pecie-font-body-word-spacing);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--pecie-color-focus);
+  outline-offset: 3px;
+}
+
+.skip-link {
+  position: fixed;
+  left: 1rem;
+  top: 1rem;
+  z-index: 200;
+  padding: 0.75rem 1rem;
+  border-radius: var(--pecie-radius-md);
+  background: var(--pecie-color-accent);
+  color: var(--pecie-color-accentText);
+  font-family: var(--pecie-font-ui);
+  font-weight: 600;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(calc(-100% - 1.25rem));
+  transition:
+    opacity var(--pecie-transition-fast),
+    transform var(--pecie-transition-fast);
+}
+
+.skip-link:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+

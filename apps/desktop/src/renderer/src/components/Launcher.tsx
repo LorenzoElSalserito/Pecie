@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 
-import { Button } from '@pecie/ui'
+import { Banner, Button, Chip, Icon, IconButton, Tooltip, type IconName } from '@pecie/ui'
 
 import appIcon from '../asset/Icon.svg'
 import { SUPPORTED_LOCALES, localeLabel, t } from '../i18n'
@@ -20,16 +20,16 @@ import {
   stringAccentColor
 } from './utils'
 
-const templateIcons: Record<TemplateId, string> = {
-  blank: 'bi-plus-square',
-  thesis: 'bi-mortarboard',
-  paper: 'bi-journal-text',
-  book: 'bi-book',
-  manual: 'bi-journal-code',
-  journal: 'bi-newspaper',
-  article: 'bi-file-earmark-richtext',
-  videoScript: 'bi-camera-video',
-  screenplay: 'bi-film'
+const templateIcons: Record<TemplateId, IconName> = {
+  blank: 'plus-square',
+  thesis: 'mortarboard',
+  paper: 'journal-text',
+  book: 'book',
+  manual: 'journal-code',
+  journal: 'newspaper',
+  article: 'file-earmark-richtext',
+  videoScript: 'camera-video',
+  screenplay: 'film'
 }
 
 export function Launcher({
@@ -118,23 +118,33 @@ export function Launcher({
           <div className="launcher-main__actions">
             <div className="launcher-action-toolbar" aria-label={t(locale, 'workflowHighlights')}>
               <div className="launcher-main__action-group">
-                <Button aria-label={t(locale, 'manageProjects')} className="launcher-action-button" onClick={onOpenProjectLibrary} size="sm" title={t(locale, 'manageProjects')} variant="secondary">
-                  <i aria-hidden="true" className="bi bi-archive"></i>
-                </Button>
-                <Button aria-label={t(locale, 'openExisting')} className="launcher-action-button" data-tutorial-id="launcher-open-project" onClick={onOpenProjectDialog} size="sm" title={t(locale, 'openExisting')} variant="secondary">
-                  <i aria-hidden="true" className="bi bi-folder2-open"></i>
-                </Button>
+                <Tooltip content={t(locale, 'manageProjects')} placement="bottom">
+                  <IconButton aria-label={t(locale, 'manageProjects')} className="launcher-action-button" variant="secondary" onClick={onOpenProjectLibrary} size="sm" title={undefined}>
+                    <Icon name="archive" />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip content={t(locale, 'openExisting')} placement="bottom">
+                  <IconButton aria-label={t(locale, 'openExisting')} className="launcher-action-button" variant="secondary" data-tutorial-id="launcher-open-project" onClick={onOpenProjectDialog} size="sm" title={undefined}>
+                    <Icon name="folder2-open" />
+                  </IconButton>
+                </Tooltip>
               </div>
               <div className="launcher-main__action-group launcher-main__action-group--minor">
-                <Button aria-label={t(locale, 'quickGuideTitle')} className="launcher-action-button" onClick={onOpenGuide} size="sm" title={t(locale, 'quickGuideTitle')} variant="ghost">
-                  <i aria-hidden="true" className="bi bi-book"></i>
-                </Button>
-                <Button aria-label={t(locale, 'info')} className="launcher-action-button" onClick={onOpenInfo} size="sm" title={t(locale, 'info')} variant="ghost">
-                  <i aria-hidden="true" className="bi bi-info-circle"></i>
-                </Button>
-                <Button aria-label={t(locale, 'settings')} className="launcher-action-button" data-tutorial-id="launcher-open-settings" onClick={onOpenSettings} size="sm" title={t(locale, 'settings')} variant="ghost">
-                  <i aria-hidden="true" className="bi bi-gear"></i>
-                </Button>
+                <Tooltip content={t(locale, 'quickGuideTitle')} placement="bottom">
+                  <IconButton aria-label={t(locale, 'quickGuideTitle')} className="launcher-action-button" onClick={onOpenGuide} size="sm" title={undefined}>
+                    <Icon name="book" />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip content={t(locale, 'info')} placement="bottom">
+                  <IconButton aria-label={t(locale, 'info')} className="launcher-action-button" onClick={onOpenInfo} size="sm" title={undefined}>
+                    <Icon name="info-circle" />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip content={t(locale, 'settings')} placement="bottom">
+                  <IconButton aria-label={t(locale, 'settings')} className="launcher-action-button" data-tutorial-id="launcher-open-settings" onClick={onOpenSettings} size="sm" title={undefined}>
+                    <Icon name="gear" />
+                  </IconButton>
+                </Tooltip>
               </div>
             </div>
             <section className="context-card context-card--soft launcher-author-card">
@@ -184,7 +194,7 @@ export function Launcher({
             </div>
             <span className="quick-resume-banner__cta">
               {t(locale, 'continueWriting')}
-              <i aria-hidden="true" className="bi bi-arrow-right"></i>
+              <Icon name="arrow-right" />
             </span>
           </button>
         ) : null}
@@ -251,7 +261,7 @@ export function Launcher({
                         role="radio"
                         type="button"
                       >
-                        <i aria-hidden="true" className={`bi ${templateIcons[templateId]} template-card__icon`}></i>
+                        <Icon className="template-card__icon" name={templateIcons[templateId]} />
                         <strong>{formatTemplateLabel(locale, templateId)}</strong>
                         <small>{formatTemplateDescription(locale, templateId)}</small>
                       </button>
@@ -297,7 +307,7 @@ export function Launcher({
                       size="lg"
                       type="button"
                     >
-                      <i aria-hidden="true" className="bi bi-pen"></i>
+                      <Icon name="pen" />
                       {busy ? t(locale, 'createProject') : t(locale, 'startWriting')}
                     </Button>
                   </div>
@@ -308,9 +318,9 @@ export function Launcher({
         </div>
 
         {error ? (
-          <p className="message-box message-box--error" role="alert">
+          <Banner tone="error">
             {error}
-          </p>
+          </Banner>
         ) : null}
       </section>
 
@@ -370,7 +380,7 @@ export function Launcher({
               <p className="eyebrow">{t(locale, 'templateGuidanceEyebrow')}</p>
               <h2>{selectedTemplateGuidance.label}</h2>
             </div>
-            <span className="status-pill">{t(locale, 'template')}</span>
+            <Chip kind="status">{t(locale, 'template')}</Chip>
           </div>
           <dl className="meta-list">
             <div>
@@ -405,7 +415,7 @@ export function Launcher({
                   type="button"
                 >
                   <div className="recent-list__identity">
-                    <i aria-hidden="true" className="bi bi-folder2-open recent-list__icon"></i>
+                    <Icon className="recent-list__icon" name="folder2-open" />
                     <div>
                       <strong>{recentProjectPath.split('/').at(-1)}</strong>
                       <span>{recentProjectPath}</span>
@@ -419,7 +429,7 @@ export function Launcher({
           )}
           <div className="context-card__actions">
             <a className="pecie-btn pecie-btn--ghost pecie-btn--sm" href={donationUrl} rel="noreferrer" target="_blank">
-              <i aria-hidden="true" className="bi bi-heart-fill"></i>
+              <Icon name="heart-fill" />
               {t(locale, 'supportByDonating')}
             </a>
           </div>

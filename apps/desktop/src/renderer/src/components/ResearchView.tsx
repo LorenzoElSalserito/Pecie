@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 
-import { Button } from '@pecie/ui'
+import { Button, Chip } from '@pecie/ui'
 
 import { t } from '../i18n'
 import type { ResearchViewProps } from './types'
@@ -124,7 +124,7 @@ export function ResearchView({
           <section className="context-card context-card--soft">
             <div className="context-card__heading">
               <h3>{t(locale, 'researchNotesListTitle')}</h3>
-              <span className="count-chip">{notes.length}</span>
+              <Chip>{notes.length}</Chip>
             </div>
             <ul className="stack-list stack-list--tight">
               {notes.map((note) => (
@@ -145,7 +145,7 @@ export function ResearchView({
           <section className="context-card context-card--soft">
             <div className="context-card__heading">
               <h3>{t(locale, 'researchPdfListTitle')}</h3>
-              <span className="count-chip">{pdfItems.length}</span>
+              <Chip>{pdfItems.length}</Chip>
             </div>
             <label className="field">
               <span>{t(locale, 'researchImportPdfPaths')}</span>
@@ -273,7 +273,7 @@ export function ResearchView({
           <section className="context-card context-card--soft">
             <div className="context-card__heading">
               <h3>{t(locale, 'researchBacklinksTitle')}</h3>
-              <span className="count-chip">{backlinks.length}</span>
+              <Chip>{backlinks.length}</Chip>
             </div>
             <ul className="stack-list stack-list--tight">
               {backlinks.map((link) => {

@@ -1,0 +1,139 @@
+.link-list-button:focus-visible {
+  outline: 3px solid var(--pecie-color-focus);
+  outline-offset: 3px;
+}
+
+.context-card h3 {
+  margin: 0;
+  font-family: var(--pecie-font-ui);
+  letter-spacing: -0.025em;
+}
+
+.context-card--soft {
+  border: 1px solid var(--pecie-color-borderSubtle);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 26%, transparent), transparent 46%),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--pecie-color-surfaceStrong) 64%, transparent),
+      transparent
+    ),
+    var(--pecie-color-background);
+}
+
+.context-card {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1.02rem;
+  border: 1px solid var(--pecie-color-borderSubtle);
+  border-radius: var(--pecie-radius-lg);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 20%, transparent), transparent 48%),
+    linear-gradient(180deg, color-mix(in srgb, var(--pecie-color-surfaceStrong) 12%, transparent), transparent),
+    var(--pecie-color-background);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 24%, transparent),
+    0 8px 20px color-mix(in srgb, black 4%, transparent);
+  transition:
+    border-color var(--pecie-transition-fast),
+    box-shadow var(--pecie-transition-fast),
+    transform var(--pecie-transition-fast);
+}
+
+.context-card:hover {
+  border-color: color-mix(in srgb, var(--pecie-color-accent) 18%, var(--pecie-color-borderSubtle));
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 28%, transparent),
+    0 14px 28px color-mix(in srgb, black 6%, transparent);
+}
+
+.context-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.support-library-grid {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.support-library-card {
+  gap: 0.72rem;
+}
+
+.context-card__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.context-card h3 {
+  font-size: 1rem;
+}
+
+.context-card h4 {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.context-card p {
+  margin: 0;
+  color: var(--pecie-color-textMuted);
+}
+
+.link-list-button {
+  display: grid;
+  gap: 0.18rem;
+  width: 100%;
+  padding: 0.1rem 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.link-list-button span {
+  color: var(--pecie-color-textMuted);
+}
+
+.attachment-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.42rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--pecie-color-borderSubtle) 62%, transparent);
+}
+
+.attachment-row > div {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.attachment-row strong,
+.link-list-button strong {
+  overflow-wrap: anywhere;
+}
+
+.context-card--flush {
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  background: transparent;
+}
+
+.context-card--flush:hover {
+  border: none;
+  box-shadow: none;
+}
+
+.link-list-button--active {
+  border-color: rgba(214, 152, 78, 0.45);
+  background: rgba(214, 152, 78, 0.12);
+}
+

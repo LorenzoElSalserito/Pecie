@@ -2,10 +2,17 @@ export const tokens = {
   spacing: { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32, xxxl: 48 },
   radius: { none: 0, sm: 8, md: 13, lg: 18, xl: 24, full: 9999 },
   typography: {
+    /** Hero and display titles (UI.md §10: Display 32px). */
+    display: { size: 32, lineHeight: 1.2 },
     body: { size: 16, lineHeight: 1.6 },
+    /** Dense UI copy: card bodies, list rows, hints that are not captions (UI.md §10: Body 15px). */
+    compact: { size: 15, lineHeight: 1.55 },
     heading: { size: 24, lineHeight: 1.25 },
     subheading: { size: 18, lineHeight: 1.35 },
+    /** Card and section titles (UI.md §10: H3 16px). */
+    h3: { size: 16, lineHeight: 1.4 },
     small: { size: 13, lineHeight: 1.4 },
+    mono: { size: 13, lineHeight: 1.5 },
     caption: { size: 11, lineHeight: 1.3 }
   },
   shadow: {
@@ -106,6 +113,37 @@ export const tokens = {
       }
     }
   }
+} as const
+
+/**
+ * Extra palette entries that the stylesheets used as raw hex before Fase 2. They keep the exact
+ * legacy values so the refactor is pixel-identical; later phases fold them into semantic roles.
+ * Emitted as `--pecie-palette-<name>` for every theme (they are theme-independent constants).
+ */
+export const paletteExtras = {
+  'accent-deep': '#8f431f',
+  'accent-deeper': '#7b3717',
+  'accent-gradient-top': '#b45a2d',
+  'accent-gradient-bottom': '#9c4a23',
+  'accent-gradient-border': '#8c3f1c',
+  'accent-gradient-top-hover': '#c16333',
+  'accent-gradient-bottom-hover': '#a94f25',
+  'accent-gradient-border-hover': '#94431d',
+  'accent-tint': '#f0a25f',
+  'marker-document': '#4c86ff',
+  'marker-folder': '#d89a45',
+  'marker-folder-bright': '#e0a24a',
+  'marker-support': '#3fa972',
+  'marker-support-bright': '#49b97d',
+  'sheet-dark': '#1e1e22',
+  white: '#ffffff',
+  paper: '#fdfbf7',
+  'sand-200': '#d1c0a8',
+  'sand-300': '#cdb99d',
+  'sand-400': '#ccb494',
+  'sand-500': '#c7af90',
+  'success-tint': '#8fd08a',
+  'warning-text-dark': '#e7b36b'
 } as const
 
 export type ThemeMode = 'light' | 'dark' | 'system'

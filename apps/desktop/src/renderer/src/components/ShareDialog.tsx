@@ -95,7 +95,7 @@ export function ShareDialog({
   }
 
   return (
-    <Dialog open={open} onClose={onClose} size="wide" icon="bi-share" title={t(locale, 'shareTitle')}>
+    <Dialog open={open} onClose={onClose} size="wide" icon="share" title={t(locale, 'shareTitle')}>
       <div className="dialog-form">
         {project ? (
           <section className="context-card context-card--soft">

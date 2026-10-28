@@ -131,3 +131,51 @@ export async function executeTutorialStep(step: TutorialStepDescriptor): Promise
 
   return target
 }
+
+export type TutorialRect = { top: number; left: number; width: number; height: number }
+
+export type TutorialCoachPlacement = {
+  side: 'below' | 'above' | 'right' | 'left' | 'floating'
+  top: number
+  left: number
+}
+
+/**
+ * Pure placement for the coach-mark card next to a spotlighted target.
+ * Prefers below, then above, then right, then left; always clamps inside the viewport.
+ * Without a target the card floats near the bottom-right corner.
+ */
+export function computeTutorialCoachPlacement(
+  target: TutorialRect | null,
+  card: { width: number; height: number },
+  viewport: { width: number; height: number },
+  options: { gap?: number; margin?: number } = {}
+): TutorialCoachPlacement {
+  const gap = options.gap ?? 16
+  const margin = options.margin ?? 16
+  const clampLeft = (value: number): number => Math.max(margin, Math.min(value, viewport.width - card.width - margin))
+  const clampTop = (value: number): number => Math.max(margin, Math.min(value, viewport.height - card.height - margin))
+
+  if (!target) {
+    return { side: 'floating', top: clampTop(viewport.height - card.height - margin * 2), left: clampLeft(viewport.width - card.width - margin * 2) }
+  }
+
+  const spaceBelow = viewport.height - (target.top + target.height) - gap - margin
+  const spaceAbove = target.top - gap - margin
+  const spaceRight = viewport.width - (target.left + target.width) - gap - margin
+  const spaceLeft = target.left - gap - margin
+
+  if (spaceBelow >= card.height) {
+    return { side: 'below', top: target.top + target.height + gap, left: clampLeft(target.left) }
+  }
+  if (spaceAbove >= card.height) {
+    return { side: 'above', top: target.top - gap - card.height, left: clampLeft(target.left) }
+  }
+  if (spaceRight >= card.width) {
+    return { side: 'right', top: clampTop(target.top), left: target.left + target.width + gap }
+  }
+  if (spaceLeft >= card.width) {
+    return { side: 'left', top: clampTop(target.top), left: target.left - gap - card.width }
+  }
+  return { side: 'floating', top: clampTop(viewport.height - card.height - margin * 2), left: clampLeft(viewport.width - card.width - margin * 2) }
+}

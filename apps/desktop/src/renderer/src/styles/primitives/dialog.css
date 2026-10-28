@@ -1,0 +1,161 @@
+.dialog-card h2 {
+  margin: 0;
+  font-family: var(--pecie-font-ui);
+  letter-spacing: -0.025em;
+}
+
+.dialog-card {
+  border: 1px solid var(--pecie-color-borderSubtle);
+  border-radius: var(--pecie-radius-xl);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 18%, transparent), transparent 48%),
+    color-mix(in srgb, var(--pecie-color-surface) 94%, transparent);
+  box-shadow: var(--pecie-shadow-md);
+}
+
+.dialog-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: clamp(5.5rem, 8vh, 6.75rem) 2rem 2rem;
+  overflow-y: auto;
+  background: var(--pecie-color-overlayBg);
+  backdrop-filter: blur(8px);
+  animation: scrim-enter var(--pecie-transition-normal) both;
+}
+
+.dialog-card {
+  width: min(46rem, 100%);
+  max-height: calc(100vh - 8rem);
+  margin: 0 auto auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 1.45rem;
+  animation: dialog-enter var(--pecie-transition-normal) both;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 24%, transparent), transparent 46%),
+    linear-gradient(180deg, color-mix(in srgb, var(--pecie-color-surfaceStrong) 18%, transparent), transparent 22%),
+    color-mix(in srgb, var(--pecie-color-surface) 96%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 34%, transparent),
+    0 24px 60px color-mix(in srgb, black 12%, transparent);
+}
+
+.dialog-card__content {
+  display: grid;
+  gap: 1rem;
+}
+
+.dialog-card--compact {
+  width: min(36rem, 100%);
+}
+
+.dialog-card--wide {
+  width: min(72rem, 100%);
+}
+
+.dialog-card__header,
+.dialog-actions {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.dialog-card__header {
+  margin-bottom: 0.7rem;
+  align-items: center;
+}
+
+.dialog-card__icon {
+  font-size: 1.25rem;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+/* ── Scroll indicator shadows ── */
+.dialog-card {
+  background:
+    /* top shadow – fades in when scrolled */
+    linear-gradient(var(--pecie-color-surface) 30%, transparent) center top,
+    linear-gradient(transparent, var(--pecie-color-surface) 70%) center bottom,
+    radial-gradient(farthest-side at 50% 0, color-mix(in srgb, var(--pecie-color-text) 10%, transparent), transparent) center top,
+    radial-gradient(farthest-side at 50% 100%, color-mix(in srgb, var(--pecie-color-text) 10%, transparent), transparent) center bottom;
+  background-repeat: no-repeat;
+  background-size: 100% 2.5rem, 100% 2.5rem, 100% 0.75rem, 100% 0.75rem;
+  background-attachment: local, local, scroll, scroll;
+}
+
+.dialog-actions--inline {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.dialog-actions--end {
+  justify-content: flex-end;
+}
+
+.dialog-form,
+.dialog-block {
+  display: grid;
+  gap: 1rem;
+}
+
+.dialog-form {
+  min-width: 0;
+}
+
+.dialog-actions {
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--pecie-color-borderSubtle);
+}
+
+.dialog-card__content > p,
+.dialog-card__header p {
+  margin: 0;
+  color: var(--pecie-color-textMuted);
+}
+
+@media (max-width: 900px) {
+.dialog-scrim {
+    padding: 5.25rem 1rem 1rem;
+  }
+
+.dialog-card {
+    max-height: calc(100vh - 6.5rem);
+    padding: 1rem;
+  }
+}
+
+/* Dialog header: icon badge + left-aligned title (was space-between → title drifted right). */
+.dialog-card__header {
+  justify-content: flex-start;
+  gap: 0.8rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--pecie-color-borderSubtle);
+}
+
+.dialog-card__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: var(--pecie-radius-md);
+  background: color-mix(in srgb, var(--pecie-color-accent) 12%, transparent);
+  color: var(--pecie-color-accent);
+  font-size: 1.15rem;
+  opacity: 1;
+}
+
+.dialog-card__header h2 {
+  margin: 0;
+}
+

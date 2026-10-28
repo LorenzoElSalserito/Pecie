@@ -1,0 +1,55 @@
+/* ── Tooltip: CSS-only, shows on hover and keyboard focus ── */
+.pecie-tooltip-trigger {
+  position: relative;
+}
+
+.pecie-tooltip-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.pecie-tooltip-trigger::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  z-index: 150;
+  padding: var(--pecie-space-xs) var(--pecie-space-sm);
+  border-radius: var(--pecie-radius-sm);
+  background: var(--pecie-control-text);
+  color: var(--pecie-surface-raised);
+  font-family: var(--pecie-font-ui);
+  font-size: var(--pecie-caption-size);
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translate(-50%, 4px);
+  pointer-events: none;
+  box-shadow: var(--pecie-elevation-2);
+}
+
+.pecie-tooltip-trigger[data-tooltip-placement='bottom']::after {
+  bottom: auto;
+  top: calc(100% + 8px);
+  transform: translate(-50%, -4px);
+}
+
+.pecie-tooltip-trigger:hover::after,
+.pecie-tooltip-trigger:focus-visible::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pecie-tooltip-trigger::after {
+    transition: opacity var(--pecie-motion-fast) var(--pecie-ease-standard), transform var(--pecie-motion-fast) var(--pecie-ease-standard);
+  }
+}

@@ -1,0 +1,52 @@
+/* ── Context-specific icon sizing (legacy `.bi` hooks kept for cascade parity; migrate to `<Icon size>` per surface) ── */
+.launcher-action-button .bi {
+  font-size: 0.96rem;
+  line-height: 1;
+}
+
+.segmented-control__item .bi {
+  width: 1rem;
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.toggle-chip--icon .bi {
+  width: 1rem;
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.panel-toggle .bi,
+.binder-tree__marker .bi,
+.pecie-btn .bi {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.overflow-menu__item .bi {
+  font-size: 1rem;
+}
+
+.context-section__toggle .bi {
+  color: var(--pecie-color-textMuted);
+  font-size: 0.85rem;
+}
+
+.context-selection-bar .bi {
+  color: var(--pecie-color-accent);
+  font-size: 1rem;
+}
+
+.binder-actions .pecie-btn .bi + span {
+  margin-inline-start: 0.1rem;
+}
+
+.font-picker__search .bi {
+  position: absolute;
+  top: 50%;
+  left: 0.8rem;
+  transform: translateY(-50%);
+  color: var(--pecie-color-textSubtle);
+  pointer-events: none;
+}
+

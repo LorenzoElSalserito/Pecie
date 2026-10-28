@@ -1,0 +1,20 @@
+.message-box {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-radius: var(--pecie-radius-md);
+  border: 1px solid var(--pecie-color-borderSubtle);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 22%, transparent), transparent 46%),
+    var(--pecie-color-surfaceHover);
+  color: var(--pecie-color-textMuted);
+  font-family: var(--pecie-font-ui);
+  font-size: var(--pecie-small-size);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 26%, transparent);
+}
+
+.message-box--error {
+  border: 1px solid var(--pecie-color-danger);
+  background: var(--pecie-color-dangerBg);
+  color: var(--pecie-color-danger);
+}
+

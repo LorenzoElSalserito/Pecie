@@ -5,6 +5,28 @@ Tutte le modifiche rilevanti a Pecie sono documentate in questo file secondo
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-28
+
+### Fixed
+- Impostazioni: la barra delle sezioni era `sticky` dentro la card del dialogo, che scorreva con il suo padding, quindi il testo passava nella fascia sopra i pulsanti e la barra andava a capo su due righe. Ora il dialogo ha due pannelli: navigazione laterale fissa con icone e scroll-spy (evidenzia la sezione visibile), unico pannello scorrevole per il contenuto, intestazione e azioni sempre visibili. Workspace e Autore sono due sezioni distinte con titolo. Sotto i 760 px la navigazione diventa una striscia orizzontale sopra il pannello. Scrollbar sottili nei colori del tema.
+- Il tutorial di primo avvio era una finestra modale con sfondo sfocato: copriva e bloccava proprio i controlli che indicava, il focus trap annullava l'azione "focus" sul campo e lo spotlight non seguiva l'elemento. Ora è un coach mark non modale: spotlight sul controllo reale, card flottante posizionata accanto senza mai coprirlo, launcher interattivo durante la guida, frecce/Esc da tastiera, comparsa ritardata di 420 ms perché la schermata si assesti, `prefers-reduced-motion` rispettato. Il focus richiesto da un passo resta sul controllo e non viene più rubato dalla card.
+- Le icone dell'interfaccia (strumenti di scrittura assistita, binder, intestazione, dialoghi, launcher, wizard) sparivano su alcune installazioni: dipendevano dal webfont Bootstrap Icons caricato a runtime. Ora ogni icona è un glifo SVG incorporato nel bundle JavaScript tramite il componente `Icon` di `@pecie/ui`: nessun font, nessun file esterno, resa identica su ogni macchina e sistema operativo.
+
+### Changed
+- Rimossi il webfont e il foglio di stile Bootstrap Icons dagli asset del renderer; il sottoinsieme di 90 glifi usato dall'app è generato da `scripts/vendor-icons.py` in `packages/ui/src/icons/`.
+- Chip della barra di scrittura assistita: forma quadrata uniforme, raggio coerente con i token, stati hover/active/focus curati, transizioni che rispettano `prefers-reduced-motion`.
+- Test unit ed e2e aggiornati: verificano che nessun componente usi più classi `bi-*` su elementi `<i>`, che ogni nome di icona esista nel sottoinsieme incorporato e che tutte le icone visibili siano SVG con area dipinta.
+
+### Added
+- Fase 3–5 della ristrutturazione UI: scala tipografica di UI.md §10 come token (`display`, `h3`, `compact`, `mono`) applicata a launcher e wizard; azioni del launcher come `IconButton` + `Tooltip` visibile da tastiera; `EditorSurface` decomposto in barra di stato, toolbar, dialogo tabella, obiettivo parole, titolo e footer; toolbar con tooltip e scorciatoie; `SettingsDialog` diviso in sette sezioni autonome con navigazione sticky; `ExportDialog` con anteprima, log e dettagli profilo estratti.
+- Fase 6: audit di accessibilità automatico con axe-core (`phase7-a11y-audit` e2e) su 21 stati in chiaro e scuro, zero violazioni serious/critical, rapporto in `docs/a11y/audit/axe-report.json`; riferimenti visivi committati in `packages/testing/visual/` con `phase7-visual-regression`; test dei selettori CSS orfani (25 regole morte rimosse); `lang` del documento allineato alla lingua dell'interfaccia; landmark laterali con nome accessibile.
+- Fase 2 della ristrutturazione UI: il foglio di stile monolitico (6 427 righe) è spezzato in 38 moduli (`base/`, `primitives/`, `surfaces/`) importati in ordine certificato dal cascade; ogni modulo è sotto le 400 righe, senza `!important` (salvo le regole WCAG di `base/a11y.css`) e senza esadecimali (i 23 valori residui sono ora token `--pecie-palette-*`). Il test `styles-budget.test.ts` impedisce la regressione.
+- Design system `@pecie/ui`: nuovi primitivi `TextField`, `TextArea`, `Select`, `Checkbox`, `RadioGroup`, `SearchInput`, `Chip`, `ToggleChip`, `SegmentedControl`, `Tabs`, `Tooltip`, `Banner`, `Progress`, `ToastViewport`, `Card`, `EmptyState`; `IconButton` senza stili inline. Ogni componente ha documento in `packages/ui/docs/`, keyboard spec, stati, note a11y e test. I componenti applicativi usano i primitivi per campi semplici, checkbox, banner, chip, toggle della barra editor, selettore vista, tab del workspace, stato vuoto e toast.
+- Strumento `packages/testing/tools/style-snapshot.mjs`: cattura gli stili calcolati di ogni elemento su 20 stati dell'app (launcher, wizard, workspace, focus mode, pannello compresso, dialoghi, viste; chiaro e scuro) e confronta due catture. Certifica che un refactoring del foglio di stile non cambia nulla.
+- Fase 1 della ristrutturazione UI: token semantici (`surface`, `control`, `accent`, `feedback`, focus ring, scrim) con valore per tema chiaro, scuro e alto contrasto, scale per dimensione icone, elevazione e motion, emessi come variabili `--pecie-*` dal tema; prop `size` su `Icon`; test di contrasto WCAG AA su 110 coppie testo/sfondo; `packages/ui/README.md` con le regole del design system. Nessuna modifica visiva: le variabili sono additive.
+- Test e2e del primo avvio: il tutorial evidenzia i controlli reali, non copre il target, lascia il launcher usabile, porta il focus sul campo indicato, non apre mai le impostazioni da solo e persiste il completamento. Test sul tasto Esc e sul controllo di chiusura.
+- `docs/ui-restructuring-plan.md`: piano in sei fasi per la ristrutturazione dell'interfaccia (token semantici, split del foglio di stile, design system, restyle per superficie, certificazione visiva), a funzionalità congelate.
+
 ## [0.2.0] - 2026-09-17
 
 ### Added

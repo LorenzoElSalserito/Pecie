@@ -1,7 +1,7 @@
 {
   "id": "export-basics",
   "schemaVersion": 1,
-  "icon": "bi-box-arrow-up",
+  "icon": "box-arrow-up",
   "titleKey": "tutorialExportTitle",
   "steps": [
     {

@@ -1,7 +1,7 @@
 {
   "id": "workspace-basics",
   "schemaVersion": 1,
-  "icon": "bi-layout-text-window-reverse",
+  "icon": "layout-text-window-reverse",
   "titleKey": "tutorialWorkspaceTitle",
   "steps": [
     {

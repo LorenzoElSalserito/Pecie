@@ -1,5 +1,7 @@
 import { useState } from 'react'
 
+import { Icon } from '@pecie/ui'
+
 export function CopyableSnippet({ code }: { code: string }): React.JSX.Element {
   const [copied, setCopied] = useState(false)
 
@@ -16,7 +18,7 @@ export function CopyableSnippet({ code }: { code: string }): React.JSX.Element {
         }}
         type="button"
       >
-        <i className={`bi ${copied ? 'bi-check-lg' : 'bi-clipboard'}`}></i>
+        <Icon name={copied ? 'check-lg' : 'clipboard'} />
       </button>
     </div>
   )

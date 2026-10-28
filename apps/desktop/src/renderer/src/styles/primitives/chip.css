@@ -1,0 +1,206 @@
+.toggle-chip:focus-visible,
+.format-chip:focus-visible,
+.segmented-control__item:focus-visible {
+  outline: 3px solid var(--pecie-color-focus);
+  outline-offset: 3px;
+}
+
+.count-chip,
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2rem;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--pecie-color-border);
+  border-radius: var(--pecie-radius-full);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 20%, transparent), transparent 46%),
+    color-mix(in srgb, var(--pecie-color-surfaceStrong) 72%, transparent);
+  color: var(--pecie-color-textMuted);
+  font-family: var(--pecie-font-ui);
+  font-size: var(--pecie-small-size);
+  font-weight: 600;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 28%, transparent);
+}
+
+.status-pill--warning {
+  border-color: color-mix(in srgb, var(--pecie-color-warning) 30%, var(--pecie-color-border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 16%, transparent), transparent 46%),
+    color-mix(in srgb, var(--pecie-color-warning) 16%, transparent);
+  color: var(--pecie-color-warning);
+}
+
+.status-pill--danger {
+  border-color: color-mix(in srgb, var(--pecie-color-danger) 30%, var(--pecie-color-border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 16%, transparent), transparent 46%),
+    color-mix(in srgb, var(--pecie-color-danger) 14%, transparent);
+  color: var(--pecie-color-danger);
+}
+
+.citation-library-diagnostic__severity {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.6rem;
+  border-radius: var(--pecie-radius-full);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.citation-library-diagnostic__severity--warning {
+  background: color-mix(in srgb, var(--pecie-color-warning) 18%, transparent);
+  color: var(--pecie-color-warning);
+}
+
+.citation-library-diagnostic__severity--error {
+  background: color-mix(in srgb, var(--pecie-color-danger) 18%, transparent);
+  color: var(--pecie-color-danger);
+}
+
+.segmented-control {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding: 0.16rem;
+  border: 1px solid var(--pecie-color-borderSubtle);
+  border-radius: var(--pecie-radius-full);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 16%, transparent), transparent 40%),
+    color-mix(in srgb, var(--pecie-color-surfaceStrong) 46%, var(--pecie-color-background));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 26%, transparent);
+}
+
+.segmented-control__item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.9rem;
+  padding: 0.28rem 0.62rem;
+  border: 0;
+  border-radius: var(--pecie-radius-full);
+  background: transparent;
+  color: var(--pecie-color-textMuted);
+  cursor: pointer;
+  font-family: var(--pecie-font-ui);
+  font-size: var(--pecie-small-size);
+  font-weight: 600;
+}
+
+.segmented-control__item--active {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 24%, transparent), transparent 42%),
+    var(--pecie-color-background);
+  color: var(--pecie-color-text);
+  box-shadow: var(--pecie-shadow-sm);
+}
+
+.format-chip,
+.toggle-chip {
+  min-height: 2rem;
+  padding: 0.36rem 0.58rem;
+  border: 1px solid var(--pecie-color-border);
+  border-radius: var(--pecie-radius-full);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 14%, transparent), transparent 40%),
+    color-mix(in srgb, var(--pecie-color-surfaceStrong) 24%, transparent);
+  color: var(--pecie-color-textMuted);
+  cursor: pointer;
+  font-family: var(--pecie-font-ui);
+  font-size: var(--pecie-small-size);
+  font-weight: 600;
+}
+
+.format-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  min-width: 2.1rem;
+  min-height: 2.1rem;
+  padding: 0;
+  border-radius: var(--pecie-radius-md);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 14%, transparent), transparent 40%),
+    color-mix(in srgb, var(--pecie-color-surfaceStrong) 42%, var(--pecie-color-background));
+  color: var(--pecie-color-text);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 24%, transparent);
+  transition:
+    background var(--pecie-transition-fast),
+    border-color var(--pecie-transition-fast),
+    color var(--pecie-transition-fast),
+    box-shadow var(--pecie-transition-fast);
+}
+
+.format-chip:hover {
+  color: var(--pecie-color-accent);
+}
+
+.format-chip:active {
+  box-shadow: inset 0 2px 4px color-mix(in srgb, var(--pecie-color-text) 12%, transparent);
+}
+
+.format-chip:hover .format-chip__icon {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .format-chip {
+    transition:
+      background var(--pecie-transition-fast),
+      border-color var(--pecie-transition-fast),
+      color var(--pecie-transition-fast),
+      box-shadow var(--pecie-transition-fast),
+      transform var(--pecie-transition-fast);
+  }
+
+  .format-chip:hover {
+    transform: translateY(-1px);
+  }
+
+  .format-chip:active {
+    transform: translateY(0) scale(0.96);
+  }
+}
+
+.toggle-chip--icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  min-width: 2rem;
+  padding: 0;
+}
+
+.format-chip__icon {
+  width: 1.05rem;
+  height: 1.05rem;
+  opacity: 0.88;
+  transition: opacity var(--pecie-transition-fast);
+}
+
+.format-chip:hover,
+.toggle-chip:hover {
+  border-color: color-mix(in srgb, var(--pecie-color-accent) 32%, var(--pecie-color-border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 20%, transparent), transparent 48%),
+    color-mix(in srgb, var(--pecie-color-accent) 8%, var(--pecie-color-background));
+  box-shadow: var(--pecie-shadow-sm);
+}
+
+.toggle-chip[aria-pressed='true'] {
+  border-color: color-mix(in srgb, var(--pecie-color-accent) 48%, var(--pecie-color-border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 18%, transparent), transparent 48%),
+    color-mix(in srgb, var(--pecie-color-accent) 12%, var(--pecie-color-background));
+  color: var(--pecie-color-text);
+}
+
+.toggle-chip--accent {
+  border-color: color-mix(in srgb, var(--pecie-color-accent) 38%, var(--pecie-color-border));
+  color: var(--pecie-color-text);
+}
+

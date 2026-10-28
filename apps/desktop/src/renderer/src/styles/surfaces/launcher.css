@@ -1,0 +1,362 @@
+.launcher-brand-mark {
+  width: min(4.2rem, 100%);
+  height: min(4.2rem, 100%);
+  margin-bottom: 0;
+}
+
+.launcher-main,
+.launcher-side {
+  border: 1px solid var(--pecie-color-borderSubtle);
+  border-radius: var(--pecie-radius-xl);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--pecie-color-surfaceStrong) 18%, transparent), transparent 26%),
+    color-mix(in srgb, var(--pecie-color-surface) 94%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 34%, transparent),
+    var(--pecie-shadow-md);
+}
+
+.launcher-main__actions,
+.launcher-shell {
+  display: flex;
+  gap: 0.85rem;
+}
+
+.launcher-main__header {
+  align-items: start;
+  justify-content: space-between;
+}
+
+.launcher-main__header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+  gap: 0.85rem;
+}
+
+.launcher-main__header > * {
+  min-width: 0;
+}
+
+.launcher-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(19rem, 22rem);
+  gap: 1.1rem;
+  min-height: 100vh;
+  max-width: 96rem;
+  margin: 0 auto;
+  padding: 1.15rem;
+}
+
+.launcher-main,
+.launcher-side {
+  display: grid;
+  align-content: start;
+  gap: 1.05rem;
+  padding: 1.25rem;
+  min-height: calc(100vh - 2.1rem);
+}
+
+.launcher-main__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.52rem;
+  justify-items: end;
+  align-items: stretch;
+  align-self: stretch;
+  align-content: space-between;
+  width: min(19rem, 100%);
+  padding: 0.52rem;
+  border: 1px solid color-mix(in srgb, var(--pecie-color-borderSubtle) 88%, transparent);
+  border-radius: calc(var(--pecie-radius-lg) + 0.28rem);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 26%, transparent), transparent 48%),
+    color-mix(in srgb, var(--pecie-color-surface) 88%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 38%, transparent),
+    var(--pecie-shadow-sm);
+  backdrop-filter: blur(10px);
+}
+
+.launcher-main__action-group {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  gap: 0.42rem;
+  align-items: center;
+  min-width: 0;
+}
+
+.launcher-main__action-group--minor {
+  padding-block-start: 0;
+  padding-inline-start: 0.52rem;
+  border-block-start: 0;
+  border-inline-start: 1px solid color-mix(in srgb, var(--pecie-color-borderSubtle) 92%, transparent);
+}
+
+.launcher-action-toolbar {
+  display: inline-flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.52rem;
+  align-self: end;
+  max-width: 100%;
+}
+
+.launcher-action-button {
+  width: 2.12rem;
+  min-width: 2.12rem;
+  height: 2.12rem;
+  padding: 0;
+}
+
+.launcher-main {
+  grid-template-rows: auto 1fr;
+  gap: 1rem;
+}
+
+.launcher-side {
+  grid-auto-rows: min-content;
+}
+
+.launcher-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.45rem;
+  align-items: start;
+  align-self: stretch;
+  position: relative;
+  overflow: hidden;
+  padding: 0.9rem 1.05rem;
+  border: 1px solid color-mix(in srgb, var(--pecie-color-borderSubtle) 84%, transparent);
+  border-radius: calc(var(--pecie-radius-xl) - 0.15rem);
+  background:
+    radial-gradient(circle at center, color-mix(in srgb, var(--pecie-color-accent) 12%, transparent), transparent 62%),
+    linear-gradient(180deg, color-mix(in srgb, white 16%, transparent), transparent 54%),
+    color-mix(in srgb, var(--pecie-color-surface) 92%, transparent);
+}
+
+.launcher-hero__brand,
+.launcher-hero__copy {
+  display: grid;
+}
+
+.launcher-hero__brand {
+  gap: 0.48rem;
+  align-content: start;
+  justify-items: start;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+}
+
+.launcher-hero__copy {
+  gap: 0.16rem;
+  align-content: start;
+  max-width: 100%;
+}
+
+.launcher-hero__greeting {
+  margin: 0;
+  color: color-mix(in srgb, var(--pecie-color-accent) 72%, var(--pecie-color-text));
+  font-family: var(--pecie-font-ui);
+  font-size: var(--pecie-small-size);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.launcher-hero__copy .eyebrow {
+  font-size: clamp(1.8rem, 2.7vw, 2.35rem);
+  letter-spacing: 0.18em;
+  color: color-mix(in srgb, var(--pecie-color-text) 88%, var(--pecie-color-textSubtle));
+}
+
+.launcher-hero__copy h1 {
+  margin: 0;
+}
+
+.launcher-hero__copy .lead {
+  max-width: none;
+}
+
+.launcher-composer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.85rem;
+  align-items: start;
+}
+
+.launcher-composer__main {
+  display: grid;
+  gap: 1.05rem;
+}
+
+/* Padding and radius come from `.context-card` (primitives/card.css): the generic rule won the
+ * cascade in the monolithic sheet, and the split keeps that look. */
+.launcher-author-card {
+  width: 100%;
+}
+
+.launcher-author-card__header {
+  align-items: start;
+  gap: 0.28rem;
+  margin-block-end: 0.45rem;
+}
+
+.launcher-author-card .meta-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.46rem 0.62rem;
+}
+
+.launcher-author-card .meta-list dd {
+  overflow-wrap: anywhere;
+}
+
+.launcher-side > .context-card {
+  padding: 1rem;
+}
+
+.launcher-side .section-heading--compact {
+  align-items: start;
+  gap: 0.65rem;
+}
+
+.launcher-side .section-heading--compact h2 {
+  font-size: var(--pecie-h3-size);
+  line-height: 1.18;
+}
+
+.launcher-side .context-card .context-card {
+  padding: 0.92rem 0.96rem;
+}
+
+.launcher-side .context-card .context-card h3 {
+  font-size: var(--pecie-compact-size);
+}
+
+.welcome-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(18rem, 24rem);
+  gap: 1.5rem;
+}
+
+.welcome-hero__copy {
+  border: 1px solid var(--pecie-color-borderSubtle);
+  border-radius: var(--pecie-radius-xl);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 18%, transparent), transparent 48%),
+    color-mix(in srgb, var(--pecie-color-surface) 94%, transparent);
+  box-shadow: var(--pecie-shadow-md);
+}
+
+.welcome-hero__copy {
+  display: grid;
+  align-content: start;
+  gap: 1.4rem;
+  padding: clamp(1.6rem, 3vw, 2.6rem);
+}
+
+.welcome-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+
+/* ── Launcher Hero Tagline ── */
+.launcher-hero__tagline {
+  margin: 0;
+  font-family: var(--pecie-font-ui);
+  font-size: clamp(1.22rem, 1.85vw, 1.62rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.06;
+  color: var(--pecie-color-text);
+}
+
+.launcher-hero__subtitle {
+  margin: 0;
+  color: var(--pecie-color-textMuted);
+  font-size: var(--pecie-compact-size);
+  line-height: 1.34;
+  max-width: 54ch;
+}
+
+/* ── Launcher CTA field alignment ── */
+.launcher-cta-field {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.launcher-cta-field .pecie-btn {
+  width: 100%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .fade-in-up {
+    opacity: 0;
+    transform: translateY(8px);
+    animation: fade-in-up 400ms ease-out forwards;
+  }
+
+  .launcher-brand-mark.fade-in-up {
+    animation-delay: 0ms;
+  }
+
+  .launcher-hero__copy > .fade-in-up:nth-child(1) {
+    animation-delay: 120ms;
+  }
+
+  .launcher-hero__copy > .fade-in-up:nth-child(2) {
+    animation-delay: 240ms;
+  }
+
+  .launcher-hero__copy > .fade-in-up:nth-child(3) {
+    animation-delay: 360ms;
+  }
+}
+
+@media (max-width: 1180px) {
+.launcher-hero,
+.launcher-composer {
+    grid-template-columns: 1fr;
+  }
+
+.launcher-shell {
+    justify-content: start;
+  }
+}
+
+@media (max-width: 900px) {
+.launcher-shell,
+.welcome-hero {
+    grid-template-columns: 1fr;
+  }
+
+.launcher-main__header {
+    grid-template-columns: 1fr;
+  }
+
+.launcher-main__actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}
+
+/* Launcher hero: brand moment in the editorial heading face, vertically balanced. */
+.launcher-hero {
+  align-content: center;
+}
+
+.launcher-hero__tagline {
+  font-family: var(--pecie-font-heading);
+  font-size: clamp(1.7rem, 2.4vw, 2.2rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.08;
+}
+
+.launcher-hero__subtitle {
+  font-size: var(--pecie-compact-size);
+  line-height: 1.45;
+}

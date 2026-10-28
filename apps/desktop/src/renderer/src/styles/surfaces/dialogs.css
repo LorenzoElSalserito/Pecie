@@ -1,0 +1,362 @@
+.global-search-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--pecie-color-borderSubtle);
+  border-radius: var(--pecie-radius-lg);
+  background: color-mix(in srgb, var(--pecie-color-surfaceSoft) 82%, transparent);
+  color: var(--pecie-color-textMuted);
+  font-size: var(--pecie-small-size);
+}
+
+.global-search-layout {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.global-search-list {
+  display: grid;
+  gap: 0.55rem;
+  max-height: 24rem;
+  overflow: auto;
+}
+
+.global-search-item {
+  display: grid;
+  gap: 0.18rem;
+  padding: 0.78rem 0.85rem;
+  border: 1px solid var(--pecie-color-borderSubtle);
+  border-radius: var(--pecie-radius-lg);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 18%, transparent), transparent 48%),
+    var(--pecie-color-background);
+  color: var(--pecie-color-text);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    transform var(--pecie-transition-fast),
+    box-shadow var(--pecie-transition-fast),
+    border-color var(--pecie-transition-fast);
+}
+
+.global-search-item:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--pecie-color-accent) 26%, var(--pecie-color-border));
+  box-shadow: var(--pecie-shadow-sm);
+}
+
+.global-search-item small,
+.global-search-item span {
+  color: var(--pecie-color-textMuted);
+}
+
+.global-search-item span mark {
+  background: color-mix(in srgb, var(--pecie-color-accent) 18%, transparent);
+  color: inherit;
+}
+
+.project-library__list {
+  display: grid;
+  gap: 0.75rem;
+  max-height: 24rem;
+  overflow-y: auto;
+}
+
+.project-library__item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: start;
+  padding: 0.78rem 0.82rem;
+  border: 1px solid var(--pecie-color-borderSubtle);
+  border-radius: var(--pecie-radius-lg);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 20%, transparent), transparent 48%),
+    linear-gradient(180deg, color-mix(in srgb, var(--pecie-color-surfaceStrong) 16%, transparent), transparent),
+    var(--pecie-color-background);
+  transition:
+    transform var(--pecie-transition-fast),
+    border-color var(--pecie-transition-fast),
+    box-shadow var(--pecie-transition-fast),
+    background var(--pecie-transition-fast);
+}
+
+.project-library__item:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--pecie-color-accent) 24%, var(--pecie-color-border));
+  box-shadow: var(--pecie-shadow-sm);
+}
+
+.project-library__copy {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.project-library__copy strong,
+.project-library__copy small {
+  font-family: var(--pecie-font-ui);
+}
+
+.project-library__copy span {
+  color: var(--pecie-color-textMuted);
+  font-size: var(--pecie-small-size);
+  overflow-wrap: anywhere;
+}
+
+.project-library__copy small {
+  color: var(--pecie-color-textSubtle);
+}
+
+.project-library__actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  justify-content: flex-end;
+}
+
+.image-insert-dialog {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.image-insert-dialog__picker {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.image-insert-dialog__file-info {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+@media (max-width: 1180px) {
+  .global-search-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+.project-library__item {
+    grid-template-columns: 1fr;
+  }
+
+.project-library__actions {
+    justify-content: start;
+  }
+}
+
+.timeline-milestone-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.history-diff-dialog {
+  display: grid;
+  gap: 16px;
+}
+
+.history-diff-dialog__panes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.history-diff-pane {
+  display: grid;
+  gap: 10px;
+}
+
+.history-diff-pane__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.88rem;
+}
+
+.history-diff-pane__content {
+  margin: 0;
+  min-height: 320px;
+  max-height: 52vh;
+  overflow: auto;
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  white-space: pre-wrap;
+  font-family: 'Source Serif 4', serif;
+  line-height: 1.55;
+}
+
+.history-diff-pane__content--textarea {
+  resize: none;
+}
+
+.history-diff-dialog__warning {
+  margin: 0;
+  color: var(--pecie-palette-warning-text-dark);
+}
+
+@media (max-width: 900px) {
+  .history-diff-dialog__panes {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ── Settings: two panes (fixed section nav + the only scrolling region) ──
+   The card itself does not scroll: header, nav and actions stay put and only .settings-pane
+   moves, so no content can slide underneath the navigation. */
+.dialog-card.settings-dialog {
+  display: flex;
+  flex-direction: column;
+  width: min(60rem, 100%);
+  height: min(48rem, calc(100vh - 8rem));
+  overflow: hidden;
+}
+
+.settings-dialog .dialog-card__content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 0;
+}
+
+.settings-dialog .dialog-card__header {
+  margin-bottom: 0;
+}
+
+.settings-dialog .dialog-actions {
+  justify-content: flex-end;
+  margin-top: 0;
+}
+
+.settings-layout {
+  display: grid;
+  flex: 1;
+  grid-template-columns: 13.5rem minmax(0, 1fr);
+  gap: 1.25rem;
+  min-height: 0;
+}
+
+.settings-pane {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: var(--pecie-color-border) transparent;
+  scrollbar-width: thin;
+  /* Room for the focus ring of the cards' first and last controls. */
+  padding: 0.2rem 0.5rem 0.5rem 0.2rem;
+}
+
+.settings-pane > .context-card {
+  scroll-margin-top: 0.2rem;
+}
+
+.settings-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0.2rem 0.75rem 0.2rem 0.2rem;
+  border-right: 1px solid var(--pecie-color-borderSubtle);
+}
+
+.settings-nav__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  min-height: 2.35rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid transparent;
+  border-radius: 0.6rem;
+  background: transparent;
+  color: var(--pecie-control-textMuted);
+  cursor: pointer;
+  font-family: var(--pecie-font-ui);
+  font-size: var(--pecie-compact-size);
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: left;
+  transition: background var(--pecie-motion-fast) var(--pecie-ease-standard), color var(--pecie-motion-fast) var(--pecie-ease-standard), border-color var(--pecie-motion-fast) var(--pecie-ease-standard);
+}
+
+.settings-nav__icon {
+  flex-shrink: 0;
+  font-size: 1rem;
+  opacity: 0.85;
+}
+
+.settings-nav__label {
+  min-width: 0;
+}
+
+.settings-nav__item:hover {
+  background: var(--pecie-control-bgHover);
+  color: var(--pecie-control-text);
+}
+
+.settings-nav__item:active {
+  background: color-mix(in srgb, var(--pecie-control-bgHover) 70%, var(--pecie-accent-subtle));
+}
+
+.settings-nav__item--current,
+.settings-nav__item--current:hover {
+  border-color: color-mix(in srgb, var(--pecie-accent-bg) 30%, transparent);
+  background: var(--pecie-accent-subtle);
+  color: var(--pecie-accent-onSubtle);
+}
+
+.settings-nav__item--current .settings-nav__icon {
+  opacity: 1;
+}
+
+.settings-nav__item:focus-visible {
+  outline: 3px solid var(--pecie-focus-ring);
+  outline-offset: -1px;
+}
+
+/* Narrow windows: the nav becomes a single horizontal strip above the pane (it scrolls
+   sideways instead of wrapping), still outside the scrolling region. */
+@media (max-width: 760px) {
+  .dialog-card.settings-dialog {
+    height: calc(100vh - 6.5rem);
+  }
+
+  .settings-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 0.5rem;
+  }
+
+  .settings-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.2rem 0.2rem 0.5rem;
+    border-right: 0;
+    border-bottom: 1px solid var(--pecie-color-borderSubtle);
+    scrollbar-color: var(--pecie-color-border) transparent;
+    scrollbar-width: thin;
+  }
+
+  .settings-nav__item {
+    flex: 0 0 auto;
+    width: auto;
+    white-space: nowrap;
+  }
+}

@@ -1,0 +1,25 @@
+/* ── Icon system ──
+ * `<Icon>` renders an inline SVG with the classes `pecie-icon bi bi-<name>`. The glyph is a 1em
+ * square, so every legacy `.bi { font-size }` rule keeps sizing it, and it inherits `color`.
+ */
+.pecie-icon {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  fill: currentColor;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.pecie-icon--sm { width: var(--pecie-icon-size-sm); height: var(--pecie-icon-size-sm); }
+
+.pecie-icon--md { width: var(--pecie-icon-size-md); height: var(--pecie-icon-size-md); }
+
+.pecie-icon--lg { width: var(--pecie-icon-size-lg); height: var(--pecie-icon-size-lg); }
+
+.pecie-icon--xl { width: var(--pecie-icon-size-xl); height: var(--pecie-icon-size-xl); }
+
+.pecie-icon--hero { width: var(--pecie-icon-size-hero); height: var(--pecie-icon-size-hero); }
+

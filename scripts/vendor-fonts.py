@@ -160,7 +160,7 @@ def vendor(manifest):
         css += ['@font-face {', "  font-family: 'OpenDyslexic';", f"  font-style: {style};", f"  font-weight: {weight};", '  font-display: swap;',
                 f"  src: url('../asset/fonts/open-dyslexic/OpenDyslexic-{name}.woff') format('woff');", '}']
     lic.append('- **OpenDyslexic** — Bitstream Vera-derived license (`open-dyslexic/LICENSE.txt`)')
-    lic.append('- **Bootstrap Icons** — MIT (`bootstrap-icons/LICENSE`)')
+    lic.append('- **Bootstrap Icons** — MIT, embedded as inline SVG path data in `packages/ui/src/icons/` (`LICENSE-bootstrap-icons.txt`)')
     css.append('')
     open(os.path.join(RENDERER, 'styles/fonts.css'), 'w').write('\n'.join(css))
     open(os.path.join(FONTS_DIR, 'LICENSE.md'), 'w').write('\n'.join(lic) + '\n')

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-import { Button, Dialog } from '@pecie/ui'
+import { Banner, Button, Dialog } from '@pecie/ui'
 
 import { t } from '../i18n'
 import type { OpenProjectDialogProps } from './types'
@@ -29,7 +29,7 @@ export function OpenProjectDialog({
   }
 
   return (
-    <Dialog open={open} onClose={onClose} size="compact" icon="bi-folder2-open" title={t(locale, 'openDialogTitle')}>
+    <Dialog open={open} onClose={onClose} size="compact" icon="folder2-open" title={t(locale, 'openDialogTitle')}>
       <div className="dialog-form">
         <label className="field">
           <span>{t(locale, 'projectPath')}</span>
@@ -73,9 +73,9 @@ export function OpenProjectDialog({
         ) : null}
 
         {error ? (
-          <p className="message-box message-box--error" role="alert">
+          <Banner tone="error">
             {error}
-          </p>
+          </Banner>
         ) : null}
 
         <div className="dialog-actions">

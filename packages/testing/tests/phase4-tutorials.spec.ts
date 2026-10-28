@@ -106,6 +106,95 @@ async function createProjectFromLauncher(page: Page, title: string) {
 }
 
 test.describe('FASE 4 Tutorials', () => {
+  test('first launch: the coach mark spotlights the real launcher controls and leaves the launcher usable', async () => {
+    const { electronApp, page, homeDirectory, settingsPath } = await launchDesktop({ onboardingCompleted: false })
+
+    try {
+      const tutorialDialog = page.getByRole('dialog', { name: 'Getting started' })
+      await expect(tutorialDialog).toBeVisible()
+      await expect(tutorialDialog.getByText('Step 1 of 4')).toBeVisible()
+      // Non-modal: no scrim blur, no focus trap, the launcher stays interactive underneath.
+      expect(await page.locator('.dialog-scrim').count()).toBe(0)
+      await expect(tutorialDialog).toHaveAttribute('aria-modal', 'false')
+
+      const titleField = page.getByLabel('Project title')
+      const spotlight = page.locator('.tutorial-spotlight')
+      await expect(spotlight).toBeVisible()
+      const overlaps = async (target: ReturnType<Page['locator']>): Promise<boolean> => {
+        const [spot, box] = await Promise.all([spotlight.boundingBox(), target.boundingBox()])
+        if (!spot || !box) return false
+        return spot.x <= box.x + 1 && spot.y <= box.y + 1 && spot.x + spot.width >= box.x + box.width - 1 && spot.y + spot.height >= box.y + box.height - 1
+      }
+      await expect.poll(() => overlaps(titleField)).toBe(true)
+
+      // The card never covers the control it points at.
+      const [cardBox, titleBox] = await Promise.all([tutorialDialog.boundingBox(), titleField.boundingBox()])
+      expect(cardBox && titleBox && (cardBox.y >= titleBox.y + titleBox.height || cardBox.y + cardBox.height <= titleBox.y || cardBox.x >= titleBox.x + titleBox.width || cardBox.x + cardBox.width <= titleBox.x)).toBe(true)
+
+      await titleField.fill('Tour Project')
+      await expect(titleField).toHaveValue('Tour Project')
+
+      await tutorialDialog.getByRole('button', { name: 'Next' }).click()
+      await expect(titleField).toBeFocused()
+      await expect(tutorialDialog.getByText('Step 2 of 4')).toBeVisible()
+      await expect.poll(() => overlaps(page.getByRole('radiogroup', { name: 'Template' }))).toBe(true)
+
+      await tutorialDialog.getByRole('button', { name: 'Next' }).click()
+      await expect(tutorialDialog.getByText('Step 3 of 4')).toBeVisible()
+      const destinationField = page.getByLabel('Destination folder')
+      await expect.poll(() => overlaps(destinationField)).toBe(true)
+
+      await tutorialDialog.getByRole('button', { name: 'Back' }).click()
+      await expect(tutorialDialog.getByText('Step 2 of 4')).toBeVisible()
+      await tutorialDialog.focus()
+      await page.keyboard.press('ArrowRight')
+      await expect(tutorialDialog.getByText('Step 3 of 4')).toBeVisible()
+
+      await tutorialDialog.getByRole('button', { name: 'Next' }).click()
+      await expect(destinationField).toBeFocused()
+      await expect(tutorialDialog.getByText('Step 4 of 4')).toBeVisible()
+      await expect.poll(() => overlaps(page.getByRole('button', { name: 'Settings' }))).toBe(true)
+      expect(await page.getByRole('dialog', { name: 'Settings' }).count()).toBe(0)
+
+      await tutorialDialog.getByRole('button', { name: 'Understood' }).click()
+      await expect(tutorialDialog).toBeHidden()
+      expect(await page.locator('.tutorial-spotlight').count()).toBe(0)
+      expect(await page.locator('.tutorial-target--active').count()).toBe(0)
+      expect(await page.getByRole('dialog', { name: 'Settings' }).count()).toBe(0)
+      await expect(titleField).toHaveValue('Tour Project')
+
+      await expect
+        .poll(async () => JSON.parse(await readFile(settingsPath, 'utf8')).onboardingCompleted as boolean)
+        .toBe(true)
+      const persistedSettings = JSON.parse(await readFile(settingsPath, 'utf8'))
+      expect(persistedSettings.tutorialProgress?.completedTutorialIds).toContain('launcher-basics')
+      expect(persistedSettings.tutorialProgress?.activeSession).toBeUndefined()
+    } finally {
+      await electronApp.close()
+      await rm(homeDirectory, { recursive: true, force: true })
+    }
+  })
+
+  test('Escape on the coach mark skips the tour and the close control is distinct from skip', async () => {
+    const { electronApp, page, homeDirectory, settingsPath } = await launchDesktop({ onboardingCompleted: false })
+
+    try {
+      const tutorialDialog = page.getByRole('dialog', { name: 'Getting started' })
+      await expect(tutorialDialog).toBeVisible()
+      await expect(tutorialDialog.getByRole('button', { name: 'Skip tutorial' })).toHaveCount(1)
+      await expect(tutorialDialog.getByRole('button', { name: 'Close' })).toHaveCount(1)
+      await tutorialDialog.focus()
+      await page.keyboard.press('Escape')
+      await expect(tutorialDialog).toBeHidden()
+      await expect
+        .poll(async () => JSON.parse(await readFile(settingsPath, 'utf8')).tutorialProgress?.skippedTutorialIds as string[])
+        .toContain('launcher-basics')
+    } finally {
+      await electronApp.close()
+      await rm(homeDirectory, { recursive: true, force: true })
+    }
+  })
+
   test('restores the launcher tutorial from persisted progress at the final step', async () => {
     const { electronApp, page, homeDirectory, settingsPath } = await launchDesktop({
       onboardingCompleted: false,

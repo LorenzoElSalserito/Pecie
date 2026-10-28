@@ -1,0 +1,123 @@
+/* ── Collapsible Context Section ── */
+.context-section {
+  display: grid;
+  gap: 0;
+  border: 1px solid var(--pecie-color-borderSubtle);
+  border-radius: var(--pecie-radius-lg);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 18%, transparent), transparent 48%),
+    var(--pecie-color-background);
+  overflow: hidden;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 24%, transparent),
+    0 10px 24px color-mix(in srgb, black 4%, transparent);
+}
+
+.context-section__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.8rem 0.88rem;
+  border: none;
+  background: transparent;
+  color: var(--pecie-color-text);
+  cursor: pointer;
+  text-align: left;
+}
+
+.context-section__toggle h3 {
+  margin: 0;
+  font-family: var(--pecie-font-ui);
+  font-size: 0.95rem;
+}
+
+.context-section__body {
+  display: grid;
+  gap: 0.8rem;
+  padding: 0 0.88rem 0.88rem;
+  overflow: hidden;
+  transition: max-height 200ms ease, opacity 200ms ease, padding 200ms ease;
+}
+
+.context-section__body--collapsed {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* ── Context Selection Bar ── */
+.context-selection-bar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--pecie-color-accent) 18%, var(--pecie-color-borderSubtle));
+  border-radius: var(--pecie-radius-lg);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--pecie-color-accent) 4%, transparent), transparent 50%),
+    var(--pecie-color-background);
+}
+
+.context-selection-bar div {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.context-selection-bar strong {
+  font-family: var(--pecie-font-ui);
+  font-size: var(--pecie-small-size);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.context-selection-bar small {
+  color: var(--pecie-color-textMuted);
+  font-size: var(--pecie-caption-size);
+}
+
+@media (max-width: 900px) {
+.context-metric-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Context Session Card ── */
+.context-session-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+  padding: 0.72rem 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--pecie-color-success) 18%, var(--pecie-color-borderSubtle));
+  border-radius: var(--pecie-radius-lg);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--pecie-color-success) 5%, transparent), transparent 50%),
+    linear-gradient(180deg, color-mix(in srgb, white 18%, transparent), transparent 48%),
+    var(--pecie-color-background);
+  font-family: var(--pecie-font-ui);
+  font-size: var(--pecie-small-size);
+}
+
+.context-session-card__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--pecie-color-success);
+  font-weight: 600;
+}
+
+.context-session-card__stats {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  color: var(--pecie-color-textMuted);
+  font-weight: 600;
+}
+

@@ -1,7 +1,7 @@
 {
   "id": "timeline-basics",
   "schemaVersion": 1,
-  "icon": "bi-clock-history",
+  "icon": "clock-history",
   "titleKey": "tutorialTimelineTitle",
   "steps": [
     {

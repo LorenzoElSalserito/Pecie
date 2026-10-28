@@ -1,0 +1,212 @@
+html[data-theme='light'] {
+  background:
+    radial-gradient(circle at 8% 10%, rgba(255, 255, 255, 0.92), transparent 28%),
+    radial-gradient(circle at 88% 12%, rgba(214, 169, 120, 0.14), transparent 22%),
+    radial-gradient(circle at 18% 100%, rgba(171, 127, 86, 0.1), transparent 24%),
+    linear-gradient(180deg, rgba(255, 253, 249, 0.88), rgba(242, 237, 228, 0.94)),
+    var(--pecie-color-background);
+}
+
+html[data-theme='light'] .launcher-main,
+html[data-theme='light'] .launcher-side,
+html[data-theme='light'] .workspace-header,
+html[data-theme='light'] .workspace-binder,
+html[data-theme='light'] .workspace-context,
+html[data-theme='light'] .dialog-card,
+html[data-theme='light'] .context-card,
+html[data-theme='light'] .recent-list__item,
+html[data-theme='light'] .project-library__item,
+html[data-theme='light'] .metric-grid__item,
+html[data-theme='light'] .guide-card,
+html[data-theme='light'] .template-card,
+html[data-theme='light'] .quick-resume-banner,
+html[data-theme='light'] .context-hero-metric,
+html[data-theme='light'] .context-metric-pill,
+html[data-theme='light'] .context-section,
+html[data-theme='light'] .context-pulse-board,
+html[data-theme='light'] .binder-actions,
+html[data-theme='light'] .binder-search,
+html[data-theme='light'] .binder-attachments__dropzone,
+html[data-theme='light'] .binder-attachments__item,
+html[data-theme='light'] .global-search-summary,
+html[data-theme='light'] .global-search-item,
+html[data-theme='light'] .context-selection-bar,
+html[data-theme='light'] .overflow-menu {
+  border-color: color-mix(in srgb, var(--pecie-color-borderSubtle) 72%, var(--pecie-palette-sand-300) 28%);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 252, 246, 0.9) 42%, rgba(247, 241, 232, 0.94)),
+    color-mix(in srgb, var(--pecie-color-surface) 96%, white 4%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    0 18px 34px rgba(138, 107, 70, 0.1);
+}
+
+html[data-theme='light'] .editor-sheet {
+  border-color: color-mix(in srgb, var(--pecie-color-borderSubtle) 68%, var(--pecie-palette-sand-400) 32%);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 251, 245, 0.95) 42%, rgba(253, 251, 247, 0.98)),
+    var(--pecie-palette-paper);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.98),
+    0 1px 3px rgba(107, 78, 47, 0.08),
+    0 18px 36px rgba(138, 107, 70, 0.08);
+}
+
+html[data-theme='light'] .binder-tree__item {
+  border-color: color-mix(in srgb, var(--pecie-color-borderSubtle) 58%, var(--pecie-palette-sand-200) 42%);
+}
+
+html[data-theme='light'] .binder-tree__item[aria-selected='true'],
+html[data-theme='light'] .binder-tree__progress-fill,
+html[data-theme='light'] .status-pill {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.96),
+    0 10px 18px rgba(148, 83, 40, 0.08);
+}
+
+html[data-theme='light'] .field input,
+html[data-theme='light'] .field select,
+html[data-theme='light'] .field textarea,
+html[data-theme='light'] .editor-monaco,
+html[data-theme='light'] .markdown-render,
+html[data-theme='light'] .template-preview {
+  border-color: color-mix(in srgb, var(--pecie-color-border) 74%, var(--pecie-palette-sand-300) 26%);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(251, 246, 238, 0.94)),
+    var(--pecie-color-background);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.98),
+    0 8px 18px rgba(138, 107, 70, 0.06);
+}
+
+html[data-theme='light'] .launcher-main__actions,
+html[data-theme='light'] .workspace-header__action-group,
+html[data-theme='light'] .segmented-control {
+  border-color: color-mix(in srgb, var(--pecie-color-borderSubtle) 68%, var(--pecie-palette-sand-300) 32%);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(248, 241, 231, 0.92)),
+    color-mix(in srgb, var(--pecie-color-surface) 92%, white 8%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    0 10px 20px rgba(138, 107, 70, 0.05);
+}
+
+html[data-theme='light'] .pecie-btn--secondary,
+html[data-theme='light'] .pecie-btn--ghost,
+html[data-theme='light'] .panel-toggle,
+html[data-theme='light'] .format-chip,
+html[data-theme='light'] .toggle-chip,
+html[data-theme='light'] .segmented-control__item--active,
+html[data-theme='light'] .status-pill,
+html[data-theme='light'] .count-chip {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.96),
+    0 8px 16px rgba(138, 107, 70, 0.05);
+}
+
+html[data-theme='light'] .pecie-btn--secondary {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 240, 231, 0.94)),
+    var(--pecie-color-surface);
+  border-color: color-mix(in srgb, var(--pecie-color-border) 72%, var(--pecie-palette-sand-500) 28%);
+}
+
+html[data-theme='light'] .pecie-btn--ghost,
+html[data-theme='light'] .panel-toggle,
+html[data-theme='light'] .format-chip,
+html[data-theme='light'] .toggle-chip {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(244, 236, 226, 0.9)),
+    color-mix(in srgb, var(--pecie-color-surfaceStrong) 34%, white 66%);
+  border-color: color-mix(in srgb, var(--pecie-color-borderSubtle) 68%, var(--pecie-palette-sand-500) 32%);
+}
+
+html[data-theme='light'] .pecie-btn--ghost:not(:disabled):hover,
+html[data-theme='light'] .panel-toggle:hover,
+html[data-theme='light'] .format-chip:hover,
+html[data-theme='light'] .toggle-chip:hover,
+html[data-theme='light'] .segmented-control__item--active {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 239, 229, 0.96)),
+    color-mix(in srgb, var(--pecie-color-surfaceHover) 88%, white 12%);
+}
+
+html[data-theme='light'] .pecie-btn--primary {
+  background:
+    linear-gradient(180deg, var(--pecie-palette-accent-gradient-top) 0%, var(--pecie-palette-accent-gradient-bottom) 100%);
+  border-color: var(--pecie-palette-accent-gradient-border);
+}
+
+html[data-theme='light'] .pecie-btn--primary:not(:disabled):hover {
+  background:
+    linear-gradient(180deg, var(--pecie-palette-accent-gradient-top-hover) 0%, var(--pecie-palette-accent-gradient-bottom-hover) 100%);
+  border-color: var(--pecie-palette-accent-gradient-border-hover);
+}
+
+html[data-theme='light'] .workspace-header__identity .status-pill,
+html[data-theme='light'] .binder-node-badge--document,
+html[data-theme='light'] .toggle-chip[aria-pressed='true'] {
+  background:
+    linear-gradient(180deg, rgba(255, 248, 242, 0.98), rgba(244, 224, 206, 0.94)),
+    color-mix(in srgb, var(--pecie-color-accent) 14%, white 86%);
+  border-color: color-mix(in srgb, var(--pecie-color-accent) 28%, var(--pecie-color-border));
+}
+
+html[data-theme='light'] .template-picker__option[aria-checked='true'] {
+  border-color: var(--pecie-palette-accent-deep);
+  background:
+    linear-gradient(180deg, rgba(255, 251, 246, 0.98), rgba(246, 227, 210, 0.96)),
+    rgba(255, 245, 238, 0.98);
+  box-shadow:
+    inset 0 0 0 2px var(--pecie-palette-accent-deep),
+    0 0 0 4px rgba(143, 67, 31, 0.22),
+    0 12px 24px rgba(143, 67, 31, 0.16);
+}
+
+html[data-theme='light'] .template-card--selected {
+  border-color: var(--pecie-palette-accent-deep);
+  outline: 3px solid var(--pecie-palette-accent-deep);
+  outline-offset: 2px;
+  background:
+    linear-gradient(180deg, rgba(255, 251, 246, 0.98), rgba(246, 227, 210, 0.96)),
+    rgba(255, 245, 238, 0.98);
+  box-shadow:
+    inset 0 0 0 2px var(--pecie-palette-accent-deep),
+    0 0 0 4px rgba(143, 67, 31, 0.22),
+    0 12px 24px rgba(143, 67, 31, 0.16);
+}
+
+html[data-theme='light'] button.template-card.template-card--selected,
+html[data-theme='light'] button.template-card[aria-checked='true'] {
+  border-color: var(--pecie-palette-accent-deep);
+  outline: 3px solid var(--pecie-palette-accent-deep);
+  outline-offset: 2px;
+  background:
+    linear-gradient(180deg, rgba(255, 251, 246, 0.98), rgba(246, 227, 210, 0.96)),
+    rgba(255, 245, 238, 0.98);
+  box-shadow:
+    inset 0 0 0 2px var(--pecie-palette-accent-deep),
+    0 0 0 4px rgba(143, 67, 31, 0.24),
+    0 12px 24px rgba(143, 67, 31, 0.16);
+}
+
+html[data-theme='light'] button.template-card.template-card--selected:hover,
+html[data-theme='light'] button.template-card[aria-checked='true']:hover {
+  border-color: var(--pecie-palette-accent-deeper);
+  outline-color: var(--pecie-palette-accent-deeper);
+  box-shadow:
+    inset 0 0 0 2px var(--pecie-palette-accent-deeper),
+    0 0 0 4px rgba(123, 55, 23, 0.24),
+    0 14px 26px rgba(123, 55, 23, 0.18);
+}
+
+html[data-theme='light'] .template-card--selected .template-card__icon,
+html[data-theme='light'] .template-card--selected strong {
+  color: var(--pecie-palette-accent-deep);
+}
+
+html[data-theme='light'] .message-box {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(246, 238, 228, 0.94)),
+    var(--pecie-color-surfaceHover);
+}

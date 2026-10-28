@@ -1,0 +1,57 @@
+/* ── RadioGroup: native radios inside a fieldset ── */
+.radio-group {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.radio-group legend {
+  padding: 0;
+  margin-bottom: var(--pecie-space-xs);
+  color: var(--pecie-control-textMuted);
+  font-family: var(--pecie-font-ui);
+  font-size: var(--pecie-small-size);
+  font-weight: 600;
+}
+
+.radio-group__options {
+  display: grid;
+  gap: var(--pecie-space-sm);
+}
+
+.radio-group__option {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--pecie-space-sm);
+  padding: var(--pecie-space-sm) var(--pecie-space-md);
+  border: 1px solid var(--pecie-control-border);
+  border-radius: var(--pecie-radius-md);
+  background: var(--pecie-control-bg);
+  color: var(--pecie-control-text);
+  cursor: pointer;
+}
+
+.radio-group__option:hover {
+  background: var(--pecie-control-bgHover);
+}
+
+.radio-group__option--checked {
+  border-color: var(--pecie-accent-bg);
+  background: var(--pecie-accent-subtle);
+  color: var(--pecie-accent-onSubtle);
+}
+
+.radio-group__option:has(input:focus-visible) {
+  outline: 3px solid var(--pecie-focus-ring);
+  outline-offset: 3px;
+}
+
+.radio-group__copy {
+  display: grid;
+  gap: 2px;
+}
+
+.radio-group__copy small {
+  color: var(--pecie-control-textMuted);
+}

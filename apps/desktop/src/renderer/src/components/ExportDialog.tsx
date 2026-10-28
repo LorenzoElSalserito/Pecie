@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-import { Button, Dialog } from '@pecie/ui'
+import { Banner, Button, Dialog, Progress, Select, TextField } from '@pecie/ui'
 
 import {
   type ExportProfileSupportDecision,
@@ -17,6 +17,8 @@ import { t } from '../i18n'
 import type { ExportDialogProps, ExportFormatId, TemplateId } from './types'
 import { exportFormats } from './types'
 import { buildExportFilePath, formatTemplateLabel } from './utils'
+import { ExportLog, ExportProfileDetails } from './export/ExportDetails'
+import { ExportPreviewPane } from './export/ExportPreviewPane'
 
 const exportStepMachine = {
   idle: { next: ['profile-selected'] },
@@ -38,35 +40,6 @@ function canTransition(from: ExportStepState, to: ExportStepState): boolean {
 
 function profileFamilyPrefix(profileId: string): string {
   return profileId.replace(/-(pdf|docx|odt|rtf|epub|html|latex|jats|tei|md|txt)$/, '')
-}
-
-function renderPreviewParagraphs(value: string): React.JSX.Element[] {
-  return value
-    .split(/\n\s*\n/)
-    .map((paragraph) => paragraph.trim())
-    .filter(Boolean)
-    .map((paragraph) => <p key={paragraph}>{paragraph}</p>)
-}
-
-function getRuntimeCapabilityLabel(locale: ExportDialogProps['locale'], capabilityId: RuntimeCapabilityReport['capabilityId']): string {
-  switch (capabilityId) {
-    case 'pandoc':
-      return t(locale, 'exportRuntimeCapability_pandoc')
-    case 'weasyprint':
-      return t(locale, 'exportRuntimeCapability_weasyprint')
-    case 'xelatex':
-      return t(locale, 'exportRuntimeCapability_xelatex')
-    case 'pdflatex':
-      return t(locale, 'exportRuntimeCapability_pdflatex')
-    case 'lualatex':
-      return t(locale, 'exportRuntimeCapability_lualatex')
-    default:
-      return capabilityId
-  }
-}
-
-function formatRuntimeCapabilityList(locale: ExportDialogProps['locale'], capabilityIds: RuntimeCapabilityReport['capabilityId'][]): string {
-  return capabilityIds.map((capabilityId) => getRuntimeCapabilityLabel(locale, capabilityId)).join(', ')
 }
 
 function getProfileSupportDecision(
@@ -275,8 +248,6 @@ export function ExportDialog({
 
   const currentProject = project
   const defaultExportDirectory = `${currentProject.projectPath}/exports/out`
-  const previewPage = previewResponse?.preview?.pages[previewPageIndex] ?? null
-  const previewPageUrl = previewPage ? `file://${currentProject.projectPath}/${previewPage.previewAssetRelPath}` : ''
 
   async function finalizeExport(): Promise<void> {
     if (!selectedProfile) {
@@ -370,17 +341,12 @@ export function ExportDialog({
   }
 
   return (
-    <Dialog open={open} onClose={onClose} size="compact" icon="bi-box-arrow-up" title={t(locale, 'exportTitle')}>
+    <Dialog open={open} onClose={onClose} size="compact" icon="box-arrow-up" title={t(locale, 'exportTitle')}>
       <div className="dialog-form">
         <div className="field-grid">
-          <label className="field">
-            <span>{t(locale, 'template')}</span>
-            <input readOnly value={formatTemplateLabel(locale, project.project.documentKind as TemplateId)} />
-          </label>
+          <TextField label={t(locale, 'template')} readOnly value={formatTemplateLabel(locale, project.project.documentKind as TemplateId)} />
 
-          <label className="field">
-            <span>{t(locale, 'format')}</span>
-            <select
+          <Select label={t(locale, 'format')}
               data-tutorial-id="export-format"
               onChange={(event) => setSelectedFormat(event.target.value as ExportFormatId)}
               value={selectedFormat}
@@ -392,12 +358,9 @@ export function ExportDialog({
                     {entry.label}
                   </option>
                 ))}
-            </select>
-          </label>
+            </Select>
 
-          <label className="field">
-            <span>{t(locale, 'exportProfile')}</span>
-            <select
+          <Select label={t(locale, 'exportProfile')}
               data-tutorial-id="export-profile"
               disabled={profilesForSelectedFormat.length === 0}
               onChange={(event) => setSelectedProfileId(event.target.value)}
@@ -412,12 +375,9 @@ export function ExportDialog({
                   </option>
                 )
               })}
-            </select>
-          </label>
+            </Select>
 
-          <label className="field">
-            <span>{t(locale, 'scope')}</span>
-            <select
+          <Select label={t(locale, 'scope')}
               data-tutorial-id="export-scope"
               value={scope}
               onChange={(event) => setScope(event.target.value as 'current-document' | 'whole-project')}
@@ -427,14 +387,13 @@ export function ExportDialog({
               </option>
               <option value="whole-project">{t(locale, 'wholeProject')}
               </option>
-            </select>
-          </label>
+            </Select>
         </div>
 
         {!isCurrentDocumentAvailable ? (
-          <p className="message-box" role="status">
+          <Banner>
             {t(locale, 'exportNeedsSelection')}
-          </p>
+          </Banner>
         ) : null}
 
         <label className="field">
@@ -480,83 +439,36 @@ export function ExportDialog({
           />
           <span>{t(locale, 'exportPreviewBeforeSave')}</span>
         </label>
-        <p className="message-box" role="status">
+        <Banner>
           {exportPreviewEnabled
             ? t(locale, 'exportPreviewBeforeSaveBody')
             : t(locale, 'exportPreviewDisabledForMode')}
-        </p>
+        </Banner>
         {runtimeLoading ? (
-          <p className="message-box" role="status">{t(locale, 'exportRuntimeLoading')}</p>
+          <Banner>{t(locale, 'exportRuntimeLoading')}</Banner>
         ) : null}
         {runtimeError ? (
-          <p className="message-box" role="alert">{runtimeError}</p>
+          <Banner role="alert">{runtimeError}</Banner>
         ) : null}
         {selectedProfileSupport ? (
-          <p className="message-box" role="status">{t(locale, selectedProfileSupport.messageKey)}</p>
+          <Banner>{t(locale, selectedProfileSupport.messageKey)}</Banner>
         ) : null}
 
         {exportStepState === 'preview-generating' ? (
-          <p aria-live="polite" className="message-box" role="status">
+          <Banner aria-live="polite">
             {t(locale, 'exportPreviewGenerating')}
-          </p>
+          </Banner>
         ) : null}
         {exportStepState === 'preview-ready' && previewResponse ? (
-          <section className="context-card">
-            <h3>{t(locale, 'exportPreviewTitle')}</h3>
-            <p className="message-box" role="status">
-              {t(locale, 'exportPreviewModeLabel', {
-                mode: t(locale, previewModes[appSettings.preview.mode].shortLabelKey)
-              })}
-            </p>
-            {previewResponse.warningMessageKey ? (
-              <p className="message-box" role="status">{t(locale, previewResponse.warningMessageKey)}</p>
-            ) : null}
-            {previewCapability.previewKind === 'visual' && previewPage ? (
-              <>
-                <iframe className="attachment-preview-frame" src={previewPageUrl} title={t(locale, 'exportPreviewFrameTitle')} />
-                {previewResponse.preview && previewResponse.preview.totalPages > 1 ? (
-                  <div className="dialog-actions dialog-actions--end">
-                    <Button
-                      disabled={previewPageIndex === 0}
-                      onClick={() => setPreviewPageIndex((current) => Math.max(0, current - 1))}
-                      size="sm"
-                      type="button"
-                      variant="ghost"
-                    >
-                      {t(locale, 'previous')}
-                    </Button>
-                    <span className="message-box">
-                      {t(locale, 'exportPreviewPageCounter', {
-                        current: String(previewPageIndex + 1),
-                        total: String(previewResponse.preview.totalPages)
-                      })}
-                    </span>
-                    <Button
-                      disabled={previewPageIndex >= previewResponse.preview.totalPages - 1}
-                      onClick={() =>
-                        setPreviewPageIndex((current) => Math.min(previewResponse.preview!.totalPages - 1, current + 1))
-                      }
-                      size="sm"
-                      type="button"
-                      variant="ghost"
-                    >
-                      {t(locale, 'next')}
-                    </Button>
-                  </div>
-                ) : null}
-              </>
-            ) : previewCapability.previewKind === 'reader' ? (
-              <article className="attachment-preview-reader">{renderPreviewParagraphs(previewResponse.previewText ?? '')}</article>
-            ) : previewCapability.previewKind === 'approximate' ? (
-              <article className="attachment-preview-text attachment-preview-text--rich">
-                {renderPreviewParagraphs(previewResponse.previewText ?? '')}
-              </article>
-            ) : previewCapability.previewKind === 'text' ? (
-              <pre className="attachment-preview-text">{previewResponse.previewText ?? ''}</pre>
-            ) : (
-              <pre className="attachment-preview-text">{previewResponse.previewText ?? ''}</pre>
-            )}
-          </section>
+          <ExportPreviewPane
+            locale={locale}
+            onPageIndexChange={setPreviewPageIndex}
+            pageIndex={previewPageIndex}
+            previewKind={previewCapability.previewKind}
+            previewModeLabel={t(locale, previewModes[appSettings.preview.mode].shortLabelKey)}
+            previewResponse={previewResponse}
+            projectPath={currentProject.projectPath}
+          />
         ) : null}
 
         <div className="dialog-actions">
@@ -587,9 +499,7 @@ export function ExportDialog({
             >
               {busy ? (
                 <>
-                  <span className="progress-bar" aria-hidden="true">
-                    <span className="progress-bar__track"></span>
-                  </span>
+                  <Progress decorative />
                   {t(locale, 'startExport')}
                 </>
               ) : (
@@ -598,84 +508,14 @@ export function ExportDialog({
             </Button>
           )}
         </div>
-        <p className="message-box" role="status">
+        <Banner>
           {t(locale, 'exportStepStateLabel', {
             state: t(locale, `exportStepState_${exportStepState}`)
           })}
-        </p>
+        </Banner>
 
-        {logLines.length > 0 ? (
-          <section className="context-card">
-            <h3>{t(locale, 'export')}</h3>
-            <ul aria-live="assertive" className="stack-list stack-list--tight">
-              {logLines.map((line) => (
-                <li key={line}>
-                  <span>{line}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
-
-        {selectedProfile || exportProfileDiagnostics.length > 0 ? (
-          <section className="context-card">
-            <h3>{t(locale, 'exportProfile')}</h3>
-            {selectedProfile ? (
-              <ul className="stack-list stack-list--tight">
-                <li>
-                  <span>{selectedProfile.sourcePath}</span>
-                </li>
-                <li>
-                  <span>
-                    {`${t(locale, 'exportRuntimeAvailabilityLabel')}: ${
-                      selectedProfileSupport
-                        ? t(locale, `exportRuntimeAvailability_${selectedProfileSupport.availability}`)
-                        : t(locale, 'exportRuntimeAvailability_unknown')
-                    }`}
-                  </span>
-                </li>
-                {runtimeVersion ? (
-                  <li>
-                    <span>{`${t(locale, 'exportRuntimeVersion')}: ${runtimeVersion}`}</span>
-                  </li>
-                ) : null}
-                {selectedProfile.engine ? (
-                  <li>
-                    <span>{`${t(locale, 'exportEngine')}: ${selectedProfile.engine}`}</span>
-                  </li>
-                ) : null}
-                {selectedProfile.citationProfile ? (
-                  <li>
-                    <span>{`${t(locale, 'citationProfile')}: ${selectedProfile.citationProfile}`}</span>
-                  </li>
-                ) : null}
-                {selectedProfileSupport?.requiredCapabilities.length ? (
-                  <li>
-                    <span>
-                      {`${t(locale, 'exportRuntimeRequiredCapabilities')}: ${formatRuntimeCapabilityList(locale, selectedProfileSupport.requiredCapabilities)}`}
-                    </span>
-                  </li>
-                ) : null}
-                {selectedProfileSupport?.missingCapabilities.length ? (
-                  <li>
-                    <span>
-                      {`${t(locale, 'exportRuntimeMissingCapabilities')}: ${formatRuntimeCapabilityList(locale, selectedProfileSupport.missingCapabilities)}`}
-                    </span>
-                  </li>
-                ) : null}
-              </ul>
-            ) : null}
-            {exportProfileDiagnostics.length > 0 ? (
-              <ul className="stack-list stack-list--tight">
-                {exportProfileDiagnostics.map((diagnostic) => (
-                  <li key={`${diagnostic.profileId}-${diagnostic.sourcePath}`}>
-                    <span>{diagnostic.message}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </section>
-        ) : null}
+        <ExportLog lines={logLines} locale={locale} />
+        <ExportProfileDetails diagnostics={exportProfileDiagnostics} locale={locale} profile={selectedProfile} runtimeVersion={runtimeVersion} support={selectedProfileSupport} />
       </div>
     </Dialog>
   )

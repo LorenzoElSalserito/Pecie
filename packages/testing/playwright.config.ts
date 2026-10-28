@@ -9,5 +9,6 @@ export default defineConfig({
   fullyParallel: false,
   retries: 0,
   workers: 1,
-  reporter: 'list'
+  reporter: 'list',
+  snapshotPathTemplate: '{testDir}/../visual/{arg}{ext}'
 })

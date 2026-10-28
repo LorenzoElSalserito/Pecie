@@ -1,0 +1,397 @@
+.binder-tree__item:focus-visible {
+  outline: 3px solid var(--pecie-color-focus);
+  outline-offset: 3px;
+}
+
+.binder-tree {
+  display: grid;
+  gap: 0.52rem;
+  padding-right: 0.28rem;
+  padding-bottom: 0.25rem;
+  min-height: 0;
+}
+
+.binder-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  padding: 0.18rem;
+  border: 1px solid color-mix(in srgb, var(--pecie-color-borderSubtle) 78%, transparent);
+  border-radius: calc(var(--pecie-radius-lg) + 0.08rem);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 16%, transparent), transparent 48%),
+    color-mix(in srgb, var(--pecie-color-surfaceStrong) 18%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 24%, transparent);
+}
+
+.binder-actions--secondary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.binder-actions--collapsed {
+  grid-template-columns: 1fr;
+}
+
+.binder-tree__item {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: 0.72rem;
+  align-items: start;
+  width: 100%;
+  padding: 0.82rem 0.86rem;
+  border: 1px solid color-mix(in srgb, var(--pecie-color-borderSubtle) 36%, transparent);
+  border-radius: var(--pecie-radius-lg);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 10%, transparent), transparent 52%),
+    transparent;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  animation: binder-node-enter 150ms ease both;
+  animation-delay: calc(var(--binder-depth, 0) * 30ms);
+  transition:
+    background var(--pecie-transition-fast),
+    border-color var(--pecie-transition-fast),
+    transform var(--pecie-transition-fast),
+    box-shadow var(--pecie-transition-fast);
+}
+
+.binder-tree__item::before {
+  content: '';
+  position: absolute;
+  left: 0.8rem;
+  top: 0.35rem;
+  bottom: 0.35rem;
+  width: calc(var(--binder-depth, 0) * 0.85rem);
+  pointer-events: none;
+  opacity: 0.55;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent calc(0.85rem - 1px),
+      color-mix(in srgb, var(--pecie-color-borderSubtle) 90%, transparent) calc(0.85rem - 1px),
+      color-mix(in srgb, var(--pecie-color-borderSubtle) 90%, transparent) 0.85rem
+    );
+}
+
+.binder-tree__item:hover {
+  transform: translateX(2px);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 18%, transparent), transparent 48%),
+    var(--pecie-color-surfaceHover);
+  border-color: color-mix(in srgb, var(--pecie-color-border) 72%, transparent);
+  box-shadow: var(--pecie-shadow-sm);
+}
+
+.binder-tree__item[aria-selected='true'] {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 18%, transparent), transparent 48%),
+    color-mix(in srgb, var(--pecie-color-accent) 12%, var(--pecie-color-surface));
+  border-color: color-mix(in srgb, var(--pecie-color-accent) 45%, var(--pecie-color-border));
+  box-shadow:
+    inset 3px 0 0 0 var(--pecie-color-accent),
+    0 10px 20px color-mix(in srgb, var(--pecie-color-accent) 10%, transparent);
+}
+
+.binder-tree__item[aria-selected='true']::before {
+  opacity: 0.75;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent calc(0.85rem - 1px),
+      color-mix(in srgb, var(--pecie-color-accent) 28%, transparent) calc(0.85rem - 1px),
+      color-mix(in srgb, var(--pecie-color-accent) 28%, transparent) 0.85rem
+    );
+}
+
+.binder-tree__item--support {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--pecie-color-focus) 4%, transparent), transparent 48%),
+    linear-gradient(180deg, color-mix(in srgb, white 10%, transparent), transparent 52%),
+    transparent;
+}
+
+.binder-tree__item--dragging {
+  opacity: 0.55;
+}
+
+.binder-tree__item--drop-before {
+  border-color: color-mix(in srgb, var(--pecie-color-accent) 56%, var(--pecie-color-border));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--pecie-color-accent) 18%, transparent),
+    var(--pecie-shadow-sm);
+}
+
+.binder-tree__item--drop-after {
+  border-color: color-mix(in srgb, var(--pecie-color-accent) 56%, var(--pecie-color-border));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--pecie-color-accent) 18%, transparent),
+    var(--pecie-shadow-sm);
+}
+
+.binder-tree__item--drop-inside {
+  border-color: color-mix(in srgb, var(--pecie-color-accent) 60%, var(--pecie-color-border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 18%, transparent), transparent 48%),
+    color-mix(in srgb, var(--pecie-color-accent) 11%, var(--pecie-color-surface));
+  box-shadow:
+    inset 0 0 0 2px color-mix(in srgb, var(--pecie-color-accent) 46%, transparent),
+    0 12px 22px color-mix(in srgb, var(--pecie-color-accent) 12%, transparent);
+}
+
+.binder-tree__item--drop-before::after,
+.binder-tree__item--drop-after::after {
+  content: '';
+  position: absolute;
+  left: 0.7rem;
+  right: 0.7rem;
+  height: 3px;
+  border-radius: var(--pecie-radius-full);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--pecie-color-accent) 88%, white 12%), var(--pecie-color-accent));
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--pecie-color-accent) 12%, transparent),
+    0 0 18px color-mix(in srgb, var(--pecie-color-accent) 20%, transparent);
+}
+
+.binder-tree__item--drop-before::after {
+  top: -2px;
+}
+
+.binder-tree__item--drop-after::after {
+  bottom: -2px;
+}
+
+.binder-tree__item--collapsed {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  padding-inline-start: 0.8rem;
+}
+
+.binder-tree__item--collapsed::before {
+  display: none;
+}
+
+.binder-tree__disclosure {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.9rem;
+  color: var(--pecie-color-textSubtle);
+  font-size: 0.72rem;
+  line-height: 1;
+  transform: translateY(0.16rem);
+  transition: transform var(--pecie-transition-fast), color var(--pecie-transition-fast);
+}
+
+.binder-tree__disclosure--expanded {
+  transform: translateY(0.16rem) rotate(90deg);
+  color: var(--pecie-color-textMuted);
+}
+
+.binder-tree__marker {
+  font-family: var(--pecie-font-ui);
+  font-size: 1.06rem;
+  line-height: 1.4;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.binder-tree__marker--document {
+  color: color-mix(in srgb, var(--pecie-palette-marker-document) 78%, var(--pecie-color-accent) 22%);
+}
+
+.binder-tree__marker--folder {
+  color: color-mix(in srgb, var(--pecie-palette-marker-folder) 84%, var(--pecie-color-text) 16%);
+}
+
+.binder-tree__marker--support {
+  color: color-mix(in srgb, var(--pecie-palette-marker-support) 82%, var(--pecie-color-text) 18%);
+}
+
+.binder-tree__item[aria-selected='true'] .binder-tree__marker--document {
+  color: color-mix(in srgb, var(--pecie-palette-marker-document) 84%, white 16%);
+}
+
+.binder-tree__item[aria-selected='true'] .binder-tree__marker--folder {
+  color: color-mix(in srgb, var(--pecie-palette-marker-folder-bright) 88%, white 12%);
+}
+
+.binder-tree__item[aria-selected='true'] .binder-tree__marker--support {
+  color: color-mix(in srgb, var(--pecie-palette-marker-support-bright) 84%, white 16%);
+}
+
+.binder-tree__content {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .binder-tree__item--revealed {
+    animation: binder-node-reveal 150ms ease both;
+    animation-delay: calc(var(--reveal-index, 0) * 30ms);
+  }
+}
+
+.binder-tree__headline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.binder-tree__dirty-dot {
+  display: inline-flex;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--pecie-color-accent) 84%, var(--pecie-palette-accent-tint) 16%);
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--pecie-color-background) 88%, transparent),
+    0 0 0 5px color-mix(in srgb, var(--pecie-color-accent) 10%, transparent);
+}
+
+.binder-tree__content strong {
+  font-family: var(--pecie-font-ui);
+  font-size: 0.98rem;
+  line-height: 1.35;
+}
+
+.binder-tree__content small {
+  color: var(--pecie-color-textMuted);
+  font-size: var(--pecie-caption-size);
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+}
+
+.binder-node-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.35rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: var(--pecie-radius-full);
+  font-family: var(--pecie-font-ui);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.binder-node-badge--document {
+  background: color-mix(in srgb, var(--pecie-color-accent) 12%, var(--pecie-color-background));
+  color: var(--pecie-color-text);
+}
+
+.binder-node-badge--folder {
+  background: color-mix(in srgb, var(--pecie-color-surfaceStrong) 62%, var(--pecie-color-background));
+  color: var(--pecie-color-text);
+}
+
+.binder-node-badge--support {
+  background: color-mix(in srgb, var(--pecie-color-focus) 10%, var(--pecie-color-background));
+  color: var(--pecie-color-text);
+}
+
+.binder-tree__progress {
+  display: block;
+  width: 100%;
+  height: 0.28rem;
+  border-radius: var(--pecie-radius-full);
+  background: color-mix(in srgb, var(--pecie-color-borderSubtle) 88%, transparent);
+  overflow: hidden;
+}
+
+.binder-tree__progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--pecie-color-accent) 72%, white 28%), var(--pecie-color-accent));
+}
+
+.binder-tree__progress-fill--active {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--pecie-color-accent) 12%, transparent);
+}
+
+.binder-tree__progress-fill--support {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--pecie-color-focus) 70%, white 30%), var(--pecie-color-focus));
+}
+
+.binder-tree__section-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.9rem 0 0.18rem;
+  color: var(--pecie-color-textSubtle);
+  font-family: var(--pecie-font-ui);
+  font-size: var(--pecie-caption-size);
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.binder-tree__section-divider-icon {
+  font-size: 0.92rem;
+  line-height: 1;
+}
+
+.binder-tree__section-divider-icon--manuscript {
+  color: color-mix(in srgb, var(--pecie-palette-marker-document) 72%, var(--pecie-color-accent) 28%);
+}
+
+.binder-tree__section-divider-icon--support {
+  color: color-mix(in srgb, var(--pecie-palette-marker-support) 78%, var(--pecie-color-text) 22%);
+}
+
+.binder-tree__section-divider--top {
+  margin-top: 0;
+}
+
+.binder-tree__section-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--pecie-color-borderSubtle) 92%, transparent), transparent);
+}
+
+/* ── Binder active dot (collapsed) ── */
+.binder-tree__dot-active {
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--pecie-color-accent);
+  margin: 0.15rem auto 0;
+}
+
+@media (max-width: 900px) {
+.binder-actions,
+.binder-actions--secondary {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Binder node actions: icon-only controls with tooltips (labels stay for assistive tech). */
+.binder-actions--icons .pecie-btn {
+  min-height: 2.35rem;
+  padding-inline: 0.4rem;
+  font-size: 1.05rem;
+}
+
+.binder-actions--icons .pecie-btn:not(:disabled):hover {
+  color: var(--pecie-color-accent);
+}
+
+.binder-actions--icons .binder-actions__danger:not(:disabled):hover {
+  color: var(--pecie-color-danger);
+  background: color-mix(in srgb, var(--pecie-color-danger) 10%, transparent);
+}
+
+.binder-actions > .pecie-btn:only-child {
+  grid-column: 1 / -1;
+  white-space: nowrap;
+}
+

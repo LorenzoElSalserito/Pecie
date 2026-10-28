@@ -1,6 +1,7 @@
 import { HEADING_FONT_DEFINITION, MONO_FONT_DEFINITION, UI_FONT_DEFINITION, fontFamilyStack } from '@pecie/schemas'
 
-import { tokens } from './tokens'
+import { elevationTokens, flattenSemanticPalette, iconSizeTokens, motionTokens, semanticTokens, type SemanticPalette } from './semantic-tokens'
+import { paletteExtras, tokens } from './tokens'
 
 function toCssVariables(prefix: string, values: Record<string, string | number>): string {
   return Object.entries(values)
@@ -8,9 +9,18 @@ function toCssVariables(prefix: string, values: Record<string, string | number>)
     .join('\n')
 }
 
+function semanticVariables(palette: SemanticPalette): string {
+  return toCssVariables('--pecie', flattenSemanticPalette(palette))
+}
+
 export const globalThemeStyles = `
 :root {
   color-scheme: light dark;
+  ${toCssVariables('--pecie-icon-size', Object.fromEntries(Object.entries(iconSizeTokens).map(([key, value]) => [key, `${value}px`])))}
+  ${toCssVariables('--pecie-elevation', elevationTokens)}
+  ${toCssVariables('--pecie-motion', Object.fromEntries(Object.entries(motionTokens.duration).map(([key, value]) => [key, `${value}ms`])))}
+  ${toCssVariables('--pecie-ease', motionTokens.easing)}
+  ${toCssVariables('--pecie-palette', paletteExtras)}
   ${toCssVariables('--pecie-space', tokens.spacing)}
   ${toCssVariables('--pecie-radius', tokens.radius)}
   ${toCssVariables('--pecie-shadow', tokens.shadow)}
@@ -24,6 +34,15 @@ export const globalThemeStyles = `
   --pecie-font-ui-scale: 1;
   --pecie-font-body-letter-spacing: normal;
   --pecie-font-body-word-spacing: normal;
+  --pecie-display-size: ${tokens.typography.display.size}px;
+  --pecie-display-line-height: ${tokens.typography.display.lineHeight};
+  --pecie-compact-size: ${tokens.typography.compact.size}px;
+  --pecie-compact-line-height: ${tokens.typography.compact.lineHeight};
+  --pecie-h3-size: ${tokens.typography.h3.size}px;
+  --pecie-h3-line-height: ${tokens.typography.h3.lineHeight};
+  --pecie-mono-size: ${tokens.typography.mono.size}px;
+  --pecie-mono-line-height: ${tokens.typography.mono.lineHeight};
+  --pecie-tracking-tight: -0.02em;
   --pecie-body-size: ${tokens.typography.body.size}px;
   --pecie-body-line-height: ${tokens.typography.body.lineHeight};
   --pecie-heading-size: ${tokens.typography.heading.size}px;
@@ -39,19 +58,23 @@ export const globalThemeStyles = `
 
 [data-theme='light'] {
   ${toCssVariables('--pecie-color', tokens.color.light)}
+  ${semanticVariables(semanticTokens.light)}
 }
 
 [data-theme='dark'] {
   ${toCssVariables('--pecie-color', tokens.color.dark)}
+  ${semanticVariables(semanticTokens.dark)}
 }
 
 @media (prefers-contrast: more) {
   [data-theme='light'] {
     ${toCssVariables('--pecie-color', tokens.color.highContrast.light)}
+    ${semanticVariables(semanticTokens.highContrast.light)}
   }
 
   [data-theme='dark'] {
     ${toCssVariables('--pecie-color', tokens.color.highContrast.dark)}
+    ${semanticVariables(semanticTokens.highContrast.dark)}
   }
 }
 `

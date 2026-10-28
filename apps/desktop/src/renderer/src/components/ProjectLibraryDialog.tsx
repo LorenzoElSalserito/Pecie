@@ -90,7 +90,7 @@ export function ProjectLibraryDialog({
   }
 
   return (
-    <Dialog open={open} onClose={onClose} size="default" icon="bi-collection" title={t(locale, 'manageProjectsTitle')}>
+    <Dialog open={open} onClose={onClose} size="default" icon="collection" title={t(locale, 'manageProjectsTitle')}>
       <div className="dialog-form">
         <section className="context-card">
           <h3>{t(locale, 'activeProjects')}</h3>

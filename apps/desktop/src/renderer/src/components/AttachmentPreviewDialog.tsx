@@ -52,7 +52,7 @@ export function AttachmentPreviewDialog({
   const fileUrl = `file://${attachment.absolutePath}`
 
   return (
-    <Dialog open={open} onClose={onClose} size="wide" icon="bi-paperclip" title={attachment.name}>
+    <Dialog open={open} onClose={onClose} size="wide" icon="paperclip" title={attachment.name}>
       <div className="dialog-form">
         <div className="context-card context-card--soft">
           <dl className="meta-list">

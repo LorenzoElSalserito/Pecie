@@ -1,7 +1,10 @@
 import { useEffect } from 'react'
 
+import { ToastViewport as ToastStack } from '@pecie/ui'
+
 import type { ToastViewportProps } from './types'
 
+/** Desktop toast host: owns the auto-dismiss timers, delegates markup to the design system. */
 export function ToastViewport({ toasts, dismissLabel, onDismiss }: ToastViewportProps): React.JSX.Element | null {
   useEffect(() => {
     if (toasts.length === 0) {
@@ -19,20 +22,5 @@ export function ToastViewport({ toasts, dismissLabel, onDismiss }: ToastViewport
     }
   }, [onDismiss, toasts])
 
-  if (toasts.length === 0) {
-    return null
-  }
-
-  return (
-    <div aria-atomic="true" aria-live="polite" className="toast-viewport">
-      {toasts.map((toast) => (
-        <article className={`toast toast--${toast.tone}`} key={toast.id} role="status">
-          <span>{toast.message}</span>
-          <button aria-label={dismissLabel} className="toast__dismiss" onClick={() => onDismiss(toast.id)} type="button">
-            ×
-          </button>
-        </article>
-      ))}
-    </div>
-  )
+  return <ToastStack dismissLabel={dismissLabel} onDismiss={onDismiss} toasts={toasts} />
 }

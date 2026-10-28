@@ -352,7 +352,7 @@ export function GuideCenterDialog({
   }
 
   return (
-    <Dialog open={open} onClose={onClose} size="wide" icon="bi-compass" title={t(locale, 'guideCenterTitle')}>
+    <Dialog open={open} onClose={onClose} size="wide" icon="compass" title={t(locale, 'guideCenterTitle')}>
       <div className="guide-center">
         <aside className="guide-center__sidebar" aria-label={t(locale, 'guideCenterSidebarLabel')}>
           {sidebarSections.map((section) => (
